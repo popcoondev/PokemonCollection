@@ -136,9 +136,9 @@ void loop() {
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
           pendingAction = makePendingAction(ACTION_OPEN_SEARCH);
-        } else if (pressedControl == PRESS_NAV_PREV && currentId > MIN_POKEMON_ID) {
+        } else if (pressedControl == PRESS_NAV_PREV) {
           pendingAction = makePendingAction(ACTION_NAV_PREV);
-        } else if (pressedControl == PRESS_NAV_NEXT && currentId < MAX_POKEMON_ID) {
+        } else if (pressedControl == PRESS_NAV_NEXT) {
           pendingAction = makePendingAction(ACTION_NAV_NEXT);
         } else if (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4)) {
           pendingAction = makePendingAction(ACTION_SET_TAB, pressedControl - PRESS_TAB_0);
@@ -215,11 +215,11 @@ void loop() {
         dataMgr.loadPokemonDetail(currentId);
         break;
       case ACTION_NAV_PREV:
-        currentId--;
+        currentId = (currentId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (currentId - 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
       case ACTION_NAV_NEXT:
-        currentId++;
+        currentId = (currentId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (currentId + 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
       case ACTION_SET_TAB:
