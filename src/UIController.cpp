@@ -42,7 +42,7 @@ void UIController::drawBase() {
 }
 
 void UIController::drawPressedOverlay(int x, int y, int w, int h, int radius) {
-  const uint16_t overlay = blend565(COLOR_PK_SUB, COLOR_PK_CARD, 96);
+  const uint16_t overlay = blend565(COLOR_PK_SUB, COLOR_PK_CARD, 48);
   if (radius > 0) {
     sprite->fillRoundRect(x, y, w, h, radius, overlay);
   } else {
