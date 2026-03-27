@@ -124,9 +124,9 @@ void loop() {
       needsRedraw = true;
 
       if (screenMode == SCREEN_SEARCH) {
-        if (pressedControl == PRESS_SEARCH_MINUS && searchId > MIN_POKEMON_ID) {
+        if (pressedControl == PRESS_SEARCH_MINUS) {
           pendingAction = makePendingAction(ACTION_SEARCH_MINUS);
-        } else if (pressedControl == PRESS_SEARCH_PLUS && searchId < MAX_POKEMON_ID) {
+        } else if (pressedControl == PRESS_SEARCH_PLUS) {
           pendingAction = makePendingAction(ACTION_SEARCH_PLUS);
         } else if (pressedControl == PRESS_SEARCH_CANCEL) {
           pendingAction = makePendingAction(ACTION_SEARCH_CANCEL);
@@ -200,10 +200,10 @@ void loop() {
         searchId = currentId;
         break;
       case ACTION_SEARCH_MINUS:
-        searchId--;
+        searchId = (searchId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (searchId - 1);
         break;
       case ACTION_SEARCH_PLUS:
-        searchId++;
+        searchId = (searchId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (searchId + 1);
         break;
       case ACTION_SEARCH_CANCEL:
         screenMode = SCREEN_DETAIL;
