@@ -1,0 +1,14 @@
+.DS_Store
+
+.pio/
+.pio-core/
+
+.vscode/
+!.vscode/extensions.json
+
+/tmp/
+*.log
+*.tmp
+*.bak
+
+/.clangd/
