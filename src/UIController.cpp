@@ -250,13 +250,15 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
     sprite->fillRoundRect(x, y, 84, 80, 8, COLOR_PK_BG);
     sprite->drawRoundRect(x, y, 84, 80, 8, COLOR_PK_BORDER);
 
+    imageLoader.loadAndDisplayPNG(*sprite, pk.evolutions[i].id, x + 17, y + 6, 50, 32);
+
     char idStr[12];
     snprintf(idStr, sizeof(idStr), "No.%04d", pk.evolutions[i].id);
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(COLOR_PK_SUB);
-    sprite->drawCenterString(idStr, x + 42, y + 12);
+    sprite->drawCenterString(idStr, x + 42, y + 40);
     sprite->setTextColor(COLOR_PK_TEXT);
-    drawWrappedText(pk.evolutions[i].name, x + 8, y + 34, 68, 16, 2);
+    drawWrappedText(pk.evolutions[i].name, x + 8, y + 56, 68, 14, 2);
 
     x += 96;
   }

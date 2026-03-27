@@ -33,6 +33,7 @@ enum PressedControl {
   PRESS_SEARCH_OPEN,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
+  PRESS_EVOLUTION_0,
   PRESS_TAB_0,
 };
 
@@ -48,6 +49,9 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, 204)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, 204)) return PRESS_NAV_NEXT;
+  if (hitTest(tx, ty, 22, 80, 84, 80)) return PRESS_EVOLUTION_0;
+  if (hitTest(tx, ty, 118, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 1);
+  if (hitTest(tx, ty, 214, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 2);
   if (ty >= 194) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
   return PRESS_NONE;
 }
@@ -61,6 +65,7 @@ enum PendingActionType {
   ACTION_SEARCH_OPEN,
   ACTION_NAV_PREV,
   ACTION_NAV_NEXT,
+  ACTION_OPEN_EVOLUTION,
   ACTION_SET_TAB,
 };
 
@@ -140,6 +145,10 @@ void loop() {
           pendingAction = makePendingAction(ACTION_NAV_PREV);
         } else if (pressedControl == PRESS_NAV_NEXT) {
           pendingAction = makePendingAction(ACTION_NAV_NEXT);
+        } else if (currentTab == TAB_EVOLUTION
+            && pressedControl >= PRESS_EVOLUTION_0
+            && pressedControl <= (PRESS_EVOLUTION_0 + 2)) {
+          pendingAction = makePendingAction(ACTION_OPEN_EVOLUTION, pressedControl - PRESS_EVOLUTION_0);
         } else if (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4)) {
           pendingAction = makePendingAction(ACTION_SET_TAB, pressedControl - PRESS_TAB_0);
         }
@@ -222,6 +231,15 @@ void loop() {
         currentId = (currentId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (currentId + 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
+      case ACTION_OPEN_EVOLUTION: {
+        const auto& pk = dataMgr.getCurrentPokemon();
+        const int index = pendingAction.value;
+        if (index >= 0 && index < static_cast<int>(pk.evolutions.size())) {
+          currentId = pk.evolutions[index].id;
+          dataMgr.loadPokemonDetail(currentId);
+        }
+        break;
+      }
       case ACTION_SET_TAB:
         currentTab = static_cast<TabType>(pendingAction.value);
         break;
