@@ -45,6 +45,9 @@ private:
       bool pressed,
       uint16_t pressedFillColor,
       uint16_t borderColor);
+  const lgfx::IFont* getFallbackFont(const lgfx::IFont* primaryFont) const;
+  const lgfx::IFont* selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const;
+  size_t readUtf8Glyph(const String& text, size_t index, uint16_t& codepoint, String& glyph) const;
   void drawInfoRow(const char* label, const String& value, int y);
   void drawTypeBadge(const String& type, int x, int y);
   void drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines);
