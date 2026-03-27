@@ -41,6 +41,61 @@ void UIController::drawBase() {
   sprite->fillScreen(COLOR_PK_BG);
 }
 
+const lgfx::IFont* UIController::getFallbackFont(const lgfx::IFont* primaryFont) const {
+  if (primaryFont == &fonts::efontJA_16_b) return &fonts::efontCN_16_b;
+  if (primaryFont == &fonts::efontJA_16) return &fonts::efontCN_16;
+  if (primaryFont == &fonts::efontJA_12_b) return &fonts::efontCN_12_b;
+  if (primaryFont == &fonts::efontJA_12) return &fonts::efontCN_12;
+  if (primaryFont == &fonts::efontJA_10_b) return &fonts::efontCN_10_b;
+  return &fonts::efontCN_10;
+}
+
+const lgfx::IFont* UIController::selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const {
+  if (codepoint == 0x20 || codepoint == 0x3000) {
+    return primaryFont;
+  }
+
+  lgfx::FontMetrics metrics;
+  if (primaryFont != nullptr && primaryFont->updateFontMetric(&metrics, codepoint)) {
+    return primaryFont;
+  }
+
+  const lgfx::IFont* fallbackFont = getFallbackFont(primaryFont);
+  if (fallbackFont != nullptr && fallbackFont->updateFontMetric(&metrics, codepoint)) {
+    return fallbackFont;
+  }
+
+  return primaryFont;
+}
+
+size_t UIController::readUtf8Glyph(const String& text, size_t index, uint16_t& codepoint, String& glyph) const {
+  glyph = "";
+  if (index >= text.length()) {
+    codepoint = 0;
+    return 0;
+  }
+
+  const uint8_t b0 = static_cast<uint8_t>(text[index]);
+  size_t length = 1;
+  codepoint = b0;
+
+  if ((b0 & 0xE0) == 0xC0 && index + 1 < text.length()) {
+    const uint8_t b1 = static_cast<uint8_t>(text[index + 1]);
+    codepoint = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
+    length = 2;
+  } else if ((b0 & 0xF0) == 0xE0 && index + 2 < text.length()) {
+    const uint8_t b1 = static_cast<uint8_t>(text[index + 1]);
+    const uint8_t b2 = static_cast<uint8_t>(text[index + 2]);
+    codepoint = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
+    length = 3;
+  }
+
+  for (size_t i = 0; i < length; ++i) {
+    glyph += text[index + i];
+  }
+  return length;
+}
+
 void UIController::drawPressedOverlay(int x, int y, int w, int h, int radius) {
   const uint16_t overlay = blend565(COLOR_PK_SUB, COLOR_PK_CARD, 48);
   if (radius > 0) {
@@ -64,7 +119,7 @@ void UIController::drawActionButton(
   const uint16_t bg = pressed ? pressedFillColor : fillColor;
   sprite->fillRoundRect(x, y, w, h, 10, bg);
   sprite->drawRoundRect(x, y, w, h, 10, borderColor);
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(textColor);
   sprite->drawCenterString(label, x + (w / 2), y + ((h - 12) / 2));
 }
@@ -79,7 +134,7 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
   char idStr[12];
   snprintf(idStr, sizeof(idStr), "No.%04d", pk.id);
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->drawString(idStr, 22, 14);
 
   sprite->setTextColor(COLOR_PK_TEXT);
@@ -88,13 +143,10 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
 }
 
 void UIController::drawAppearanceTab(const PokemonDetail& pk) {
-  sprite->fillCircle(85, 125, 55, COLOR_PK_CARD);
-  sprite->drawCircle(85, 125, 55, COLOR_PK_BORDER);
-
-  const int imageX = 35;
-  const int imageY = 75;
-  const int imageW = 100;
-  const int imageH = 100;
+  const int imageX = 6;
+  const int imageY = 54;
+  const int imageW = 140;
+  const int imageH = 140;
 
   imageLoader.loadAndDisplayPNG(*sprite, pk.id, imageX, imageY, imageW, imageH);
   
@@ -102,7 +154,7 @@ void UIController::drawAppearanceTab(const PokemonDetail& pk) {
   sprite->fillRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_BORDER);
 
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString(pk.category, cardX + 10, 75);
 
@@ -112,7 +164,7 @@ void UIController::drawAppearanceTab(const PokemonDetail& pk) {
     ty += 22;
   }
 
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString("高さ", cardX + 10, 145);
   sprite->setTextColor(COLOR_PK_SUB);
@@ -126,9 +178,9 @@ void UIController::drawAppearanceTab(const PokemonDetail& pk) {
 void UIController::drawDescriptionTab(const PokemonDetail& pk) {
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_TEXT);
-  drawWrappedText(pk.description, 20, 74, 280, 20, 6);
+  drawWrappedText(pk.description, 20, 72, 280, 22, 5);
 }
 
 void UIController::drawBodyTab(const PokemonDetail& pk) {
@@ -139,7 +191,7 @@ void UIController::drawBodyTab(const PokemonDetail& pk) {
   drawInfoRow("高さ", pk.height, 102);
   drawInfoRow("重さ", pk.weight, 130);
 
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString("タイプ", 24, 160);
 
@@ -159,10 +211,10 @@ void UIController::drawAbilityTab(const PokemonDetail& pk) {
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(COLOR_PK_TEXT);
     sprite->drawString(pk.abilities[i].name, 20, y);
-    sprite->setFont(&fonts::efontJA_10);
+    sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(COLOR_PK_SUB);
-    drawWrappedText(pk.abilities[i].description, 20, y + 22, 280, 18, 3);
-    y += 60;
+    drawWrappedText(pk.abilities[i].description, 20, y + 24, 280, 20, 2);
+    y += 62;
   }
 }
 
@@ -178,7 +230,7 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
 
     char idStr[12];
     snprintf(idStr, sizeof(idStr), "No.%04d", pk.evolutions[i].id);
-    sprite->setFont(&fonts::efontJA_10);
+    sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(COLOR_PK_SUB);
     sprite->drawCenterString(idStr, x + 42, y + 12);
     sprite->setTextColor(COLOR_PK_TEXT);
@@ -210,7 +262,7 @@ void UIController::drawSearchScreen(
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString("SEARCH", 26, 24);
 
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawString("えらびたい No. を へんこう", 26, 48);
 
@@ -231,7 +283,7 @@ void UIController::drawSearchScreen(
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_RED);
   sprite->drawCenterString(idText, 160, 90);
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawCenterString("POKEMON NO.", 160, 118);
   sprite->setTextColor(COLOR_PK_TEXT);
@@ -243,7 +295,7 @@ void UIController::drawSearchScreen(
 }
 
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString(label, 20, y);
   sprite->setTextColor(COLOR_PK_SUB);
@@ -253,28 +305,56 @@ void UIController::drawInfoRow(const char* label, const String& value, int y) {
 void UIController::drawTypeBadge(const String& type, int x, int y) {
   sprite->fillRoundRect(x, y, 60, 18, 4, COLOR_PK_TEXT);
   sprite->setTextColor(COLOR_PK_CARD);
-  sprite->setFont(&fonts::efontJA_10);
+  sprite->setFont(&fonts::efontJA_12);
   sprite->drawCenterString(type, x + 30, y + 2);
 }
 
 void UIController::drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines) {
-  String line;
+  const lgfx::IFont* primaryFont = sprite->getFont();
+  int cursorX = x;
+  int cursorY = y;
   int lineCount = 0;
 
-  for (size_t i = 0; i < text.length() && lineCount < maxLines; ++i) {
-    String candidate = line + text[i];
-    if (sprite->textWidth(candidate) > maxWidth && !line.isEmpty()) {
-      sprite->drawString(line, x, y + (lineCount * lineHeight));
-      line = String(text[i]);
+  for (size_t i = 0; i < text.length() && lineCount < maxLines; ) {
+    uint16_t codepoint = 0;
+    String glyph;
+    const size_t glyphLength = readUtf8Glyph(text, i, codepoint, glyph);
+    if (glyphLength == 0) break;
+    i += glyphLength;
+
+    if (glyph == "\n") {
       ++lineCount;
-    } else {
-      line = candidate;
+      cursorX = x;
+      cursorY = y + (lineCount * lineHeight);
+      continue;
     }
+
+    const lgfx::IFont* font = selectFontForCodepoint(codepoint, primaryFont);
+    sprite->setFont(font);
+
+    int glyphWidth = 0;
+    if (codepoint == 0x20) {
+      glyphWidth = 6;
+    } else if (codepoint == 0x3000) {
+      glyphWidth = 12;
+    } else {
+      glyphWidth = sprite->textWidth(glyph);
+    }
+
+    if (cursorX > x && (cursorX + glyphWidth) > (x + maxWidth)) {
+      ++lineCount;
+      if (lineCount >= maxLines) break;
+      cursorX = x;
+      cursorY = y + (lineCount * lineHeight);
+    }
+
+    if (codepoint != 0x20 && codepoint != 0x3000) {
+      sprite->drawString(glyph, cursorX, cursorY);
+    }
+    cursorX += glyphWidth;
   }
 
-  if (lineCount < maxLines && !line.isEmpty()) {
-    sprite->drawString(line, x, y + (lineCount * lineHeight));
-  }
+  sprite->setFont(primaryFont);
 }
 
 void UIController::drawTabBar(TabType activeTab, int pressedTab) {
@@ -287,7 +367,7 @@ void UIController::drawTabBar(TabType activeTab, int pressedTab) {
     uint16_t tx = (isActive || isPressed) ? COLOR_PK_CARD : COLOR_PK_TEXT;
     sprite->fillRect(i * tabW, 204, tabW, TAB_BAR_H, bg);
     sprite->drawRect(i * tabW, 204, tabW, TAB_BAR_H, COLOR_PK_BORDER);
-    sprite->setFont(&fonts::efontJA_10);
+    sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(tx);
     sprite->drawCenterString(labels[i], (i * tabW) + (tabW / 2), 214);
   }
