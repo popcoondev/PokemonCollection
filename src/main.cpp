@@ -45,9 +45,9 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_NONE;
   }
 
-  if (hitTest(tx, ty, 240, 6, 70, 36, 8)) return PRESS_SEARCH_HEADER;
-  if (tx < 70 && ty >= 48 && ty <= 200) return PRESS_NAV_PREV;
-  if (tx > 250 && ty >= 48 && ty <= 200) return PRESS_NAV_NEXT;
+  if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
+  if (hitTest(tx, ty, 0, 0, 40, 204)) return PRESS_NAV_PREV;
+  if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, 204)) return PRESS_NAV_NEXT;
   if (ty >= 194) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
   return PRESS_NONE;
 }

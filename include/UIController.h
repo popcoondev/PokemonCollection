@@ -33,6 +33,7 @@ public:
 private:
   LGFX_Sprite* sprite;
   ImageLoader imageLoader;
+  void drawPressedOverlay(int x, int y, int w, int h, int radius = 0);
   void drawActionButton(
       int x,
       int y,
@@ -44,7 +45,6 @@ private:
       bool pressed,
       uint16_t pressedFillColor,
       uint16_t borderColor);
-  void drawNavigationButton(int cx, int cy, bool isLeft, bool pressed);
   void drawInfoRow(const char* label, const String& value, int y);
   void drawTypeBadge(const String& type, int x, int y);
   void drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines);

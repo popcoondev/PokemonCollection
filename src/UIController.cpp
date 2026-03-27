@@ -1,5 +1,21 @@
 #include "UIController.h"
 
+namespace {
+uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
+  const uint8_t fgR = (fg >> 11) & 0x1F;
+  const uint8_t fgG = (fg >> 5) & 0x3F;
+  const uint8_t fgB = fg & 0x1F;
+  const uint8_t bgR = (bg >> 11) & 0x1F;
+  const uint8_t bgG = (bg >> 5) & 0x3F;
+  const uint8_t bgB = bg & 0x1F;
+
+  const uint8_t outR = ((fgR * alpha) + (bgR * (255 - alpha))) / 255;
+  const uint8_t outG = ((fgG * alpha) + (bgG * (255 - alpha))) / 255;
+  const uint8_t outB = ((fgB * alpha) + (bgB * (255 - alpha))) / 255;
+  return (outR << 11) | (outG << 5) | outB;
+}
+}
+
 UIController::UIController() : sprite(nullptr) {}
 
 UIController::~UIController() {
@@ -25,6 +41,15 @@ void UIController::drawBase() {
   sprite->fillScreen(COLOR_PK_BG);
 }
 
+void UIController::drawPressedOverlay(int x, int y, int w, int h, int radius) {
+  const uint16_t overlay = blend565(COLOR_PK_RED, COLOR_PK_CARD, 80);
+  if (radius > 0) {
+    sprite->fillRoundRect(x, y, w, h, radius, overlay);
+  } else {
+    sprite->fillRect(x, y, w, h, overlay);
+  }
+}
+
 void UIController::drawActionButton(
     int x,
     int y,
@@ -44,21 +69,12 @@ void UIController::drawActionButton(
   sprite->drawCenterString(label, x + (w / 2), y + ((h - 12) / 2));
 }
 
-void UIController::drawNavigationButton(int cx, int cy, bool isLeft, bool pressed) {
-  const uint16_t fill = pressed ? COLOR_PK_RED : COLOR_PK_CARD;
-  const uint16_t arrow = pressed ? COLOR_PK_CARD : COLOR_PK_TEXT;
-
-  sprite->fillRoundRect(cx - 22, cy - 30, 44, 60, 18, fill);
-  sprite->drawRoundRect(cx - 22, cy - 30, 44, 60, 18, COLOR_PK_BORDER);
-
-  const int tipX = isLeft ? cx - 8 : cx + 8;
-  const int tailX = isLeft ? cx + 6 : cx - 6;
-  sprite->fillTriangle(tipX, cy, tailX, cy - 12, tailX, cy + 12, arrow);
-}
-
 void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  if (searchPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
 
   char idStr[12];
   snprintf(idStr, sizeof(idStr), "No.%04d", pk.id);
@@ -69,20 +85,6 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->drawString(pk.name, 22, 26);
-
-  sprite->setFont(&fonts::efontJA_10);
-  sprite->setTextColor(COLOR_PK_SUB);
-  drawActionButton(
-      SCREEN_WIDTH - 82,
-      10,
-      62,
-      28,
-      "SEARCH",
-      COLOR_PK_BG,
-      COLOR_PK_TEXT,
-      searchPressed,
-      COLOR_PK_RED,
-      COLOR_PK_BORDER);
 }
 
 void UIController::drawAppearanceTab(const PokemonDetail& pk) {
@@ -187,8 +189,12 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
 }
 
 void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
-  drawNavigationButton(24, 125, true, prevPressed);
-  drawNavigationButton(SCREEN_WIDTH - 24, 125, false, nextPressed);
+  if (prevPressed) {
+    drawPressedOverlay(0, 0, 40, 204);
+  }
+  if (nextPressed) {
+    drawPressedOverlay(SCREEN_WIDTH - 40, 0, 40, 204);
+  }
 }
 
 void UIController::drawSearchScreen(
