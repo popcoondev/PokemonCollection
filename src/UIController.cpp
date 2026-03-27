@@ -14,6 +14,28 @@ uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t outB = ((fgB * alpha) + (bgB * (255 - alpha))) / 255;
   return (outR << 11) | (outG << 5) | outB;
 }
+
+uint16_t typeBadgeColor(const String& type) {
+  if (type == "ノーマル") return 0xA4B0;
+  if (type == "ほのお") return 0xFBE0;
+  if (type == "みず") return 0x3D9F;
+  if (type == "でんき") return 0xFEE0;
+  if (type == "くさ") return 0x6E4D;
+  if (type == "こおり") return 0x8F7D;
+  if (type == "かくとう") return 0xB1E8;
+  if (type == "どく") return 0xA1B3;
+  if (type == "じめん") return 0xD5C9;
+  if (type == "ひこう") return 0xA59F;
+  if (type == "エスパー") return 0xFC9C;
+  if (type == "むし") return 0xA445;
+  if (type == "いわ") return 0xBC68;
+  if (type == "ゴースト") return 0x6A95;
+  if (type == "ドラゴン") return 0x6B5F;
+  if (type == "あく") return 0x62EC;
+  if (type == "はがね") return 0xA534;
+  if (type == "フェアリー") return 0xFDB8;
+  return COLOR_PK_TEXT;
+}
 }
 
 UIController::UIController() : sprite(nullptr) {}
@@ -303,10 +325,11 @@ void UIController::drawInfoRow(const char* label, const String& value, int y) {
 }
 
 void UIController::drawTypeBadge(const String& type, int x, int y) {
-  sprite->fillRoundRect(x, y, 60, 18, 4, COLOR_PK_TEXT);
+  const uint16_t bg = typeBadgeColor(type);
+  sprite->fillRoundRect(x, y, 68, 20, 5, bg);
   sprite->setTextColor(COLOR_PK_CARD);
   sprite->setFont(&fonts::efontJA_12);
-  sprite->drawCenterString(type, x + 30, y + 2);
+  sprite->drawCenterString(type, x + 34, y + 3);
 }
 
 void UIController::drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines) {
