@@ -1,5 +1,21 @@
 #include "UIController.h"
 
+namespace {
+uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
+  const uint8_t fgR = (fg >> 11) & 0x1F;
+  const uint8_t fgG = (fg >> 5) & 0x3F;
+  const uint8_t fgB = fg & 0x1F;
+  const uint8_t bgR = (bg >> 11) & 0x1F;
+  const uint8_t bgG = (bg >> 5) & 0x3F;
+  const uint8_t bgB = bg & 0x1F;
+
+  const uint8_t outR = ((fgR * alpha) + (bgR * (255 - alpha))) / 255;
+  const uint8_t outG = ((fgG * alpha) + (bgG * (255 - alpha))) / 255;
+  const uint8_t outB = ((fgB * alpha) + (bgB * (255 - alpha))) / 255;
+  return (outR << 11) | (outG << 5) | outB;
+}
+}
+
 UIController::UIController() : sprite(nullptr) {}
 
 UIController::~UIController() {
@@ -25,9 +41,40 @@ void UIController::drawBase() {
   sprite->fillScreen(COLOR_PK_BG);
 }
 
-void UIController::drawHeader(const PokemonDetail& pk) {
+void UIController::drawPressedOverlay(int x, int y, int w, int h, int radius) {
+  const uint16_t overlay = blend565(COLOR_PK_SUB, COLOR_PK_CARD, 48);
+  if (radius > 0) {
+    sprite->fillRoundRect(x, y, w, h, radius, overlay);
+  } else {
+    sprite->fillRect(x, y, w, h, overlay);
+  }
+}
+
+void UIController::drawActionButton(
+    int x,
+    int y,
+    int w,
+    int h,
+    const char* label,
+    uint16_t fillColor,
+    uint16_t textColor,
+    bool pressed,
+    uint16_t pressedFillColor,
+    uint16_t borderColor) {
+  const uint16_t bg = pressed ? pressedFillColor : fillColor;
+  sprite->fillRoundRect(x, y, w, h, 10, bg);
+  sprite->drawRoundRect(x, y, w, h, 10, borderColor);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(textColor);
+  sprite->drawCenterString(label, x + (w / 2), y + ((h - 12) / 2));
+}
+
+void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  if (searchPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
 
   char idStr[12];
   snprintf(idStr, sizeof(idStr), "No.%04d", pk.id);
@@ -38,16 +85,18 @@ void UIController::drawHeader(const PokemonDetail& pk) {
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->drawString(pk.name, 22, 26);
-
-  sprite->setFont(&fonts::efontJA_10);
-  sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("SEARCH", SCREEN_WIDTH - 64, 20);
 }
 
 void UIController::drawAppearanceTab(const PokemonDetail& pk) {
   sprite->fillCircle(85, 125, 55, COLOR_PK_CARD);
   sprite->drawCircle(85, 125, 55, COLOR_PK_BORDER);
-  imageLoader.loadAndDisplayPNG(*sprite, pk.id, 35, 75, 100, 100);
+
+  const int imageX = 35;
+  const int imageY = 75;
+  const int imageW = 100;
+  const int imageH = 100;
+
+  imageLoader.loadAndDisplayPNG(*sprite, pk.id, imageX, imageY, imageW, imageH);
   
   int cardX = 165;
   sprite->fillRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_CARD);
@@ -139,6 +188,60 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
   }
 }
 
+void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
+  if (prevPressed) {
+    drawPressedOverlay(0, 0, 40, 204);
+  }
+  if (nextPressed) {
+    drawPressedOverlay(SCREEN_WIDTH - 40, 0, 40, 204);
+  }
+}
+
+void UIController::drawSearchScreen(
+    uint16_t selectedId,
+    bool minusPressed,
+    bool plusPressed,
+    bool cancelPressed,
+    bool openPressed) {
+  sprite->fillRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_CARD);
+  sprite->drawRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_BORDER);
+
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawString("SEARCH", 26, 24);
+
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("えらびたい No. を へんこう", 26, 48);
+
+  drawActionButton(24, 72, 62, 70, "", COLOR_PK_BG, COLOR_PK_TEXT, minusPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(minusPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+  sprite->drawCenterString("-", 55, 98);
+
+  drawActionButton(234, 72, 62, 70, "", COLOR_PK_BG, COLOR_PK_TEXT, plusPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(plusPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+  sprite->drawCenterString("+", 265, 98);
+
+  sprite->fillRoundRect(98, 72, 124, 70, 12, COLOR_PK_BG);
+  sprite->drawRoundRect(98, 72, 124, 70, 12, COLOR_PK_BORDER);
+  char idText[12];
+  snprintf(idText, sizeof(idText), "%04d", selectedId);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_RED);
+  sprite->drawCenterString(idText, 160, 90);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawCenterString("POKEMON NO.", 160, 118);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("番号をえらんで", 160, 164);
+  sprite->drawCenterString("ひらく をタップ", 160, 186);
+
+  drawActionButton(24, 196, 126, 34, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(170, 196, 126, 34, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+}
+
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
   sprite->setFont(&fonts::efontJA_10);
   sprite->setTextColor(COLOR_PK_TEXT);
@@ -174,14 +277,17 @@ void UIController::drawWrappedText(const String& text, int x, int y, int maxWidt
   }
 }
 
-void UIController::drawTabBar(TabType activeTab) {
+void UIController::drawTabBar(TabType activeTab, int pressedTab) {
   const char* labels[] = {"すがた", "せつめい", "からだ", "とくせい", "しんか"};
   int tabW = SCREEN_WIDTH / 5;
   for (int i = 0; i < 5; i++) {
-    uint16_t bg = (i == (int)activeTab) ? COLOR_PK_RED : COLOR_PK_CARD;
-    uint16_t tx = (i == (int)activeTab) ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    const bool isActive = (i == (int)activeTab);
+    const bool isPressed = (i == pressedTab);
+    uint16_t bg = isPressed ? COLOR_PK_TEXT : (isActive ? COLOR_PK_RED : COLOR_PK_CARD);
+    uint16_t tx = (isActive || isPressed) ? COLOR_PK_CARD : COLOR_PK_TEXT;
     sprite->fillRect(i * tabW, 204, tabW, TAB_BAR_H, bg);
     sprite->drawRect(i * tabW, 204, tabW, TAB_BAR_H, COLOR_PK_BORDER);
+    sprite->setFont(&fonts::efontJA_10);
     sprite->setTextColor(tx);
     sprite->drawCenterString(labels[i], (i * tabW) + (tabW / 2), 214);
   }
