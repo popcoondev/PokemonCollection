@@ -263,6 +263,11 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
 }
 
 void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->drawCenterString("◀", 18, 50);
+  sprite->drawCenterString("▶", SCREEN_WIDTH - 18, 50);
+
   if (prevPressed) {
     drawPressedOverlay(0, 0, 40, 204);
   }
