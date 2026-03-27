@@ -51,6 +51,30 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (ty >= 194) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
   return PRESS_NONE;
 }
+
+enum PendingActionType {
+  ACTION_NONE = 0,
+  ACTION_OPEN_SEARCH,
+  ACTION_SEARCH_MINUS,
+  ACTION_SEARCH_PLUS,
+  ACTION_SEARCH_CANCEL,
+  ACTION_SEARCH_OPEN,
+  ACTION_NAV_PREV,
+  ACTION_NAV_NEXT,
+  ACTION_SET_TAB,
+};
+
+struct PendingAction {
+  PendingActionType type = ACTION_NONE;
+  int value = 0;
+};
+
+PendingAction makePendingAction(PendingActionType type, int value = 0) {
+  PendingAction action;
+  action.type = type;
+  action.value = value;
+  return action;
+}
 }
 
 void setup() {
@@ -78,75 +102,139 @@ void setup() {
 
 void loop() {
   M5.update();
+  static PressedControl heldControl = PRESS_NONE;
+  static PressedControl latchedControl = PRESS_NONE;
+  static PendingAction pendingAction;
+  static bool needsRedraw = true;
+  static TabType lastRenderedTab = TAB_APPEARANCE;
+
   PressedControl pressedControl = PRESS_NONE;
 
   if (M5.Touch.getCount() > 0) {
     auto t = M5.Touch.getDetail(0);
     pressedControl = getPressedControl(t.x, t.y, screenMode);
+    if (pressedControl != heldControl) {
+      heldControl = pressedControl;
+      if (latchedControl == PRESS_NONE) {
+        needsRedraw = true;
+      }
+    }
     if (t.wasClicked()) {
+      latchedControl = pressedControl;
+      needsRedraw = true;
+
       if (screenMode == SCREEN_SEARCH) {
         if (pressedControl == PRESS_SEARCH_MINUS && searchId > MIN_POKEMON_ID) {
-          searchId--;
-          dataMgr.loadPokemonDetail(searchId);
+          pendingAction = makePendingAction(ACTION_SEARCH_MINUS);
         } else if (pressedControl == PRESS_SEARCH_PLUS && searchId < MAX_POKEMON_ID) {
-          searchId++;
-          dataMgr.loadPokemonDetail(searchId);
+          pendingAction = makePendingAction(ACTION_SEARCH_PLUS);
         } else if (pressedControl == PRESS_SEARCH_CANCEL) {
-          screenMode = SCREEN_DETAIL;
-          dataMgr.loadPokemonDetail(returnId);
+          pendingAction = makePendingAction(ACTION_SEARCH_CANCEL);
         } else if (pressedControl == PRESS_SEARCH_OPEN) {
-          currentId = searchId;
-          returnId = currentId;
-          screenMode = SCREEN_DETAIL;
+          pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
-          screenMode = SCREEN_SEARCH;
-          returnId = currentId;
-          searchId = currentId;
-          dataMgr.loadPokemonDetail(searchId);
+          pendingAction = makePendingAction(ACTION_OPEN_SEARCH);
         } else if (pressedControl == PRESS_NAV_PREV && currentId > MIN_POKEMON_ID) {
-          currentId--;
-          dataMgr.loadPokemonDetail(currentId);
+          pendingAction = makePendingAction(ACTION_NAV_PREV);
         } else if (pressedControl == PRESS_NAV_NEXT && currentId < MAX_POKEMON_ID) {
-          currentId++;
-          dataMgr.loadPokemonDetail(currentId);
+          pendingAction = makePendingAction(ACTION_NAV_NEXT);
         } else if (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4)) {
-          currentTab = static_cast<TabType>(pressedControl - PRESS_TAB_0);
+          pendingAction = makePendingAction(ACTION_SET_TAB, pressedControl - PRESS_TAB_0);
         }
       }
     }
+  } else if (heldControl != PRESS_NONE) {
+    heldControl = PRESS_NONE;
+    if (latchedControl == PRESS_NONE) {
+      needsRedraw = true;
+    }
   }
 
-  ui.drawBase();
-  const auto& pk = dataMgr.getCurrentPokemon();
-
-  if (screenMode == SCREEN_SEARCH) {
-    ui.drawSearchScreen(
-        pk,
-        searchId,
-        pressedControl == PRESS_SEARCH_MINUS,
-        pressedControl == PRESS_SEARCH_PLUS,
-        pressedControl == PRESS_SEARCH_CANCEL,
-        pressedControl == PRESS_SEARCH_OPEN);
-  } else {
-    ui.drawHeader(pk, pressedControl == PRESS_SEARCH_HEADER);
-    
-    if (currentTab == TAB_APPEARANCE) ui.drawAppearanceTab(pk);
-    else if (currentTab == TAB_DESCRIPTION) ui.drawDescriptionTab(pk);
-    else if (currentTab == TAB_BODY) ui.drawBodyTab(pk);
-    else if (currentTab == TAB_ABILITY) ui.drawAbilityTab(pk);
-    else ui.drawEvolutionTab(pk);
-
-    ui.drawDetailNavigation(pressedControl == PRESS_NAV_PREV, pressedControl == PRESS_NAV_NEXT);
-
-    ui.drawTabBar(
-        currentTab,
-        (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4))
-            ? (pressedControl - PRESS_TAB_0)
-            : -1);
+  const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
+  const bool tabChanged = lastRenderedTab != currentTab;
+  if (tabChanged) {
+    needsRedraw = true;
+    lastRenderedTab = currentTab;
   }
 
-  ui.pushToDisplay();
+  if (needsRedraw) {
+    ui.drawBase();
+    const auto& pk = dataMgr.getCurrentPokemon();
+
+    if (screenMode == SCREEN_SEARCH) {
+      ui.drawSearchScreen(
+          searchId,
+          visualControl == PRESS_SEARCH_MINUS,
+          visualControl == PRESS_SEARCH_PLUS,
+          visualControl == PRESS_SEARCH_CANCEL,
+          visualControl == PRESS_SEARCH_OPEN);
+    } else {
+      ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
+      
+      if (currentTab == TAB_APPEARANCE) ui.drawAppearanceTab(pk);
+      else if (currentTab == TAB_DESCRIPTION) ui.drawDescriptionTab(pk);
+      else if (currentTab == TAB_BODY) ui.drawBodyTab(pk);
+      else if (currentTab == TAB_ABILITY) ui.drawAbilityTab(pk);
+      else ui.drawEvolutionTab(pk);
+
+      ui.drawDetailNavigation(visualControl == PRESS_NAV_PREV, visualControl == PRESS_NAV_NEXT);
+
+      ui.drawTabBar(
+          currentTab,
+          (visualControl >= PRESS_TAB_0 && visualControl <= (PRESS_TAB_0 + 4))
+              ? (visualControl - PRESS_TAB_0)
+              : -1);
+    }
+
+    ui.pushToDisplay();
+    needsRedraw = false;
+  }
+
+  if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
+    switch (pendingAction.type) {
+      case ACTION_OPEN_SEARCH:
+        screenMode = SCREEN_SEARCH;
+        returnId = currentId;
+        searchId = currentId;
+        break;
+      case ACTION_SEARCH_MINUS:
+        searchId--;
+        break;
+      case ACTION_SEARCH_PLUS:
+        searchId++;
+        break;
+      case ACTION_SEARCH_CANCEL:
+        screenMode = SCREEN_DETAIL;
+        break;
+      case ACTION_SEARCH_OPEN:
+        currentId = searchId;
+        returnId = currentId;
+        screenMode = SCREEN_DETAIL;
+        dataMgr.loadPokemonDetail(currentId);
+        break;
+      case ACTION_NAV_PREV:
+        currentId--;
+        dataMgr.loadPokemonDetail(currentId);
+        break;
+      case ACTION_NAV_NEXT:
+        currentId++;
+        dataMgr.loadPokemonDetail(currentId);
+        break;
+      case ACTION_SET_TAB:
+        currentTab = static_cast<TabType>(pendingAction.value);
+        break;
+      case ACTION_NONE:
+        break;
+    }
+
+    pendingAction = {};
+    latchedControl = PRESS_NONE;
+    if (heldControl == PRESS_NONE) {
+      needsRedraw = true;
+    }
+  }
+
   delay(10);
 }

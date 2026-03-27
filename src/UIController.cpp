@@ -192,7 +192,6 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
 }
 
 void UIController::drawSearchScreen(
-    const PokemonDetail& pk,
     uint16_t selectedId,
     bool minusPressed,
     bool plusPressed,
@@ -229,19 +228,9 @@ void UIController::drawSearchScreen(
   sprite->setFont(&fonts::efontJA_10);
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawCenterString("POKEMON NO.", 160, 118);
-
-  sprite->fillCircle(82, 185, 42, COLOR_PK_BG);
-  sprite->drawCircle(82, 185, 42, COLOR_PK_BORDER);
-  imageLoader.loadAndDisplayPNG(*sprite, pk.id, 48, 151, 68, 68);
-
-  sprite->fillRoundRect(136, 152, 160, 66, 10, COLOR_PK_BG);
-  sprite->drawRoundRect(136, 152, 160, 66, 10, COLOR_PK_BORDER);
-  sprite->setFont(&fonts::efontJA_10);
-  sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("プレビュー", 148, 164);
-  sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
-  drawWrappedText(pk.name, 148, 186, 136, 18, 2);
+  sprite->drawCenterString("番号をえらんで", 160, 164);
+  sprite->drawCenterString("ひらく をタップ", 160, 186);
 
   drawActionButton(24, 196, 126, 34, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(170, 196, 126, 34, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);

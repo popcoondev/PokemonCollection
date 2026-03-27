@@ -22,7 +22,6 @@ public:
   void drawEvolutionTab(const PokemonDetail& pk);
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawSearchScreen(
-      const PokemonDetail& pk,
       uint16_t selectedId,
       bool minusPressed,
       bool plusPressed,
