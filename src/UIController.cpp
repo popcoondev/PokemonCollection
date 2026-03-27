@@ -143,13 +143,10 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
 }
 
 void UIController::drawAppearanceTab(const PokemonDetail& pk) {
-  sprite->fillCircle(85, 125, 55, COLOR_PK_CARD);
-  sprite->drawCircle(85, 125, 55, COLOR_PK_BORDER);
-
-  const int imageX = 35;
-  const int imageY = 75;
-  const int imageW = 100;
-  const int imageH = 100;
+  const int imageX = 6;
+  const int imageY = 54;
+  const int imageW = 140;
+  const int imageH = 140;
 
   imageLoader.loadAndDisplayPNG(*sprite, pk.id, imageX, imageY, imageW, imageH);
   
