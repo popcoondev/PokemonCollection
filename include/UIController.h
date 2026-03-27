@@ -20,6 +20,7 @@ public:
   void drawBodyTab(const PokemonDetail& pk);
   void drawAbilityTab(const PokemonDetail& pk);
   void drawEvolutionTab(const PokemonDetail& pk);
+  void drawSearchScreen(const PokemonDetail& pk, uint16_t selectedId);
   
   void pushToDisplay();
 

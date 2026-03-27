@@ -145,6 +145,63 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
   }
 }
 
+void UIController::drawSearchScreen(const PokemonDetail& pk, uint16_t selectedId) {
+  sprite->fillRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_CARD);
+  sprite->drawRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_BORDER);
+
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawString("SEARCH", 26, 24);
+
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("えらびたい No. を へんこう", 26, 48);
+
+  sprite->fillRoundRect(24, 72, 62, 70, 12, COLOR_PK_BG);
+  sprite->drawRoundRect(24, 72, 62, 70, 12, COLOR_PK_BORDER);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->drawCenterString("-", 55, 98);
+
+  sprite->fillRoundRect(234, 72, 62, 70, 12, COLOR_PK_BG);
+  sprite->drawRoundRect(234, 72, 62, 70, 12, COLOR_PK_BORDER);
+  sprite->drawCenterString("+", 265, 98);
+
+  sprite->fillRoundRect(98, 72, 124, 70, 12, COLOR_PK_BG);
+  sprite->drawRoundRect(98, 72, 124, 70, 12, COLOR_PK_BORDER);
+  char idText[12];
+  snprintf(idText, sizeof(idText), "%04d", selectedId);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_RED);
+  sprite->drawCenterString(idText, 160, 90);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawCenterString("POKEMON NO.", 160, 118);
+
+  sprite->fillCircle(82, 185, 42, COLOR_PK_BG);
+  sprite->drawCircle(82, 185, 42, COLOR_PK_BORDER);
+  imageLoader.loadAndDisplayPNG(*sprite, pk.id, 48, 151, 68, 68);
+
+  sprite->fillRoundRect(136, 152, 160, 66, 10, COLOR_PK_BG);
+  sprite->drawRoundRect(136, 152, 160, 66, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("プレビュー", 148, 164);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  drawWrappedText(pk.name, 148, 186, 136, 18, 2);
+
+  sprite->fillRoundRect(24, 202, 126, 26, 8, COLOR_PK_BG);
+  sprite->fillRoundRect(170, 202, 126, 26, 8, COLOR_PK_RED);
+  sprite->drawRoundRect(24, 202, 126, 26, 8, COLOR_PK_BORDER);
+  sprite->drawRoundRect(170, 202, 126, 26, 8, COLOR_PK_RED);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("もどる", 87, 209);
+  sprite->setTextColor(COLOR_PK_CARD);
+  sprite->drawCenterString("ひらく", 233, 209);
+}
+
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
   sprite->setFont(&fonts::efontJA_10);
   sprite->setTextColor(COLOR_PK_TEXT);
