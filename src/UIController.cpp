@@ -47,7 +47,13 @@ void UIController::drawHeader(const PokemonDetail& pk) {
 void UIController::drawAppearanceTab(const PokemonDetail& pk) {
   sprite->fillCircle(85, 125, 55, COLOR_PK_CARD);
   sprite->drawCircle(85, 125, 55, COLOR_PK_BORDER);
-  imageLoader.loadAndDisplayPNG(*sprite, pk.id, 35, 75, 100, 100);
+
+  const int imageX = 35;
+  const int imageY = 75;
+  const int imageW = 100;
+  const int imageH = 100;
+
+  imageLoader.loadAndDisplayPNG(*sprite, pk.id, imageX, imageY, imageW, imageH);
   
   int cardX = 165;
   sprite->fillRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_CARD);

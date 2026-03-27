@@ -2,8 +2,9 @@
 #define IMAGE_LOADER_H
 
 #include <Arduino.h>
-#include <M5Unified.h>
 #include <FS.h>
+#include <SD.h>
+#include <M5Unified.h>
 #include "Config.h"
 
 // ========== ImageLoader Class ==========
@@ -26,7 +27,8 @@ public:
 
 private:
   // Helper functions
-  bool openPNGFile(uint16_t id, char* filename, uint16_t filenameSize);
+  bool resolveImagePath(uint16_t id, char* filename, uint16_t filenameSize);
+  bool readPngSize(const char* path, uint32_t& width, uint32_t& height);
 };
 
 #endif // IMAGE_LOADER_H

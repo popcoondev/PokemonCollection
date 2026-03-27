@@ -1,10 +1,10 @@
 #ifndef UI_CONTROLLER_H
 #define UI_CONTROLLER_H
 
+#include "ImageLoader.h"
 #include <M5Unified.h>
 #include "Config.h"
 #include "DataManager.h"
-#include "ImageLoader.h"
 
 class UIController {
 public:
