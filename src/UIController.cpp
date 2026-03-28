@@ -281,10 +281,12 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
 void UIController::drawSearchScreen(
     uint16_t selectedId,
     const String& selectedName,
-    bool minusPressed,
-    bool plusPressed,
+    int pressedDigitDelta,
     bool cancelPressed,
     bool openPressed) {
+  const int digitX[4] = {70, 115, 160, 205};
+  const int digitStep[4] = {1000, 100, 10, 1};
+
   sprite->fillRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_CARD);
   sprite->drawRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_BORDER);
 
@@ -296,33 +298,35 @@ void UIController::drawSearchScreen(
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawString("えらびたい No. を へんこう", 26, 48);
 
-  drawActionButton(24, 72, 62, 70, "", COLOR_PK_BG, COLOR_PK_TEXT, minusPressed, COLOR_PK_RED, COLOR_PK_BORDER);
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(minusPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-  sprite->drawCenterString("-", 55, 98);
-
-  drawActionButton(234, 72, 62, 70, "", COLOR_PK_BG, COLOR_PK_TEXT, plusPressed, COLOR_PK_RED, COLOR_PK_BORDER);
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(plusPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-  sprite->drawCenterString("+", 265, 98);
-
-  sprite->fillRoundRect(98, 72, 124, 70, 12, COLOR_PK_BG);
-  sprite->drawRoundRect(98, 72, 124, 70, 12, COLOR_PK_BORDER);
   char idText[12];
   snprintf(idText, sizeof(idText), "%04d", selectedId);
+  const bool validId = selectedId >= MIN_POKEMON_ID && selectedId <= MAX_POKEMON_ID && selectedName.length() > 0;
+
+  for (int i = 0; i < 4; ++i) {
+    const bool upPressed = pressedDigitDelta == digitStep[i];
+    const bool downPressed = pressedDigitDelta == -digitStep[i];
+
+    drawActionButton(digitX[i], 66, 32, 28, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(upPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+    sprite->drawCenterString("▲", digitX[i] + 16, 72);
+
+    sprite->fillRoundRect(digitX[i], 100, 32, 42, 8, COLOR_PK_BG);
+    sprite->drawRoundRect(digitX[i], 100, 32, 42, 8, COLOR_PK_BORDER);
+    char digitText[2] = {idText[i], '\0'};
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(COLOR_PK_RED);
+    sprite->drawCenterString(digitText, digitX[i] + 16, 112);
+
+    drawActionButton(digitX[i], 148, 32, 28, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(downPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+    sprite->drawCenterString("▼", digitX[i] + 16, 154);
+  }
+
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_RED);
-  sprite->drawCenterString(idText, 160, 90);
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawCenterString("POKEMON NO.", 160, 118);
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawCenterString(selectedName, 160, 152);
-  sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->drawCenterString("番号をえらんで", 160, 176);
-  sprite->drawCenterString("ひらく をタップ", 160, 194);
+  sprite->setTextColor(validId ? COLOR_PK_TEXT : COLOR_PK_SUB);
+  sprite->drawCenterString(validId ? selectedName : "データなし", 160, 178);
 
   drawActionButton(24, 196, 126, 34, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(170, 196, 126, 34, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);

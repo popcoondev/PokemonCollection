@@ -24,8 +24,7 @@ public:
   void drawSearchScreen(
       uint16_t selectedId,
       const String& selectedName,
-      bool minusPressed,
-      bool plusPressed,
+      int pressedDigitDelta,
       bool cancelPressed,
       bool openPressed);
   

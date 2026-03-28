@@ -27,8 +27,14 @@ bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
 enum PressedControl {
   PRESS_NONE = 0,
   PRESS_SEARCH_HEADER,
-  PRESS_SEARCH_MINUS,
-  PRESS_SEARCH_PLUS,
+  PRESS_SEARCH_DIGIT_UP_0,
+  PRESS_SEARCH_DIGIT_UP_1,
+  PRESS_SEARCH_DIGIT_UP_2,
+  PRESS_SEARCH_DIGIT_UP_3,
+  PRESS_SEARCH_DIGIT_DOWN_0,
+  PRESS_SEARCH_DIGIT_DOWN_1,
+  PRESS_SEARCH_DIGIT_DOWN_2,
+  PRESS_SEARCH_DIGIT_DOWN_3,
   PRESS_SEARCH_CANCEL,
   PRESS_SEARCH_OPEN,
   PRESS_NAV_PREV,
@@ -39,8 +45,11 @@ enum PressedControl {
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_SEARCH) {
-    if (hitTest(tx, ty, 24, 72, 62, 70, 10)) return PRESS_SEARCH_MINUS;
-    if (hitTest(tx, ty, 234, 72, 62, 70, 10)) return PRESS_SEARCH_PLUS;
+    const int digitX[4] = {70, 115, 160, 205};
+    for (int i = 0; i < 4; ++i) {
+      if (hitTest(tx, ty, digitX[i], 66, 32, 28, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
+      if (hitTest(tx, ty, digitX[i], 148, 32, 28, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
+    }
     if (hitTest(tx, ty, 24, 196, 126, 34, 10)) return PRESS_SEARCH_CANCEL;
     if (hitTest(tx, ty, 170, 196, 126, 34, 10)) return PRESS_SEARCH_OPEN;
     return PRESS_NONE;
@@ -59,8 +68,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 enum PendingActionType {
   ACTION_NONE = 0,
   ACTION_OPEN_SEARCH,
-  ACTION_SEARCH_MINUS,
-  ACTION_SEARCH_PLUS,
+  ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
   ACTION_NAV_PREV,
@@ -79,6 +87,12 @@ PendingAction makePendingAction(PendingActionType type, int value = 0) {
   action.type = type;
   action.value = value;
   return action;
+}
+
+uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction) {
+  const int digit = (currentValue / placeValue) % 10;
+  const int nextDigit = (digit + direction + 10) % 10;
+  return static_cast<uint16_t>(currentValue + ((nextDigit - digit) * placeValue));
 }
 }
 
@@ -129,10 +143,12 @@ void loop() {
       needsRedraw = true;
 
       if (screenMode == SCREEN_SEARCH) {
-        if (pressedControl == PRESS_SEARCH_MINUS) {
-          pendingAction = makePendingAction(ACTION_SEARCH_MINUS);
-        } else if (pressedControl == PRESS_SEARCH_PLUS) {
-          pendingAction = makePendingAction(ACTION_SEARCH_PLUS);
+        if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+          const int digitStep[4] = {1000, 100, 10, 1};
+          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, digitStep[pressedControl - PRESS_SEARCH_DIGIT_UP_0]);
+        } else if (pressedControl >= PRESS_SEARCH_DIGIT_DOWN_0 && pressedControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
+          const int digitStep[4] = {1000, 100, 10, 1};
+          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, -digitStep[pressedControl - PRESS_SEARCH_DIGIT_DOWN_0]);
         } else if (pressedControl == PRESS_SEARCH_CANCEL) {
           pendingAction = makePendingAction(ACTION_SEARCH_CANCEL);
         } else if (pressedControl == PRESS_SEARCH_OPEN) {
@@ -173,11 +189,18 @@ void loop() {
     const auto& pk = dataMgr.getCurrentPokemon();
 
     if (screenMode == SCREEN_SEARCH) {
+      int pressedDigitDelta = 0;
+      if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
+      } else if (visualControl >= PRESS_SEARCH_DIGIT_DOWN_0 && visualControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
+      }
       ui.drawSearchScreen(
           searchId,
           dataMgr.getPokemonName(searchId),
-          visualControl == PRESS_SEARCH_MINUS,
-          visualControl == PRESS_SEARCH_PLUS,
+          pressedDigitDelta,
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
     } else {
@@ -209,20 +232,24 @@ void loop() {
         returnId = currentId;
         searchId = currentId;
         break;
-      case ACTION_SEARCH_MINUS:
-        searchId = (searchId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (searchId - 1);
-        break;
-      case ACTION_SEARCH_PLUS:
-        searchId = (searchId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (searchId + 1);
+      case ACTION_SEARCH_ADJUST:
+        searchId = adjustSearchDigit(
+            searchId,
+            pendingAction.value > 0 ? pendingAction.value : -pendingAction.value,
+            pendingAction.value > 0 ? 1 : -1);
         break;
       case ACTION_SEARCH_CANCEL:
         screenMode = SCREEN_DETAIL;
         break;
       case ACTION_SEARCH_OPEN:
-        currentId = searchId;
-        returnId = currentId;
-        screenMode = SCREEN_DETAIL;
-        dataMgr.loadPokemonDetail(currentId);
+        if (searchId >= MIN_POKEMON_ID
+            && searchId <= MAX_POKEMON_ID
+            && dataMgr.getPokemonName(searchId).length() > 0) {
+          currentId = searchId;
+          returnId = currentId;
+          screenMode = SCREEN_DETAIL;
+          dataMgr.loadPokemonDetail(currentId);
+        }
         break;
       case ACTION_NAV_PREV:
         currentId = (currentId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (currentId - 1);
