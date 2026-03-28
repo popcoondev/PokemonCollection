@@ -3,10 +3,33 @@
 
 DataManager::DataManager() {
   currentPokemon = {};
+  pokemonNames.resize(MAX_POKEMON_ID + 1);
 }
 
 bool DataManager::begin() {
-  return SD.exists("/pokemon");
+  return SD.exists("/pokemon") && loadPokemonIndex();
+}
+
+bool DataManager::loadPokemonIndex() {
+  File file = SD.open("/pokemon/index.json");
+  if (!file) return false;
+
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, file);
+  file.close();
+  if (error || !doc.is<JsonArray>()) return false;
+
+  for (auto& name : pokemonNames) {
+    name = "";
+  }
+
+  for (JsonObject entry : doc.as<JsonArray>()) {
+    const uint16_t id = static_cast<uint16_t>(entry["id"] | 0);
+    if (id >= pokemonNames.size()) continue;
+    pokemonNames[id] = entry["n"].as<String>();
+  }
+
+  return true;
 }
 
 bool DataManager::loadPokemonDetail(uint16_t id) {
@@ -41,4 +64,10 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
 
   file.close();
   return true;
+}
+
+const String& DataManager::getPokemonName(uint16_t id) const {
+  static const String emptyName = "";
+  if (id >= pokemonNames.size()) return emptyName;
+  return pokemonNames[id];
 }

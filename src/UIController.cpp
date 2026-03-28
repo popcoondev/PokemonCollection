@@ -280,6 +280,7 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
 
 void UIController::drawSearchScreen(
     uint16_t selectedId,
+    const String& selectedName,
     bool minusPressed,
     bool plusPressed,
     bool cancelPressed,
@@ -315,9 +316,13 @@ void UIController::drawSearchScreen(
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawCenterString("POKEMON NO.", 160, 118);
+  sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawCenterString("番号をえらんで", 160, 164);
-  sprite->drawCenterString("ひらく をタップ", 160, 186);
+  sprite->drawCenterString(selectedName, 160, 152);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->drawCenterString("番号をえらんで", 160, 176);
+  sprite->drawCenterString("ひらく をタップ", 160, 194);
 
   drawActionButton(24, 196, 126, 34, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(170, 196, 126, 34, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
