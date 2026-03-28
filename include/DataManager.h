@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <vector>
 #include <ArduinoJson.h>
+#include "Config.h"
 
 struct PokemonDetail {
   struct Ability {
@@ -32,9 +33,12 @@ public:
   bool begin();
   bool loadPokemonDetail(uint16_t id);
   const PokemonDetail& getCurrentPokemon() const { return currentPokemon; }
+  const String& getPokemonName(uint16_t id) const;
 
 private:
+  bool loadPokemonIndex();
   PokemonDetail currentPokemon;
+  std::vector<String> pokemonNames;
 };
 
 #endif

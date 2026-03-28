@@ -23,6 +23,7 @@ public:
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawSearchScreen(
       uint16_t selectedId,
+      const String& selectedName,
       bool minusPressed,
       bool plusPressed,
       bool cancelPressed,

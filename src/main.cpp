@@ -175,6 +175,7 @@ void loop() {
     if (screenMode == SCREEN_SEARCH) {
       ui.drawSearchScreen(
           searchId,
+          dataMgr.getPokemonName(searchId),
           visualControl == PRESS_SEARCH_MINUS,
           visualControl == PRESS_SEARCH_PLUS,
           visualControl == PRESS_SEARCH_CANCEL,
