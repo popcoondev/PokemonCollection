@@ -240,7 +240,7 @@ void UIController::drawAbilityTab(const PokemonDetail& pk) {
   }
 }
 
-void UIController::drawEvolutionTab(const PokemonDetail& pk) {
+void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex) {
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
 
@@ -259,6 +259,10 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk) {
     sprite->drawCenterString(idStr, x + 42, y + 40);
     sprite->setTextColor(COLOR_PK_TEXT);
     drawWrappedText(pk.evolutions[i].name, x + 8, y + 56, 68, 14, 2);
+
+    if (static_cast<int>(i) == pressedEvolutionIndex) {
+      drawPressedOverlay(x, y, 84, 80, 8);
+    }
 
     x += 96;
   }
