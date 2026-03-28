@@ -19,7 +19,7 @@ public:
   void drawDescriptionTab(const PokemonDetail& pk);
   void drawBodyTab(const PokemonDetail& pk);
   void drawAbilityTab(const PokemonDetail& pk);
-  void drawEvolutionTab(const PokemonDetail& pk);
+  void drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex = -1);
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawSearchScreen(
       uint16_t selectedId,

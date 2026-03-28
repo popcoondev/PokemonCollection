@@ -210,7 +210,11 @@ void loop() {
       else if (currentTab == TAB_DESCRIPTION) ui.drawDescriptionTab(pk);
       else if (currentTab == TAB_BODY) ui.drawBodyTab(pk);
       else if (currentTab == TAB_ABILITY) ui.drawAbilityTab(pk);
-      else ui.drawEvolutionTab(pk);
+      else ui.drawEvolutionTab(
+          pk,
+          (visualControl >= PRESS_EVOLUTION_0 && visualControl <= (PRESS_EVOLUTION_0 + 2))
+              ? (visualControl - PRESS_EVOLUTION_0)
+              : -1);
 
       ui.drawDetailNavigation(visualControl == PRESS_NAV_PREV, visualControl == PRESS_NAV_NEXT);
 
