@@ -40,7 +40,9 @@ enum PressedControl {
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
-  PRESS_TAB_0,
+  PRESS_EVOLUTION_1,
+  PRESS_EVOLUTION_2,
+  PRESS_TAB_0 = 32,
 };
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
@@ -268,6 +270,7 @@ void loop() {
         const int index = pendingAction.value;
         if (index >= 0 && index < static_cast<int>(pk.evolutions.size())) {
           currentId = pk.evolutions[index].id;
+          currentTab = TAB_APPEARANCE;
           dataMgr.loadPokemonDetail(currentId);
         }
         break;
