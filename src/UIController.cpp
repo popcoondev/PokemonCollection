@@ -282,6 +282,12 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
   }
 }
 
+void UIController::drawFullscreenPreview(uint16_t pokemonId) {
+  sprite->fillScreen(TFT_BLACK);
+
+  imageLoader.loadAndDisplayPNG(*sprite, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+}
+
 void UIController::drawSearchScreen(
     uint16_t selectedId,
     const String& selectedName,

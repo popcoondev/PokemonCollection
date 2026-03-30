@@ -14,6 +14,7 @@ TabType currentTab = TAB_APPEARANCE;
 enum ScreenMode {
   SCREEN_DETAIL = 0,
   SCREEN_SEARCH,
+  SCREEN_PREVIEW,
 };
 
 ScreenMode screenMode = SCREEN_DETAIL;
@@ -37,6 +38,7 @@ enum PressedControl {
   PRESS_SEARCH_DIGIT_DOWN_3,
   PRESS_SEARCH_CANCEL,
   PRESS_SEARCH_OPEN,
+  PRESS_APPEARANCE_PREVIEW,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -57,9 +59,14 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_NONE;
   }
 
+  if (mode == SCREEN_PREVIEW) {
+    return PRESS_APPEARANCE_PREVIEW;
+  }
+
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, 204)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, 204)) return PRESS_NAV_NEXT;
+  if (currentTab == TAB_APPEARANCE && hitTest(tx, ty, 46, 54, 100, 140, 0)) return PRESS_APPEARANCE_PREVIEW;
   if (hitTest(tx, ty, 22, 80, 84, 80)) return PRESS_EVOLUTION_0;
   if (hitTest(tx, ty, 118, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 1);
   if (hitTest(tx, ty, 214, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 2);
@@ -73,6 +80,8 @@ enum PendingActionType {
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
+  ACTION_PREVIEW_OPEN,
+  ACTION_PREVIEW_CLOSE,
   ACTION_NAV_PREV,
   ACTION_NAV_NEXT,
   ACTION_OPEN_EVOLUTION,
@@ -156,9 +165,13 @@ void loop() {
         } else if (pressedControl == PRESS_SEARCH_OPEN) {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
         }
+      } else if (screenMode == SCREEN_PREVIEW) {
+        pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
           pendingAction = makePendingAction(ACTION_OPEN_SEARCH);
+        } else if (pressedControl == PRESS_APPEARANCE_PREVIEW) {
+          pendingAction = makePendingAction(ACTION_PREVIEW_OPEN);
         } else if (pressedControl == PRESS_NAV_PREV) {
           pendingAction = makePendingAction(ACTION_NAV_PREV);
         } else if (pressedControl == PRESS_NAV_NEXT) {
@@ -205,6 +218,8 @@ void loop() {
           pressedDigitDelta,
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
+    } else if (screenMode == SCREEN_PREVIEW) {
+      ui.drawFullscreenPreview(currentId);
     } else {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
       
@@ -256,6 +271,12 @@ void loop() {
           screenMode = SCREEN_DETAIL;
           dataMgr.loadPokemonDetail(currentId);
         }
+        break;
+      case ACTION_PREVIEW_OPEN:
+        screenMode = SCREEN_PREVIEW;
+        break;
+      case ACTION_PREVIEW_CLOSE:
+        screenMode = SCREEN_DETAIL;
         break;
       case ACTION_NAV_PREV:
         currentId = (currentId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (currentId - 1);
