@@ -285,10 +285,12 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
   }
 }
 
-void UIController::drawFullscreenPreview(uint16_t pokemonId) {
+void UIController::drawFullscreenPreview(bool drawImage, uint16_t pokemonId) {
   sprite->fillScreen(TFT_BLACK);
 
-  imageLoader.loadAndDisplayPNG(*sprite, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+  if (drawImage) {
+    imageLoader.loadAndDisplayPNG(*sprite, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+  }
 }
 
 void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
@@ -309,6 +311,19 @@ void UIController::redrawDetailNavigationToDisplay() {
   M5.Display.setFont(&fonts::efontJA_12);
   M5.Display.drawCenterString("◀", 18, 50);
   M5.Display.drawCenterString("▶", SCREEN_WIDTH - 18, 50);
+}
+
+void UIController::blitPreviewImageToCanvas(LGFX_Sprite& imageSprite) {
+  sprite->pushImage(
+      0,
+      0,
+      SCREEN_WIDTH,
+      SCREEN_HEIGHT,
+      static_cast<const uint16_t*>(imageSprite.getBuffer()));
+}
+
+void UIController::pushPreviewImageToDisplay(LGFX_Sprite& imageSprite) {
+  imageSprite.pushSprite(&M5.Display, 0, 0);
 }
 
 void UIController::drawSearchScreen(

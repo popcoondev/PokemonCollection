@@ -40,6 +40,17 @@ struct AppearanceImageResult {
   bool success;
 };
 
+struct PreviewImageRequest {
+  uint16_t pokemonId;
+  uint32_t generation;
+};
+
+struct PreviewImageResult {
+  uint16_t pokemonId;
+  uint32_t generation;
+  bool success;
+};
+
 QueueHandle_t appearanceRequestQueue = nullptr;
 QueueHandle_t appearanceResultQueue = nullptr;
 SemaphoreHandle_t appearanceSpriteMutex = nullptr;
@@ -51,6 +62,18 @@ uint32_t appearanceCachedGeneration = 0;
 bool appearanceCacheReady = false;
 uint16_t appearanceRequestedId = 0;
 uint32_t appearanceRequestedGeneration = 0;
+
+QueueHandle_t previewRequestQueue = nullptr;
+QueueHandle_t previewResultQueue = nullptr;
+SemaphoreHandle_t previewSpriteMutex = nullptr;
+TaskHandle_t previewWorkerTaskHandle = nullptr;
+LGFX_Sprite* previewImageSprite = nullptr;
+ImageLoader previewImageLoader;
+uint16_t previewCachedId = 0;
+uint32_t previewCachedGeneration = 0;
+bool previewCacheReady = false;
+uint16_t previewRequestedId = 0;
+uint32_t previewRequestedGeneration = 0;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -184,6 +207,74 @@ void queueAppearanceImageRequest(uint16_t pokemonId) {
   };
   xQueueOverwrite(appearanceRequestQueue, &request);
 }
+
+void renderPreviewImage(LGFX_Sprite& target, uint16_t pokemonId) {
+  target.fillScreen(TFT_BLACK);
+  previewImageLoader.loadAndDisplayPNG(target, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+}
+
+bool ensurePreviewSpriteReady() {
+  if (previewImageSprite != nullptr) {
+    return true;
+  }
+
+  previewImageSprite = new LGFX_Sprite(&M5.Display);
+  if (previewImageSprite == nullptr) {
+    return false;
+  }
+
+  previewImageSprite->setColorDepth(16);
+  previewImageSprite->setPsram(true);
+  if (!previewImageSprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    delete previewImageSprite;
+    previewImageSprite = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+void previewImageWorker(void*) {
+  PreviewImageRequest request;
+
+  for (;;) {
+    if (xQueueReceive(previewRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+      continue;
+    }
+
+    bool success = false;
+    if (ensurePreviewSpriteReady()
+        && xSemaphoreTake(previewSpriteMutex, portMAX_DELAY) == pdTRUE) {
+      renderPreviewImage(*previewImageSprite, request.pokemonId);
+      xSemaphoreGive(previewSpriteMutex);
+      success = true;
+    }
+
+    const PreviewImageResult result = {
+      request.pokemonId,
+      request.generation,
+      success,
+    };
+    xQueueSend(previewResultQueue, &result, 0);
+  }
+}
+
+void queuePreviewImageRequest(uint16_t pokemonId) {
+  if (previewRequestQueue == nullptr) {
+    return;
+  }
+  if (previewRequestedId == pokemonId && previewRequestedGeneration != 0) {
+    return;
+  }
+
+  previewRequestedId = pokemonId;
+  previewRequestedGeneration += 1;
+  const PreviewImageRequest request = {
+    pokemonId,
+    previewRequestedGeneration,
+  };
+  xQueueOverwrite(previewRequestQueue, &request);
+}
 }
 
 void setup() {
@@ -211,12 +302,19 @@ void setup() {
   appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
   appearanceSpriteMutex = xSemaphoreCreateMutex();
   appearanceImageSprite = new LGFX_Sprite(&M5.Display);
+  previewRequestQueue = xQueueCreate(1, sizeof(PreviewImageRequest));
+  previewResultQueue = xQueueCreate(4, sizeof(PreviewImageResult));
+  previewSpriteMutex = xSemaphoreCreateMutex();
 
   if (appearanceRequestQueue == nullptr
       || appearanceResultQueue == nullptr
       || appearanceSpriteMutex == nullptr
       || appearanceImageSprite == nullptr
-      || !appearanceImageLoader.begin()) {
+      || previewRequestQueue == nullptr
+      || previewResultQueue == nullptr
+      || previewSpriteMutex == nullptr
+      || !appearanceImageLoader.begin()
+      || !previewImageLoader.begin()) {
     M5.Display.print("Image Queue Error");
     while(1) delay(100);
   }
@@ -234,6 +332,14 @@ void setup() {
       nullptr,
       1,
       &appearanceWorkerTaskHandle,
+      0);
+  xTaskCreatePinnedToCore(
+      previewImageWorker,
+      "previewImage",
+      8192,
+      nullptr,
+      1,
+      &previewWorkerTaskHandle,
       0);
 
   dataMgr.loadPokemonDetail(currentId);
@@ -329,6 +435,7 @@ void loop() {
         break;
       case ACTION_PREVIEW_OPEN:
         screenMode = SCREEN_PREVIEW;
+        queuePreviewImageRequest(currentId);
         break;
       case ACTION_PREVIEW_CLOSE:
         screenMode = SCREEN_DETAIL;
@@ -398,6 +505,32 @@ void loop() {
     }
   }
 
+  PreviewImageResult previewResult;
+  while (previewResultQueue != nullptr && xQueueReceive(previewResultQueue, &previewResult, 0) == pdTRUE) {
+    if (!previewResult.success) {
+      if (previewResult.generation == previewRequestedGeneration) {
+        previewRequestedId = 0;
+      }
+      continue;
+    }
+    if (previewResult.generation != previewRequestedGeneration) {
+      continue;
+    }
+
+    previewCacheReady = true;
+    previewCachedId = previewResult.pokemonId;
+    previewCachedGeneration = previewResult.generation;
+
+    if (screenMode == SCREEN_PREVIEW
+        && currentId == previewResult.pokemonId
+        && previewImageSprite != nullptr
+        && xSemaphoreTake(previewSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+      ui.blitPreviewImageToCanvas(*previewImageSprite);
+      ui.pushPreviewImageToDisplay(*previewImageSprite);
+      xSemaphoreGive(previewSpriteMutex);
+    }
+  }
+
   if (needsRedraw) {
     ui.drawBase();
     const auto& pk = dataMgr.getCurrentPokemon();
@@ -418,7 +551,17 @@ void loop() {
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
     } else if (screenMode == SCREEN_PREVIEW) {
-      ui.drawFullscreenPreview(currentId);
+      ui.drawFullscreenPreview(false, currentId);
+      if (previewCacheReady
+          && previewCachedId == currentId
+          && previewCachedGeneration == previewRequestedGeneration
+          && previewImageSprite != nullptr
+          && xSemaphoreTake(previewSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+        ui.blitPreviewImageToCanvas(*previewImageSprite);
+        xSemaphoreGive(previewSpriteMutex);
+      } else {
+        queuePreviewImageRequest(currentId);
+      }
     } else {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
 
