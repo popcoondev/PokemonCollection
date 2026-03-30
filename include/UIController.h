@@ -15,13 +15,16 @@ public:
   void drawHeader(const PokemonDetail& pk, bool searchPressed);
   void drawTabBar(TabType activeTab, int pressedTab);
   
-  void drawAppearanceTab(const PokemonDetail& pk);
+  void drawAppearanceTab(const PokemonDetail& pk, bool drawImage = true);
   void drawDescriptionTab(const PokemonDetail& pk);
   void drawBodyTab(const PokemonDetail& pk);
   void drawAbilityTab(const PokemonDetail& pk);
   void drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex = -1);
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawFullscreenPreview(uint16_t pokemonId);
+  void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
+  void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
+  void redrawDetailNavigationToDisplay();
   void drawSearchScreen(
       uint16_t selectedId,
       const String& selectedName,

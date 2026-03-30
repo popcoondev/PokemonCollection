@@ -1,5 +1,9 @@
 #include <M5Unified.h>
 #include <SD.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
+#include <freertos/task.h>
 #include "Config.h"
 #include "DataManager.h"
 #include "UIController.h"
@@ -20,6 +24,34 @@ enum ScreenMode {
 ScreenMode screenMode = SCREEN_DETAIL;
 
 namespace {
+constexpr int kAppearanceImageX = 6;
+constexpr int kAppearanceImageY = 54;
+constexpr int kAppearanceImageW = 140;
+constexpr int kAppearanceImageH = 140;
+
+struct AppearanceImageRequest {
+  uint16_t pokemonId;
+  uint32_t generation;
+};
+
+struct AppearanceImageResult {
+  uint16_t pokemonId;
+  uint32_t generation;
+  bool success;
+};
+
+QueueHandle_t appearanceRequestQueue = nullptr;
+QueueHandle_t appearanceResultQueue = nullptr;
+SemaphoreHandle_t appearanceSpriteMutex = nullptr;
+TaskHandle_t appearanceWorkerTaskHandle = nullptr;
+LGFX_Sprite* appearanceImageSprite = nullptr;
+ImageLoader appearanceImageLoader;
+uint16_t appearanceCachedId = 0;
+uint32_t appearanceCachedGeneration = 0;
+bool appearanceCacheReady = false;
+uint16_t appearanceRequestedId = 0;
+uint32_t appearanceRequestedGeneration = 0;
+
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
       && ty >= (y - pad) && ty <= (y + h + pad);
@@ -105,6 +137,53 @@ uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction)
   const int nextDigit = (digit + direction + 10) % 10;
   return static_cast<uint16_t>(currentValue + ((nextDigit - digit) * placeValue));
 }
+
+void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
+  target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, COLOR_PK_BG);
+  appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH);
+}
+
+void appearanceImageWorker(void*) {
+  AppearanceImageRequest request;
+
+  for (;;) {
+    if (xQueueReceive(appearanceRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+      continue;
+    }
+
+    bool success = false;
+    if (appearanceImageSprite != nullptr
+        && xSemaphoreTake(appearanceSpriteMutex, portMAX_DELAY) == pdTRUE) {
+      renderAppearanceImage(*appearanceImageSprite, request.pokemonId);
+      xSemaphoreGive(appearanceSpriteMutex);
+      success = true;
+    }
+
+    const AppearanceImageResult result = {
+      request.pokemonId,
+      request.generation,
+      success,
+    };
+    xQueueSend(appearanceResultQueue, &result, 0);
+  }
+}
+
+void queueAppearanceImageRequest(uint16_t pokemonId) {
+  if (appearanceRequestQueue == nullptr) {
+    return;
+  }
+  if (appearanceRequestedId == pokemonId && appearanceRequestedGeneration != 0) {
+    return;
+  }
+
+  appearanceRequestedId = pokemonId;
+  appearanceRequestedGeneration += 1;
+  const AppearanceImageRequest request = {
+    pokemonId,
+    appearanceRequestedGeneration,
+  };
+  xQueueOverwrite(appearanceRequestQueue, &request);
+}
 }
 
 void setup() {
@@ -127,6 +206,36 @@ void setup() {
     M5.Display.print("UI Error");
     while(1) delay(100);
   }
+
+  appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
+  appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
+  appearanceSpriteMutex = xSemaphoreCreateMutex();
+  appearanceImageSprite = new LGFX_Sprite(&M5.Display);
+
+  if (appearanceRequestQueue == nullptr
+      || appearanceResultQueue == nullptr
+      || appearanceSpriteMutex == nullptr
+      || appearanceImageSprite == nullptr
+      || !appearanceImageLoader.begin()) {
+    M5.Display.print("Image Queue Error");
+    while(1) delay(100);
+  }
+
+  appearanceImageSprite->setColorDepth(16);
+  if (!appearanceImageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
+    M5.Display.print("Image Sprite Error");
+    while(1) delay(100);
+  }
+
+  xTaskCreatePinnedToCore(
+      appearanceImageWorker,
+      "appearanceImage",
+      6144,
+      nullptr,
+      1,
+      &appearanceWorkerTaskHandle,
+      0);
+
   dataMgr.loadPokemonDetail(currentId);
 }
 
@@ -192,60 +301,6 @@ void loop() {
     }
   }
 
-  const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
-  const bool tabChanged = lastRenderedTab != currentTab;
-  if (tabChanged) {
-    needsRedraw = true;
-    lastRenderedTab = currentTab;
-  }
-
-  if (needsRedraw) {
-    ui.drawBase();
-    const auto& pk = dataMgr.getCurrentPokemon();
-
-    if (screenMode == SCREEN_SEARCH) {
-      int pressedDigitDelta = 0;
-      if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
-        const int digitStep[4] = {1000, 100, 10, 1};
-        pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
-      } else if (visualControl >= PRESS_SEARCH_DIGIT_DOWN_0 && visualControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
-        const int digitStep[4] = {1000, 100, 10, 1};
-        pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
-      }
-      ui.drawSearchScreen(
-          searchId,
-          dataMgr.getPokemonName(searchId),
-          pressedDigitDelta,
-          visualControl == PRESS_SEARCH_CANCEL,
-          visualControl == PRESS_SEARCH_OPEN);
-    } else if (screenMode == SCREEN_PREVIEW) {
-      ui.drawFullscreenPreview(currentId);
-    } else {
-      ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
-      
-      if (currentTab == TAB_APPEARANCE) ui.drawAppearanceTab(pk);
-      else if (currentTab == TAB_DESCRIPTION) ui.drawDescriptionTab(pk);
-      else if (currentTab == TAB_BODY) ui.drawBodyTab(pk);
-      else if (currentTab == TAB_ABILITY) ui.drawAbilityTab(pk);
-      else ui.drawEvolutionTab(
-          pk,
-          (visualControl >= PRESS_EVOLUTION_0 && visualControl <= (PRESS_EVOLUTION_0 + 2))
-              ? (visualControl - PRESS_EVOLUTION_0)
-              : -1);
-
-      ui.drawDetailNavigation(visualControl == PRESS_NAV_PREV, visualControl == PRESS_NAV_NEXT);
-
-      ui.drawTabBar(
-          currentTab,
-          (visualControl >= PRESS_TAB_0 && visualControl <= (PRESS_TAB_0 + 4))
-              ? (visualControl - PRESS_TAB_0)
-              : -1);
-    }
-
-    ui.pushToDisplay();
-    needsRedraw = false;
-  }
-
   if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
     switch (pendingAction.type) {
       case ACTION_OPEN_SEARCH:
@@ -305,9 +360,105 @@ void loop() {
 
     pendingAction = {};
     latchedControl = PRESS_NONE;
-    if (heldControl == PRESS_NONE) {
-      needsRedraw = true;
+    needsRedraw = true;
+  }
+
+  const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
+  const bool tabChanged = lastRenderedTab != currentTab;
+  if (tabChanged) {
+    needsRedraw = true;
+    lastRenderedTab = currentTab;
+  }
+
+  AppearanceImageResult imageResult;
+  while (appearanceResultQueue != nullptr && xQueueReceive(appearanceResultQueue, &imageResult, 0) == pdTRUE) {
+    if (!imageResult.success) {
+      if (imageResult.generation == appearanceRequestedGeneration) {
+        appearanceRequestedId = 0;
+      }
+      continue;
     }
+    if (imageResult.generation != appearanceRequestedGeneration) {
+      continue;
+    }
+
+    appearanceCacheReady = true;
+    appearanceCachedId = imageResult.pokemonId;
+    appearanceCachedGeneration = imageResult.generation;
+
+    if (screenMode == SCREEN_DETAIL
+        && currentTab == TAB_APPEARANCE
+        && currentId == imageResult.pokemonId
+        && appearanceImageSprite != nullptr
+        && xSemaphoreTake(appearanceSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+      ui.blitAppearanceImageToCanvas(*appearanceImageSprite);
+      ui.pushAppearanceImageToDisplay(*appearanceImageSprite);
+      ui.redrawDetailNavigationToDisplay();
+      xSemaphoreGive(appearanceSpriteMutex);
+    }
+  }
+
+  if (needsRedraw) {
+    ui.drawBase();
+    const auto& pk = dataMgr.getCurrentPokemon();
+
+    if (screenMode == SCREEN_SEARCH) {
+      int pressedDigitDelta = 0;
+      if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
+      } else if (visualControl >= PRESS_SEARCH_DIGIT_DOWN_0 && visualControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
+      }
+      ui.drawSearchScreen(
+          searchId,
+          dataMgr.getPokemonName(searchId),
+          pressedDigitDelta,
+          visualControl == PRESS_SEARCH_CANCEL,
+          visualControl == PRESS_SEARCH_OPEN);
+    } else if (screenMode == SCREEN_PREVIEW) {
+      ui.drawFullscreenPreview(currentId);
+    } else {
+      ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
+
+      if (currentTab == TAB_APPEARANCE) {
+        ui.drawAppearanceTab(pk, false);
+        if (appearanceCacheReady
+            && appearanceCachedId == currentId
+            && appearanceCachedGeneration == appearanceRequestedGeneration
+            && appearanceImageSprite != nullptr
+            && xSemaphoreTake(appearanceSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+          ui.blitAppearanceImageToCanvas(*appearanceImageSprite);
+          xSemaphoreGive(appearanceSpriteMutex);
+        } else {
+          queueAppearanceImageRequest(currentId);
+        }
+      } else if (currentTab == TAB_DESCRIPTION) {
+        ui.drawDescriptionTab(pk);
+      } else if (currentTab == TAB_BODY) {
+        ui.drawBodyTab(pk);
+      } else if (currentTab == TAB_ABILITY) {
+        ui.drawAbilityTab(pk);
+      } else {
+        ui.drawEvolutionTab(
+            pk,
+            (visualControl >= PRESS_EVOLUTION_0 && visualControl <= (PRESS_EVOLUTION_0 + 2))
+                ? (visualControl - PRESS_EVOLUTION_0)
+                : -1);
+      }
+
+      ui.drawDetailNavigation(visualControl == PRESS_NAV_PREV, visualControl == PRESS_NAV_NEXT);
+
+      ui.drawTabBar(
+          currentTab,
+          (visualControl >= PRESS_TAB_0 && visualControl <= (PRESS_TAB_0 + 4))
+              ? (visualControl - PRESS_TAB_0)
+              : -1);
+    }
+
+    ui.pushToDisplay();
+    needsRedraw = false;
   }
 
   delay(10);

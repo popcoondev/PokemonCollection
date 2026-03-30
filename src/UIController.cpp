@@ -1,6 +1,11 @@
 #include "UIController.h"
 
 namespace {
+constexpr int kAppearanceImageX = 6;
+constexpr int kAppearanceImageY = 54;
+constexpr int kAppearanceImageW = 140;
+constexpr int kAppearanceImageH = 140;
+
 uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t fgR = (fg >> 11) & 0x1F;
   const uint8_t fgG = (fg >> 5) & 0x3F;
@@ -164,14 +169,12 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
   sprite->drawString(pk.name, 22, 26);
 }
 
-void UIController::drawAppearanceTab(const PokemonDetail& pk) {
-  const int imageX = 6;
-  const int imageY = 54;
-  const int imageW = 140;
-  const int imageH = 140;
+void UIController::drawAppearanceTab(const PokemonDetail& pk, bool drawImage) {
+  sprite->fillRect(kAppearanceImageX, kAppearanceImageY, kAppearanceImageW, kAppearanceImageH, COLOR_PK_BG);
+  if (drawImage) {
+    imageLoader.loadAndDisplayPNG(*sprite, pk.id, kAppearanceImageX, kAppearanceImageY, kAppearanceImageW, kAppearanceImageH);
+  }
 
-  imageLoader.loadAndDisplayPNG(*sprite, pk.id, imageX, imageY, imageW, imageH);
-  
   int cardX = 165;
   sprite->fillRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(cardX, 60, 145, 135, 8, COLOR_PK_BORDER);
@@ -286,6 +289,26 @@ void UIController::drawFullscreenPreview(uint16_t pokemonId) {
   sprite->fillScreen(TFT_BLACK);
 
   imageLoader.loadAndDisplayPNG(*sprite, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+}
+
+void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
+  sprite->pushImage(
+      kAppearanceImageX,
+      kAppearanceImageY,
+      kAppearanceImageW,
+      kAppearanceImageH,
+      static_cast<const uint16_t*>(imageSprite.getBuffer()));
+}
+
+void UIController::pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite) {
+  imageSprite.pushSprite(&M5.Display, kAppearanceImageX, kAppearanceImageY);
+}
+
+void UIController::redrawDetailNavigationToDisplay() {
+  M5.Display.setTextColor(COLOR_PK_SUB);
+  M5.Display.setFont(&fonts::efontJA_12);
+  M5.Display.drawCenterString("◀", 18, 50);
+  M5.Display.drawCenterString("▶", SCREEN_WIDTH - 18, 50);
 }
 
 void UIController::drawSearchScreen(
