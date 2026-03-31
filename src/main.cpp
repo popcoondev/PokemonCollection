@@ -16,12 +16,13 @@ uint16_t returnId = 1;
 TabType currentTab = TAB_APPEARANCE;
 
 enum ScreenMode {
-  SCREEN_DETAIL = 0,
+  SCREEN_MENU = 0,
+  SCREEN_DETAIL,
   SCREEN_SEARCH,
   SCREEN_PREVIEW,
 };
 
-ScreenMode screenMode = SCREEN_DETAIL;
+ScreenMode screenMode = SCREEN_MENU;
 
 namespace {
 constexpr int kAppearanceImageX = 6;
@@ -123,6 +124,8 @@ enum PressedControl {
   PRESS_SEARCH_CANCEL,
   PRESS_SEARCH_OPEN,
   PRESS_APPEARANCE_PREVIEW,
+  PRESS_MENU_POKEDEX,
+  PRESS_MENU_QUIZ,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -132,6 +135,12 @@ enum PressedControl {
 };
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
+  if (mode == SCREEN_MENU) {
+    if (hitTest(tx, ty, 44, 102, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_POKEDEX;
+    if (hitTest(tx, ty, 44, 158, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_QUIZ;
+    return PRESS_NONE;
+  }
+
   if (mode == SCREEN_SEARCH) {
     const int digitX[4] = {70, 115, 160, 205};
     for (int i = 0; i < 4; ++i) {
@@ -161,6 +170,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 enum PendingActionType {
   ACTION_NONE = 0,
   ACTION_OPEN_SEARCH,
+  ACTION_OPEN_POKEDEX,
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
@@ -496,6 +506,10 @@ void loop() {
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
+      } else if (screenMode == SCREEN_MENU) {
+        if (pressedControl == PRESS_MENU_POKEDEX) {
+          pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
+        }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
           pendingAction = makePendingAction(ACTION_OPEN_SEARCH);
@@ -523,6 +537,9 @@ void loop() {
 
   if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
     switch (pendingAction.type) {
+      case ACTION_OPEN_POKEDEX:
+        screenMode = SCREEN_DETAIL;
+        break;
       case ACTION_OPEN_SEARCH:
         screenMode = SCREEN_SEARCH;
         returnId = currentId;
@@ -669,7 +686,11 @@ void loop() {
     ui.drawBase();
     const auto& pk = dataMgr.getCurrentPokemon();
 
-    if (screenMode == SCREEN_SEARCH) {
+    if (screenMode == SCREEN_MENU) {
+      ui.drawMenuScreen(
+          visualControl == PRESS_MENU_POKEDEX,
+          visualControl == PRESS_MENU_QUIZ);
+    } else if (screenMode == SCREEN_SEARCH) {
       int pressedDigitDelta = 0;
       if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
         const int digitStep[4] = {1000, 100, 10, 1};
