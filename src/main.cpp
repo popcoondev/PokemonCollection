@@ -192,7 +192,7 @@ uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction)
 
 void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, COLOR_PK_BG);
-  appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH);
+  appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
 }
 
 void appearanceImageWorker(void*) {
@@ -239,7 +239,7 @@ void queueAppearanceImageRequest(uint16_t pokemonId) {
 
 void renderPreviewImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillScreen(TFT_BLACK);
-  previewImageLoader.loadAndDisplayPNG(target, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT);
+  previewImageLoader.loadAndDisplayPNG(target, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT, false);
 }
 
 bool ensurePreviewSpriteReady() {
@@ -307,7 +307,7 @@ void queuePreviewImageRequest(uint16_t pokemonId) {
 
 void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
-  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kEvolutionImageW, kEvolutionImageH);
+  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kEvolutionImageW, kEvolutionImageH, false);
 }
 
 void evolutionImageWorker(void*) {

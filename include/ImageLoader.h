@@ -20,7 +20,7 @@ public:
   // Load and display PNG with aspect ratio preservation
   // Returns true if successful, false if image not found or decode failed
   bool loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t x, int16_t y,
-                         uint16_t maxW, uint16_t maxH);
+                         uint16_t maxW, uint16_t maxH, bool drawErrorOnFailure = true);
 
   // Draw placeholder when image unavailable
   void drawPlaceholder(lgfx::LGFXBase& target, int16_t x, int16_t y, uint16_t w, uint16_t h);

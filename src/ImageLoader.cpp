@@ -1,6 +1,8 @@
 #include "ImageLoader.h"
 #include <FS.h>
 #include <SD.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 // ========== Constructor & Destructor ==========
 
@@ -11,6 +13,8 @@ ImageLoader::~ImageLoader() {
 }
 
 namespace {
+SemaphoreHandle_t pngLoadMutex = nullptr;
+
 uint32_t readBigEndian32(const uint8_t* bytes) {
   return (static_cast<uint32_t>(bytes[0]) << 24)
        | (static_cast<uint32_t>(bytes[1]) << 16)
@@ -22,20 +26,39 @@ uint32_t readBigEndian32(const uint8_t* bytes) {
 // ========== Public Methods ==========
 
 bool ImageLoader::begin() {
+  if (pngLoadMutex == nullptr) {
+    pngLoadMutex = xSemaphoreCreateMutex();
+    if (pngLoadMutex == nullptr) {
+      return false;
+    }
+  }
   return true;
 }
 
 bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t x, int16_t y,
-                                    uint16_t maxW, uint16_t maxH) {
+                                    uint16_t maxW, uint16_t maxH, bool drawErrorOnFailure) {
+  if (pngLoadMutex == nullptr || xSemaphoreTake(pngLoadMutex, portMAX_DELAY) != pdTRUE) {
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
+    return false;
+  }
+
   char filename[64];
   if (!resolveImagePath(id, filename, sizeof(filename))) {
-    drawPlaceholder(target, x, y, maxW, maxH);
+    xSemaphoreGive(pngLoadMutex);
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
     return false;
   }
 
   File file = SD.open(filename, FILE_READ);
   if (!file) {
-    drawPlaceholder(target, x, y, maxW, maxH);
+    xSemaphoreGive(pngLoadMutex);
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
     return false;
   }
   file.close();
@@ -43,7 +66,10 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
   uint32_t srcW = 0;
   uint32_t srcH = 0;
   if (!readPngSize(filename, srcW, srcH) || srcW == 0 || srcH == 0) {
-    drawPlaceholder(target, x, y, maxW, maxH);
+    xSemaphoreGive(pngLoadMutex);
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
     return false;
   }
 
@@ -55,8 +81,11 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
   const int drawY = y + ((static_cast<int>(maxH) - drawH) / 2);
 
   bool success = target.drawPngFile(SD, filename, drawX, drawY, 0, 0, 0, 0, scale, scale);
+  xSemaphoreGive(pngLoadMutex);
   if (!success) {
-    drawPlaceholder(target, x, y, maxW, maxH);
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
     return false;
   }
 
