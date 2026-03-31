@@ -28,6 +28,8 @@ constexpr int kAppearanceImageX = 6;
 constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
+constexpr int kEvolutionImageW = 50;
+constexpr int kEvolutionImageH = 32;
 
 struct AppearanceImageRequest {
   uint16_t pokemonId;
@@ -47,6 +49,21 @@ struct PreviewImageRequest {
 
 struct PreviewImageResult {
   uint16_t pokemonId;
+  uint32_t generation;
+  bool success;
+};
+
+struct EvolutionImageRequest {
+  uint16_t pokemonId;
+  uint16_t sourcePokemonId;
+  uint8_t imageIndex;
+  uint32_t generation;
+};
+
+struct EvolutionImageResult {
+  uint16_t pokemonId;
+  uint16_t sourcePokemonId;
+  uint8_t imageIndex;
   uint32_t generation;
   bool success;
 };
@@ -74,6 +91,18 @@ uint32_t previewCachedGeneration = 0;
 bool previewCacheReady = false;
 uint16_t previewRequestedId = 0;
 uint32_t previewRequestedGeneration = 0;
+
+QueueHandle_t evolutionRequestQueue = nullptr;
+QueueHandle_t evolutionResultQueue = nullptr;
+SemaphoreHandle_t evolutionSpriteMutex = nullptr;
+TaskHandle_t evolutionWorkerTaskHandle = nullptr;
+LGFX_Sprite* evolutionImageSprites[3] = {nullptr, nullptr, nullptr};
+ImageLoader evolutionImageLoader;
+uint16_t evolutionSourcePokemonId = 0;
+uint32_t evolutionRequestedGeneration = 0;
+uint16_t evolutionRequestedIds[3] = {0, 0, 0};
+uint16_t evolutionRenderedIds[3] = {0, 0, 0};
+uint32_t evolutionRenderedGeneration = 0;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -275,6 +304,63 @@ void queuePreviewImageRequest(uint16_t pokemonId) {
   };
   xQueueOverwrite(previewRequestQueue, &request);
 }
+
+void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId) {
+  target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
+  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kEvolutionImageW, kEvolutionImageH);
+}
+
+void evolutionImageWorker(void*) {
+  EvolutionImageRequest request;
+
+  for (;;) {
+    if (xQueueReceive(evolutionRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+      continue;
+    }
+
+    bool success = false;
+    if (request.imageIndex < 3
+        && evolutionImageSprites[request.imageIndex] != nullptr
+        && xSemaphoreTake(evolutionSpriteMutex, portMAX_DELAY) == pdTRUE) {
+      renderEvolutionImage(*evolutionImageSprites[request.imageIndex], request.pokemonId);
+      xSemaphoreGive(evolutionSpriteMutex);
+      success = true;
+    }
+
+    const EvolutionImageResult result = {
+      request.pokemonId,
+      request.sourcePokemonId,
+      request.imageIndex,
+      request.generation,
+      success,
+    };
+    xQueueSend(evolutionResultQueue, &result, 0);
+  }
+}
+
+void queueEvolutionImageRequests(const PokemonDetail& pk) {
+  if (evolutionRequestQueue == nullptr) {
+    return;
+  }
+  evolutionSourcePokemonId = pk.id;
+  evolutionRequestedGeneration += 1;
+  evolutionRenderedGeneration = 0;
+  for (int i = 0; i < 3; ++i) {
+    evolutionRequestedIds[i] = 0;
+    evolutionRenderedIds[i] = 0;
+  }
+
+  for (size_t i = 0; i < pk.evolutions.size() && i < 3; ++i) {
+    evolutionRequestedIds[i] = pk.evolutions[i].id;
+    const EvolutionImageRequest request = {
+      pk.evolutions[i].id,
+      pk.id,
+      static_cast<uint8_t>(i),
+      evolutionRequestedGeneration,
+    };
+    xQueueSend(evolutionRequestQueue, &request, 0);
+  }
+}
 }
 
 void setup() {
@@ -305,6 +391,12 @@ void setup() {
   previewRequestQueue = xQueueCreate(1, sizeof(PreviewImageRequest));
   previewResultQueue = xQueueCreate(4, sizeof(PreviewImageResult));
   previewSpriteMutex = xSemaphoreCreateMutex();
+  evolutionRequestQueue = xQueueCreate(6, sizeof(EvolutionImageRequest));
+  evolutionResultQueue = xQueueCreate(6, sizeof(EvolutionImageResult));
+  evolutionSpriteMutex = xSemaphoreCreateMutex();
+  for (auto& sprite : evolutionImageSprites) {
+    sprite = new LGFX_Sprite(&M5.Display);
+  }
 
   if (appearanceRequestQueue == nullptr
       || appearanceResultQueue == nullptr
@@ -313,8 +405,15 @@ void setup() {
       || previewRequestQueue == nullptr
       || previewResultQueue == nullptr
       || previewSpriteMutex == nullptr
+      || evolutionRequestQueue == nullptr
+      || evolutionResultQueue == nullptr
+      || evolutionSpriteMutex == nullptr
+      || evolutionImageSprites[0] == nullptr
+      || evolutionImageSprites[1] == nullptr
+      || evolutionImageSprites[2] == nullptr
       || !appearanceImageLoader.begin()
-      || !previewImageLoader.begin()) {
+      || !previewImageLoader.begin()
+      || !evolutionImageLoader.begin()) {
     M5.Display.print("Image Queue Error");
     while(1) delay(100);
   }
@@ -323,6 +422,13 @@ void setup() {
   if (!appearanceImageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
     M5.Display.print("Image Sprite Error");
     while(1) delay(100);
+  }
+  for (auto& sprite : evolutionImageSprites) {
+    sprite->setColorDepth(16);
+    if (!sprite->createSprite(kEvolutionImageW, kEvolutionImageH)) {
+      M5.Display.print("Evolution Sprite Error");
+      while(1) delay(100);
+    }
   }
 
   xTaskCreatePinnedToCore(
@@ -340,6 +446,14 @@ void setup() {
       nullptr,
       1,
       &previewWorkerTaskHandle,
+      0);
+  xTaskCreatePinnedToCore(
+      evolutionImageWorker,
+      "evolutionImage",
+      6144,
+      nullptr,
+      1,
+      &evolutionWorkerTaskHandle,
       0);
 
   dataMgr.loadPokemonDetail(currentId);
@@ -531,6 +645,26 @@ void loop() {
     }
   }
 
+  EvolutionImageResult evolutionResult;
+  while (evolutionResultQueue != nullptr && xQueueReceive(evolutionResultQueue, &evolutionResult, 0) == pdTRUE) {
+    if (!evolutionResult.success) {
+      continue;
+    }
+    if (evolutionResult.generation != evolutionRequestedGeneration
+        || evolutionResult.sourcePokemonId != evolutionSourcePokemonId
+        || evolutionResult.imageIndex > 2) {
+      continue;
+    }
+
+    evolutionRenderedIds[evolutionResult.imageIndex] = evolutionResult.pokemonId;
+    evolutionRenderedGeneration = evolutionResult.generation;
+    if (screenMode == SCREEN_DETAIL
+        && currentTab == TAB_EVOLUTION
+        && currentId == evolutionResult.sourcePokemonId) {
+      needsRedraw = true;
+    }
+  }
+
   if (needsRedraw) {
     ui.drawBase();
     const auto& pk = dataMgr.getCurrentPokemon();
@@ -588,7 +722,21 @@ void loop() {
             pk,
             (visualControl >= PRESS_EVOLUTION_0 && visualControl <= (PRESS_EVOLUTION_0 + 2))
                 ? (visualControl - PRESS_EVOLUTION_0)
-                : -1);
+                : -1,
+            false);
+        if (evolutionSourcePokemonId != pk.id) {
+          queueEvolutionImageRequests(pk);
+        }
+        for (int i = 0; i < 3; ++i) {
+          if (evolutionRequestedIds[i] != 0
+              && evolutionRenderedGeneration == evolutionRequestedGeneration
+              && evolutionRenderedIds[i] == evolutionRequestedIds[i]
+              && evolutionImageSprites[i] != nullptr
+              && xSemaphoreTake(evolutionSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+            ui.blitEvolutionImageToCanvas(*evolutionImageSprites[i], i);
+            xSemaphoreGive(evolutionSpriteMutex);
+          }
+        }
       }
 
       ui.drawDetailNavigation(visualControl == PRESS_NAV_PREV, visualControl == PRESS_NAV_NEXT);

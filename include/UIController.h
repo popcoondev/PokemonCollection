@@ -19,7 +19,7 @@ public:
   void drawDescriptionTab(const PokemonDetail& pk);
   void drawBodyTab(const PokemonDetail& pk);
   void drawAbilityTab(const PokemonDetail& pk);
-  void drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex = -1);
+  void drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex = -1, bool drawImages = true);
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawFullscreenPreview(bool drawImage = true, uint16_t pokemonId = 0);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
@@ -27,6 +27,8 @@ public:
   void redrawDetailNavigationToDisplay();
   void blitPreviewImageToCanvas(LGFX_Sprite& imageSprite);
   void pushPreviewImageToDisplay(LGFX_Sprite& imageSprite);
+  void blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex);
+  void pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex);
   void drawSearchScreen(
       uint16_t selectedId,
       const String& selectedName,
