@@ -5,6 +5,12 @@ constexpr int kAppearanceImageX = 6;
 constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
+constexpr int kEvolutionCardX[3] = {22, 118, 214};
+constexpr int kEvolutionCardY = 80;
+constexpr int kEvolutionImageOffsetX = 17;
+constexpr int kEvolutionImageOffsetY = 6;
+constexpr int kEvolutionImageW = 50;
+constexpr int kEvolutionImageH = 32;
 
 uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t fgR = (fg >> 11) & 0x1F;
@@ -243,17 +249,26 @@ void UIController::drawAbilityTab(const PokemonDetail& pk) {
   }
 }
 
-void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex) {
+void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex, bool drawImages) {
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
 
-  int x = 22;
-  int y = 80;
   for (size_t i = 0; i < pk.evolutions.size() && i < 3; ++i) {
+    const int x = kEvolutionCardX[i];
+    const int y = kEvolutionCardY;
     sprite->fillRoundRect(x, y, 84, 80, 8, COLOR_PK_BG);
     sprite->drawRoundRect(x, y, 84, 80, 8, COLOR_PK_BORDER);
 
-    imageLoader.loadAndDisplayPNG(*sprite, pk.evolutions[i].id, x + 17, y + 6, 50, 32);
+    sprite->fillRect(x + kEvolutionImageOffsetX, y + kEvolutionImageOffsetY, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
+    if (drawImages) {
+      imageLoader.loadAndDisplayPNG(
+          *sprite,
+          pk.evolutions[i].id,
+          x + kEvolutionImageOffsetX,
+          y + kEvolutionImageOffsetY,
+          kEvolutionImageW,
+          kEvolutionImageH);
+    }
 
     char idStr[12];
     snprintf(idStr, sizeof(idStr), "No.%04d", pk.evolutions[i].id);
@@ -266,8 +281,6 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutio
     if (static_cast<int>(i) == pressedEvolutionIndex) {
       drawPressedOverlay(x, y, 84, 80, 8);
     }
-
-    x += 96;
   }
 }
 
@@ -324,6 +337,28 @@ void UIController::blitPreviewImageToCanvas(LGFX_Sprite& imageSprite) {
 
 void UIController::pushPreviewImageToDisplay(LGFX_Sprite& imageSprite) {
   imageSprite.pushSprite(&M5.Display, 0, 0);
+}
+
+void UIController::blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex) {
+  if (imageIndex < 0 || imageIndex > 2) {
+    return;
+  }
+  sprite->pushImage(
+      kEvolutionCardX[imageIndex] + kEvolutionImageOffsetX,
+      kEvolutionCardY + kEvolutionImageOffsetY,
+      kEvolutionImageW,
+      kEvolutionImageH,
+      static_cast<const uint16_t*>(imageSprite.getBuffer()));
+}
+
+void UIController::pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex) {
+  if (imageIndex < 0 || imageIndex > 2) {
+    return;
+  }
+  imageSprite.pushSprite(
+      &M5.Display,
+      kEvolutionCardX[imageIndex] + kEvolutionImageOffsetX,
+      kEvolutionCardY + kEvolutionImageOffsetY);
 }
 
 void UIController::drawSearchScreen(
