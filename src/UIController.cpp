@@ -166,13 +166,18 @@ void UIController::drawHeader(const PokemonDetail& pk, bool searchPressed) {
 
   char idStr[12];
   snprintf(idStr, sizeof(idStr), "No.%04d", pk.id);
+  const int baselineY = 22;
+  const int idX = 22;
+
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->drawString(idStr, 22, 14);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->drawString(idStr, idX, baselineY);
+
+  const int nameX = idX + sprite->textWidth(idStr) + 12;
 
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->drawString(pk.name, 22, 26);
+  sprite->drawString(pk.name, nameX, baselineY);
 }
 
 void UIController::drawAppearanceTab(const PokemonDetail& pk, bool drawImage) {
