@@ -311,6 +311,27 @@ void UIController::drawFullscreenPreview(bool drawImage, uint16_t pokemonId) {
   }
 }
 
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("ポケモン図鑑", SCREEN_WIDTH / 2, 22);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawCenterString("モードを えらんでください", SCREEN_WIDTH / 2, 82);
+
+  drawActionButton(44, 102, SCREEN_WIDTH - 88, 42, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  drawActionButton(44, 158, SCREEN_WIDTH - 88, 42, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawCenterString("クイズは じゅんびちゅう", SCREEN_WIDTH / 2, 212);
+}
+
 void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
   sprite->pushImage(
       kAppearanceImageX,
