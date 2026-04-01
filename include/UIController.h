@@ -62,6 +62,7 @@ private:
   void drawTypeBadge(const String& type, int x, int y);
   void drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines);
   void drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int w, int h);
+  void drawQuizPokemonImage(uint16_t pokemonId, int x, int y, int w, int h);
 };
 
 #endif

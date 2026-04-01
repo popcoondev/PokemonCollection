@@ -344,7 +344,9 @@ void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const Str
   sprite->setTextColor(COLOR_PK_CARD);
   sprite->drawString(answerSide ? "B SIDE" : "A SIDE", 14, SCREEN_HEIGHT - 26);
 
-  if (!answerSide) {
+  if (answerSide) {
+    drawQuizPokemonImage(pokemonId, 15, 15, 133, 128);
+  } else {
     drawQuizSilhouetteImage(pokemonId, 15, 15, 133, 128);
   }
 
@@ -361,6 +363,10 @@ void UIController::drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int
   char path[64];
   snprintf(path, sizeof(path), "/pokemon/silhouettes/%04d.png", pokemonId);
   imageLoader.loadAndDisplayPNGPath(*sprite, path, x, y, w, h, false);
+}
+
+void UIController::drawQuizPokemonImage(uint16_t pokemonId, int x, int y, int w, int h) {
+  imageLoader.loadAndDisplayPNG(*sprite, pokemonId, x, y, w, h, false);
 }
 
 void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
