@@ -313,7 +313,7 @@ void UIController::drawFullscreenPreview(bool drawImage, uint16_t pokemonId) {
   }
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed) {
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -331,7 +331,28 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed) {
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawCenterString("クイズは じゅんびちゅう", SCREEN_WIDTH / 2, 212);
+  sprite->drawString("おんりょう", 24, 212);
+
+  static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
+  for (int i = 0; i < 4; ++i) {
+    const int x = 92 + (i * 50);
+    const bool selected = selectedVolumeIndex == i;
+    const bool pressed = pressedVolumeIndex == i;
+    const uint16_t fill = selected ? COLOR_PK_BAR : COLOR_PK_CARD;
+    const uint16_t text = selected ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    const uint16_t border = selected ? COLOR_PK_BAR : COLOR_PK_BORDER;
+    drawActionButton(
+        x,
+        204,
+        42,
+        24,
+        volumeLabels[i],
+        fill,
+        text,
+        pressed,
+        selected ? COLOR_PK_SUB : COLOR_PK_BORDER,
+        border);
+  }
 }
 
 void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName) {
