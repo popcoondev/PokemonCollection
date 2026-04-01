@@ -1,5 +1,6 @@
 #include <M5Unified.h>
 #include <SD.h>
+#include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
@@ -213,6 +214,18 @@ uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction)
   return static_cast<uint16_t>(currentValue + ((nextDigit - digit) * placeValue));
 }
 
+uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
+  if (MAX_POKEMON_ID <= MIN_POKEMON_ID) {
+    return MIN_POKEMON_ID;
+  }
+
+  uint16_t nextId = lastId;
+  while (nextId == lastId) {
+    nextId = static_cast<uint16_t>(random(MIN_POKEMON_ID, MAX_POKEMON_ID + 1));
+  }
+  return nextId;
+}
+
 void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, COLOR_PK_BG);
   appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
@@ -389,6 +402,7 @@ void queueEvolutionImageRequests(const PokemonDetail& pk) {
 void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
+  randomSeed(static_cast<uint32_t>(esp_random()));
   M5.Display.setRotation(1);
   M5.Display.setTextFont(2);
 
@@ -564,7 +578,7 @@ void loop() {
         screenMode = SCREEN_QUIZ;
         quizPhase = QUIZ_A_SIDE;
         quizPhaseStartedAt = millis();
-        quizPokemonId = MIN_POKEMON_ID;
+        quizPokemonId = chooseNextQuizPokemonId(0);
         break;
       case ACTION_CLOSE_QUIZ:
         screenMode = SCREEN_MENU;
@@ -637,7 +651,7 @@ void loop() {
         quizPhase = QUIZ_B_SIDE;
       } else {
         quizPhase = QUIZ_A_SIDE;
-        quizPokemonId = (quizPokemonId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (quizPokemonId + 1);
+        quizPokemonId = chooseNextQuizPokemonId(quizPokemonId);
       }
       quizPhaseStartedAt = now;
       needsRedraw = true;
@@ -734,7 +748,7 @@ void loop() {
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ);
     } else if (screenMode == SCREEN_QUIZ) {
-      ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId);
+      ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
       int pressedDigitDelta = 0;
       if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
