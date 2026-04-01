@@ -1,4 +1,5 @@
 #include <M5Unified.h>
+#include <ArduinoJson.h>
 #include <FS.h>
 #include <SD.h>
 #include <esp_system.h>
@@ -38,6 +39,7 @@ constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
 constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside.wav";
 constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
+constexpr const char* kSettingsPath = "/pokemon/settings.json";
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -91,6 +93,13 @@ struct QuizSoundCache {
   bool ready = false;
 };
 
+enum QuizVolumeSetting {
+  QUIZ_VOLUME_LARGE = 0,
+  QUIZ_VOLUME_MEDIUM,
+  QUIZ_VOLUME_SMALL,
+  QUIZ_VOLUME_MUTE,
+};
+
 QueueHandle_t appearanceRequestQueue = nullptr;
 QueueHandle_t appearanceResultQueue = nullptr;
 SemaphoreHandle_t appearanceSpriteMutex = nullptr;
@@ -128,6 +137,7 @@ uint16_t evolutionRenderedIds[3] = {0, 0, 0};
 uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
+QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -150,6 +160,10 @@ enum PressedControl {
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
+  PRESS_MENU_VOL_LARGE,
+  PRESS_MENU_VOL_MEDIUM,
+  PRESS_MENU_VOL_SMALL,
+  PRESS_MENU_VOL_MUTE,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -162,6 +176,10 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
     if (hitTest(tx, ty, 44, 102, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_POKEDEX;
     if (hitTest(tx, ty, 44, 158, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
+    if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
+    if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
+    if (hitTest(tx, ty, 242, 204, 42, 24, 6)) return PRESS_MENU_VOL_MUTE;
     return PRESS_NONE;
   }
 
@@ -201,6 +219,7 @@ enum PendingActionType {
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
   ACTION_CLOSE_QUIZ,
+  ACTION_SET_QUIZ_VOLUME,
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
@@ -228,6 +247,72 @@ uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction)
   const int digit = (currentValue / placeValue) % 10;
   const int nextDigit = (digit + direction + 10) % 10;
   return static_cast<uint16_t>(currentValue + ((nextDigit - digit) * placeValue));
+}
+
+uint8_t getQuizVolumeValue(QuizVolumeSetting setting) {
+  switch (setting) {
+    case QUIZ_VOLUME_LARGE: return 200;
+    case QUIZ_VOLUME_MEDIUM: return 128;
+    case QUIZ_VOLUME_SMALL: return 64;
+    case QUIZ_VOLUME_MUTE: return 0;
+  }
+  return 128;
+}
+
+const char* getQuizVolumeKey(QuizVolumeSetting setting) {
+  switch (setting) {
+    case QUIZ_VOLUME_LARGE: return "large";
+    case QUIZ_VOLUME_MEDIUM: return "medium";
+    case QUIZ_VOLUME_SMALL: return "small";
+    case QUIZ_VOLUME_MUTE: return "mute";
+  }
+  return "medium";
+}
+
+QuizVolumeSetting parseQuizVolumeKey(const char* value) {
+  if (value == nullptr) return QUIZ_VOLUME_MEDIUM;
+  if (strcmp(value, "large") == 0) return QUIZ_VOLUME_LARGE;
+  if (strcmp(value, "small") == 0) return QUIZ_VOLUME_SMALL;
+  if (strcmp(value, "mute") == 0) return QUIZ_VOLUME_MUTE;
+  return QUIZ_VOLUME_MEDIUM;
+}
+
+void applyQuizVolume() {
+  M5.Speaker.setVolume(getQuizVolumeValue(quizVolumeSetting));
+}
+
+bool saveSettings() {
+  JsonDocument doc;
+  doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
+
+  if (SD.exists(kSettingsPath)) {
+    SD.remove(kSettingsPath);
+  }
+  File file = SD.open(kSettingsPath, FILE_WRITE);
+  if (!file) {
+    return false;
+  }
+  const bool ok = serializeJson(doc, file) > 0;
+  file.close();
+  return ok;
+}
+
+void loadSettings() {
+  quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+
+  File file = SD.open(kSettingsPath, FILE_READ);
+  if (!file) {
+    saveSettings();
+    applyQuizVolume();
+    return;
+  }
+
+  JsonDocument doc;
+  if (deserializeJson(doc, file) == DeserializationError::Ok) {
+    quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
+  }
+  file.close();
+  applyQuizVolume();
 }
 
 bool loadQuizSound(const char* path, QuizSoundCache& cache) {
@@ -578,6 +663,8 @@ void setup() {
     while(1) delay(100);
   }
 
+  loadSettings();
+
   appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
   appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
   appearanceSpriteMutex = xSemaphoreCreateMutex();
@@ -706,6 +793,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
         } else if (pressedControl == PRESS_MENU_QUIZ) {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
+        } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
+          pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
@@ -747,6 +836,11 @@ void loop() {
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
         screenMode = SCREEN_MENU;
+        break;
+      case ACTION_SET_QUIZ_VOLUME:
+        quizVolumeSetting = static_cast<QuizVolumeSetting>(pendingAction.value);
+        applyQuizVolume();
+        saveSettings();
         break;
       case ACTION_OPEN_SEARCH:
         screenMode = SCREEN_SEARCH;
@@ -912,7 +1006,11 @@ void loop() {
     if (screenMode == SCREEN_MENU) {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
-          visualControl == PRESS_MENU_QUIZ);
+          visualControl == PRESS_MENU_QUIZ,
+          static_cast<int>(quizVolumeSetting),
+          (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
+              ? (visualControl - PRESS_MENU_VOL_LARGE)
+              : -1);
     } else if (screenMode == SCREEN_QUIZ) {
       ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
