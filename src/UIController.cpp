@@ -1,4 +1,5 @@
 #include "UIController.h"
+#include <SD.h>
 
 namespace {
 constexpr int kAppearanceImageX = 6;
@@ -11,6 +12,7 @@ constexpr int kEvolutionImageOffsetX = 17;
 constexpr int kEvolutionImageOffsetY = 6;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
+constexpr const char* kQuizBackgroundPath = "/pokemon/quiz/backgrounds/quiz_bg.png";
 
 uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t fgR = (fg >> 11) & 0x1F;
@@ -330,6 +332,21 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed) {
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
   sprite->drawCenterString("クイズは じゅんびちゅう", SCREEN_WIDTH / 2, 212);
+}
+
+void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId) {
+  sprite->fillScreen(TFT_BLACK);
+  if (SD.exists(kQuizBackgroundPath)) {
+    sprite->drawPngFile(SD, kQuizBackgroundPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  }
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_CARD);
+  sprite->drawString(answerSide ? "B SIDE" : "A SIDE", 14, SCREEN_HEIGHT - 26);
+
+  sprite->setTextColor(COLOR_PK_BAR);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->drawCenterString(answerSide ? "フシギダネ" : "？？？？", 238, 46);
 }
 
 void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {

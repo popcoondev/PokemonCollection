@@ -23,6 +23,7 @@ public:
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawFullscreenPreview(bool drawImage = true, uint16_t pokemonId = 0);
   void drawMenuScreen(bool pokedexPressed, bool quizPressed);
+  void drawQuizScreen(bool answerSide, uint16_t pokemonId);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
   void redrawDetailNavigationToDisplay();
