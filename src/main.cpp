@@ -748,7 +748,7 @@ void loop() {
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ);
     } else if (screenMode == SCREEN_QUIZ) {
-      ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, dataMgr.getPokemonName(quizPokemonId));
+      ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
       int pressedDigitDelta = 0;
       if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {

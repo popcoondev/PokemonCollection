@@ -334,7 +334,7 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed) {
   sprite->drawCenterString("クイズは じゅんびちゅう", SCREEN_WIDTH / 2, 212);
 }
 
-void UIController::drawQuizScreen(bool answerSide, const String& answerName) {
+void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName) {
   sprite->fillScreen(TFT_BLACK);
   if (SD.exists(kQuizBackgroundPath)) {
     sprite->drawPngFile(SD, kQuizBackgroundPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -344,6 +344,10 @@ void UIController::drawQuizScreen(bool answerSide, const String& answerName) {
   sprite->setTextColor(COLOR_PK_CARD);
   sprite->drawString(answerSide ? "B SIDE" : "A SIDE", 14, SCREEN_HEIGHT - 26);
 
+  if (!answerSide) {
+    drawQuizSilhouetteImage(pokemonId, 15, 15, 133, 128);
+  }
+
   sprite->setTextColor(COLOR_PK_BAR);
   sprite->setFont(&fonts::efontJA_16_b);
   const int textBoxX = 175;
@@ -351,6 +355,12 @@ void UIController::drawQuizScreen(bool answerSide, const String& answerName) {
   const int textBoxW = 125;
   const String displayName = answerSide ? answerName : "？？？？";
   sprite->drawCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14);
+}
+
+void UIController::drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int w, int h) {
+  char path[64];
+  snprintf(path, sizeof(path), "/pokemon/silhouettes/%04d.png", pokemonId);
+  imageLoader.loadAndDisplayPNGPath(*sprite, path, x, y, w, h, false);
 }
 
 void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
