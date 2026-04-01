@@ -20,6 +20,7 @@ enum ScreenMode {
   SCREEN_DETAIL,
   SCREEN_SEARCH,
   SCREEN_PREVIEW,
+  SCREEN_QUIZ,
 };
 
 ScreenMode screenMode = SCREEN_MENU;
@@ -31,6 +32,12 @@ constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
+constexpr uint32_t kQuizSideDurationMs = 5000;
+
+enum QuizPhase {
+  QUIZ_A_SIDE = 0,
+  QUIZ_B_SIDE,
+};
 
 struct AppearanceImageRequest {
   uint16_t pokemonId;
@@ -141,6 +148,10 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_NONE;
   }
 
+  if (mode == SCREEN_QUIZ) {
+    return PRESS_MENU_QUIZ;
+  }
+
   if (mode == SCREEN_SEARCH) {
     const int digitX[4] = {70, 115, 160, 205};
     for (int i = 0; i < 4; ++i) {
@@ -171,6 +182,8 @@ enum PendingActionType {
   ACTION_NONE = 0,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
+  ACTION_OPEN_QUIZ,
+  ACTION_CLOSE_QUIZ,
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
@@ -476,6 +489,9 @@ void loop() {
   static PendingAction pendingAction;
   static bool needsRedraw = true;
   static TabType lastRenderedTab = TAB_APPEARANCE;
+  static QuizPhase quizPhase = QUIZ_A_SIDE;
+  static uint32_t quizPhaseStartedAt = 0;
+  static uint16_t quizPokemonId = MIN_POKEMON_ID;
 
   PressedControl pressedControl = PRESS_NONE;
 
@@ -506,9 +522,13 @@ void loop() {
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
+      } else if (screenMode == SCREEN_QUIZ) {
+        pendingAction = makePendingAction(ACTION_CLOSE_QUIZ);
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
+        } else if (pressedControl == PRESS_MENU_QUIZ) {
+          pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
@@ -539,6 +559,15 @@ void loop() {
     switch (pendingAction.type) {
       case ACTION_OPEN_POKEDEX:
         screenMode = SCREEN_DETAIL;
+        break;
+      case ACTION_OPEN_QUIZ:
+        screenMode = SCREEN_QUIZ;
+        quizPhase = QUIZ_A_SIDE;
+        quizPhaseStartedAt = millis();
+        quizPokemonId = MIN_POKEMON_ID;
+        break;
+      case ACTION_CLOSE_QUIZ:
+        screenMode = SCREEN_MENU;
         break;
       case ACTION_OPEN_SEARCH:
         screenMode = SCREEN_SEARCH;
@@ -599,6 +628,20 @@ void loop() {
     pendingAction = {};
     latchedControl = PRESS_NONE;
     needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_QUIZ && pendingAction.type == ACTION_NONE) {
+    const uint32_t now = millis();
+    if ((now - quizPhaseStartedAt) >= kQuizSideDurationMs) {
+      if (quizPhase == QUIZ_A_SIDE) {
+        quizPhase = QUIZ_B_SIDE;
+      } else {
+        quizPhase = QUIZ_A_SIDE;
+        quizPokemonId = (quizPokemonId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (quizPokemonId + 1);
+      }
+      quizPhaseStartedAt = now;
+      needsRedraw = true;
+    }
   }
 
   const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
@@ -690,6 +733,8 @@ void loop() {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ);
+    } else if (screenMode == SCREEN_QUIZ) {
+      ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId);
     } else if (screenMode == SCREEN_SEARCH) {
       int pressedDigitDelta = 0;
       if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
