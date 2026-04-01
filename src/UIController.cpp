@@ -340,10 +340,6 @@ void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const Str
     sprite->drawPngFile(SD, kQuizBackgroundPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   }
 
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_CARD);
-  sprite->drawString(answerSide ? "B SIDE" : "A SIDE", 14, SCREEN_HEIGHT - 26);
-
   if (answerSide) {
     drawQuizPokemonImage(pokemonId, 15, 15, 133, 128);
   } else {

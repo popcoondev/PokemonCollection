@@ -1,6 +1,8 @@
 #include <M5Unified.h>
+#include <FS.h>
 #include <SD.h>
 #include <esp_system.h>
+#include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
@@ -33,7 +35,9 @@ constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
-constexpr uint32_t kQuizSideDurationMs = 5000;
+constexpr uint32_t kQuizSideDurationMs = 7000;
+constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside.wav";
+constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -77,6 +81,16 @@ struct EvolutionImageResult {
   bool success;
 };
 
+struct QuizSoundCache {
+  uint8_t* data = nullptr;
+  size_t size = 0;
+  const int16_t* pcm16 = nullptr;
+  size_t sampleCount = 0;
+  uint32_t sampleRate = 44100;
+  bool stereo = false;
+  bool ready = false;
+};
+
 QueueHandle_t appearanceRequestQueue = nullptr;
 QueueHandle_t appearanceResultQueue = nullptr;
 SemaphoreHandle_t appearanceSpriteMutex = nullptr;
@@ -112,6 +126,8 @@ uint32_t evolutionRequestedGeneration = 0;
 uint16_t evolutionRequestedIds[3] = {0, 0, 0};
 uint16_t evolutionRenderedIds[3] = {0, 0, 0};
 uint32_t evolutionRenderedGeneration = 0;
+QuizSoundCache quizAsideSound;
+QuizSoundCache quizBsideSound;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -212,6 +228,138 @@ uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction)
   const int digit = (currentValue / placeValue) % 10;
   const int nextDigit = (digit + direction + 10) % 10;
   return static_cast<uint16_t>(currentValue + ((nextDigit - digit) * placeValue));
+}
+
+bool loadQuizSound(const char* path, QuizSoundCache& cache) {
+  if (cache.ready && cache.data != nullptr && cache.size > 0) {
+    return true;
+  }
+
+  struct __attribute__((packed)) RiffHeader {
+    char riff[4];
+    uint32_t chunkSize;
+    char wave[4];
+  };
+
+  struct __attribute__((packed)) WavChunkHeader {
+    char identifier[4];
+    uint32_t chunkSize;
+  };
+
+  struct __attribute__((packed)) WavFmtChunk {
+    uint16_t audioFmt;
+    uint16_t channels;
+    uint32_t sampleRate;
+    uint32_t bytesPerSec;
+    uint16_t blockSize;
+    uint16_t bitPerSample;
+  };
+
+  File file = SD.open(path, FILE_READ);
+  if (!file) {
+    return false;
+  }
+
+  const size_t size = file.size();
+  if (size == 0) {
+    file.close();
+    return false;
+  }
+
+  uint8_t* buffer = static_cast<uint8_t*>(heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  if (buffer == nullptr) {
+    buffer = static_cast<uint8_t*>(malloc(size));
+  }
+  if (buffer == nullptr) {
+    file.close();
+    return false;
+  }
+
+  const size_t readSize = file.read(buffer, size);
+  file.close();
+  if (readSize != size) {
+    free(buffer);
+    return false;
+  }
+
+  if (size < sizeof(RiffHeader)) {
+    free(buffer);
+    return false;
+  }
+
+  auto* riff = reinterpret_cast<RiffHeader*>(buffer);
+  if (memcmp(riff->riff, "RIFF", 4) != 0
+      || memcmp(riff->wave, "WAVE", 4) != 0) {
+    free(buffer);
+    return false;
+  }
+
+  bool foundFmt = false;
+  bool foundData = false;
+  WavFmtChunk fmt = {};
+  uint8_t* pcmStart = nullptr;
+  uint32_t pcmSize = 0;
+
+  uint8_t* cursor = buffer + sizeof(RiffHeader);
+  const uint8_t* bufferEnd = buffer + size;
+  while ((cursor + sizeof(WavChunkHeader)) <= bufferEnd) {
+    auto* chunk = reinterpret_cast<WavChunkHeader*>(cursor);
+    uint8_t* chunkData = cursor + sizeof(WavChunkHeader);
+    if ((chunkData + chunk->chunkSize) > bufferEnd) {
+      break;
+    }
+
+    if (memcmp(chunk->identifier, "fmt ", 4) == 0) {
+      if (chunk->chunkSize < sizeof(WavFmtChunk)) {
+        break;
+      }
+      memcpy(&fmt, chunkData, sizeof(WavFmtChunk));
+      foundFmt = true;
+    } else if (memcmp(chunk->identifier, "data", 4) == 0) {
+      pcmStart = chunkData;
+      pcmSize = chunk->chunkSize;
+      foundData = true;
+    }
+
+    cursor = chunkData + chunk->chunkSize + (chunk->chunkSize & 1);
+  }
+
+  if (!foundFmt
+      || !foundData
+      || fmt.audioFmt != 1
+      || fmt.channels == 0
+      || fmt.channels > 2
+      || fmt.bitPerSample != 16) {
+    free(buffer);
+    return false;
+  }
+
+  cache.data = buffer;
+  cache.size = size;
+  cache.pcm16 = reinterpret_cast<const int16_t*>(pcmStart);
+  cache.sampleCount = pcmSize / sizeof(int16_t);
+  cache.sampleRate = fmt.sampleRate;
+  cache.stereo = fmt.channels > 1;
+  cache.ready = true;
+  return true;
+}
+
+void playQuizSound(QuizPhase phase) {
+  QuizSoundCache& cache = (phase == QUIZ_A_SIDE) ? quizAsideSound : quizBsideSound;
+  const char* path = (phase == QUIZ_A_SIDE) ? kQuizAsideSoundPath : kQuizBsideSoundPath;
+  if (!loadQuizSound(path, cache)) {
+    return;
+  }
+
+  M5.Speaker.stop();
+  M5.Speaker.playRaw(
+      cache.pcm16,
+      cache.sampleCount,
+      cache.sampleRate,
+      cache.stereo,
+      1,
+      0,
+      true);
 }
 
 uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
@@ -401,10 +549,19 @@ void queueEvolutionImageRequests(const PokemonDetail& pk) {
 
 void setup() {
   auto cfg = M5.config();
+  cfg.internal_spk = true;
+  cfg.internal_mic = false;
   M5.begin(cfg);
   randomSeed(static_cast<uint32_t>(esp_random()));
   M5.Display.setRotation(1);
   M5.Display.setTextFont(2);
+  {
+    auto spk_cfg = M5.Speaker.config();
+    spk_cfg.sample_rate = 44100;
+    M5.Speaker.config(spk_cfg);
+  }
+  M5.Speaker.begin();
+  M5.Speaker.setVolume(128);
 
   if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
     M5.Display.print("SD Init Error");
@@ -509,7 +666,15 @@ void loop() {
 
   PressedControl pressedControl = PRESS_NONE;
 
-  if (M5.Touch.getCount() > 0) {
+  if (screenMode == SCREEN_QUIZ && M5.Touch.getCount() > 0) {
+    auto t = M5.Touch.getDetail(0);
+    heldControl = PRESS_MENU_QUIZ;
+    if (t.wasClicked()) {
+      latchedControl = PRESS_MENU_QUIZ;
+      pendingAction = makePendingAction(ACTION_CLOSE_QUIZ);
+      needsRedraw = true;
+    }
+  } else if (M5.Touch.getCount() > 0) {
     auto t = M5.Touch.getDetail(0);
     pressedControl = getPressedControl(t.x, t.y, screenMode);
     if (pressedControl != heldControl) {
@@ -536,8 +701,6 @@ void loop() {
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
-      } else if (screenMode == SCREEN_QUIZ) {
-        pendingAction = makePendingAction(ACTION_CLOSE_QUIZ);
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
@@ -579,8 +742,10 @@ void loop() {
         quizPhase = QUIZ_A_SIDE;
         quizPhaseStartedAt = millis();
         quizPokemonId = chooseNextQuizPokemonId(0);
+        playQuizSound(quizPhase);
         break;
       case ACTION_CLOSE_QUIZ:
+        M5.Speaker.stop();
         screenMode = SCREEN_MENU;
         break;
       case ACTION_OPEN_SEARCH:
@@ -654,6 +819,7 @@ void loop() {
         quizPokemonId = chooseNextQuizPokemonId(quizPokemonId);
       }
       quizPhaseStartedAt = now;
+      playQuizSound(quizPhase);
       needsRedraw = true;
     }
   }
