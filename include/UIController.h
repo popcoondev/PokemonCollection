@@ -23,7 +23,7 @@ public:
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawFullscreenPreview(bool drawImage = true, uint16_t pokemonId = 0);
   void drawMenuScreen(bool pokedexPressed, bool quizPressed);
-  void drawQuizScreen(bool answerSide, const String& answerName);
+  void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
   void redrawDetailNavigationToDisplay();
@@ -61,6 +61,7 @@ private:
   void drawInfoRow(const char* label, const String& value, int y);
   void drawTypeBadge(const String& type, int x, int y);
   void drawWrappedText(const String& text, int x, int y, int maxWidth, int lineHeight, int maxLines);
+  void drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int w, int h);
 };
 
 #endif

@@ -37,6 +37,24 @@ bool ImageLoader::begin() {
 
 bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t x, int16_t y,
                                     uint16_t maxW, uint16_t maxH, bool drawErrorOnFailure) {
+  char filename[64];
+  if (!resolveImagePath(id, filename, sizeof(filename))) {
+    if (drawErrorOnFailure) {
+      drawPlaceholder(target, x, y, maxW, maxH);
+    }
+    return false;
+  }
+
+  return loadAndDisplayPNGInternal(target, filename, x, y, maxW, maxH, drawErrorOnFailure);
+}
+
+bool ImageLoader::loadAndDisplayPNGPath(lgfx::LGFXBase& target, const char* path, int16_t x, int16_t y,
+                                        uint16_t maxW, uint16_t maxH, bool drawErrorOnFailure) {
+  return loadAndDisplayPNGInternal(target, path, x, y, maxW, maxH, drawErrorOnFailure);
+}
+
+bool ImageLoader::loadAndDisplayPNGInternal(lgfx::LGFXBase& target, const char* path, int16_t x, int16_t y,
+                                            uint16_t maxW, uint16_t maxH, bool drawErrorOnFailure) {
   if (pngLoadMutex == nullptr || xSemaphoreTake(pngLoadMutex, portMAX_DELAY) != pdTRUE) {
     if (drawErrorOnFailure) {
       drawPlaceholder(target, x, y, maxW, maxH);
@@ -44,8 +62,7 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
     return false;
   }
 
-  char filename[64];
-  if (!resolveImagePath(id, filename, sizeof(filename))) {
+  if (path == nullptr || !SD.exists(path)) {
     xSemaphoreGive(pngLoadMutex);
     if (drawErrorOnFailure) {
       drawPlaceholder(target, x, y, maxW, maxH);
@@ -53,7 +70,7 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
     return false;
   }
 
-  File file = SD.open(filename, FILE_READ);
+  File file = SD.open(path, FILE_READ);
   if (!file) {
     xSemaphoreGive(pngLoadMutex);
     if (drawErrorOnFailure) {
@@ -65,7 +82,7 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
 
   uint32_t srcW = 0;
   uint32_t srcH = 0;
-  if (!readPngSize(filename, srcW, srcH) || srcW == 0 || srcH == 0) {
+  if (!readPngSize(path, srcW, srcH) || srcW == 0 || srcH == 0) {
     xSemaphoreGive(pngLoadMutex);
     if (drawErrorOnFailure) {
       drawPlaceholder(target, x, y, maxW, maxH);
@@ -80,7 +97,7 @@ bool ImageLoader::loadAndDisplayPNG(lgfx::LGFXBase& target, uint16_t id, int16_t
   const int drawX = x + ((static_cast<int>(maxW) - drawW) / 2);
   const int drawY = y + ((static_cast<int>(maxH) - drawH) / 2);
 
-  bool success = target.drawPngFile(SD, filename, drawX, drawY, 0, 0, 0, 0, scale, scale);
+  bool success = target.drawPngFile(SD, path, drawX, drawY, 0, 0, 0, 0, scale, scale);
   xSemaphoreGive(pngLoadMutex);
   if (!success) {
     if (drawErrorOnFailure) {
