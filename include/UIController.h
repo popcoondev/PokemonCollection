@@ -47,6 +47,14 @@ public:
       bool pageNextPressed,
       bool cancelPressed,
       bool openPressed);
+  void drawSearchInputScreen(
+      const String& nameQuery,
+      bool vowelMode,
+      const String& selectedRowLabel,
+      bool backPressed,
+      bool clearPressed,
+      bool deletePressed,
+      int pressedKeyIndex);
   
   void pushToDisplay();
 

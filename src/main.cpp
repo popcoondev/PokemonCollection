@@ -8,6 +8,7 @@
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/task.h>
+#include <math.h>
 #include "Config.h"
 #include "DataManager.h"
 #include "UIController.h"
@@ -23,6 +24,7 @@ enum ScreenMode {
   SCREEN_MENU = 0,
   SCREEN_DETAIL,
   SCREEN_SEARCH,
+  SCREEN_SEARCH_INPUT,
   SCREEN_PREVIEW,
   SCREEN_QUIZ,
 };
@@ -146,10 +148,104 @@ QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
+bool searchInputVowelMode = false;
+int searchInputRowIndex = -1;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
       && ty >= (y - pad) && ty <= (y + h + pad);
+}
+
+void removeLastUtf8Glyph(String& text) {
+  int newLength = text.length();
+  if (newLength <= 0) return;
+  --newLength;
+  while (newLength > 0 && (static_cast<uint8_t>(text[newLength]) & 0xC0) == 0x80) {
+    --newLength;
+  }
+  text.remove(newLength);
+}
+
+int getSearchInputKeyIndexAt(int tx, int ty) {
+  const int keyX[3] = {30, 120, 210};
+  const int keyY[4] = {76, 106, 136, 166};
+  for (int i = 0; i < 12; ++i) {
+    const int col = i % 3;
+    const int row = i / 3;
+    if (hitTest(tx, ty, keyX[col], keyY[row], 80, 24, 8)) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+String getSearchInputGlyph(int keyIndex) {
+  static constexpr const char* kRowKanaTable[10][5] = {
+      {"ア","イ","ウ","エ","オ"},
+      {"カ","キ","ク","ケ","コ"},
+      {"サ","シ","ス","セ","ソ"},
+      {"タ","チ","ツ","テ","ト"},
+      {"ナ","ニ","ヌ","ネ","ノ"},
+      {"ハ","ヒ","フ","ヘ","ホ"},
+      {"マ","ミ","ム","メ","モ"},
+      {"ヤ","","ユ","","ヨ"},
+      {"ラ","リ","ル","レ","ロ"},
+      {"ワ","","ン","ー","ヲ"}
+  };
+  if (searchInputVowelMode) {
+    if (keyIndex >= 0 && keyIndex <= 4 && searchInputRowIndex >= 0 && searchInputRowIndex < 10) {
+      return kRowKanaTable[searchInputRowIndex][keyIndex];
+    }
+    static constexpr const char* kExtraLabels[3] = {"ン", "ー", "ッ"};
+    if (keyIndex >= 5 && keyIndex <= 7) {
+      return kExtraLabels[keyIndex - 5];
+    }
+  }
+  return "";
+}
+
+String getSearchInputRowLabel(int rowIndex) {
+  static constexpr const char* kRowLabels[10] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ"};
+  if (rowIndex < 0 || rowIndex >= 10) {
+    return "";
+  }
+  return kRowLabels[rowIndex];
+}
+
+bool replaceSearchQuerySuffix(const char* from, const char* to) {
+  if (!searchNameQuery.endsWith(from)) {
+    return false;
+  }
+  searchNameQuery.remove(searchNameQuery.length() - String(from).length());
+  searchNameQuery += to;
+  return true;
+}
+
+void applySearchDakutenToggle() {
+  static const struct { const char* base; const char* daku; const char* handaku; } table[] = {
+      {"ウ", "ヴ", nullptr},
+      {"カ", "ガ", nullptr}, {"キ", "ギ", nullptr}, {"ク", "グ", nullptr}, {"ケ", "ゲ", nullptr}, {"コ", "ゴ", nullptr},
+      {"サ", "ザ", nullptr}, {"シ", "ジ", nullptr}, {"ス", "ズ", nullptr}, {"セ", "ゼ", nullptr}, {"ソ", "ゾ", nullptr},
+      {"タ", "ダ", nullptr}, {"チ", "ヂ", nullptr}, {"ツ", "ヅ", nullptr}, {"テ", "デ", nullptr}, {"ト", "ド", nullptr},
+      {"ハ", "バ", "パ"}, {"ヒ", "ビ", "ピ"}, {"フ", "ブ", "プ"}, {"ヘ", "ベ", "ペ"}, {"ホ", "ボ", "ポ"},
+  };
+  for (const auto& entry : table) {
+    if (entry.handaku != nullptr && replaceSearchQuerySuffix(entry.handaku, entry.base)) return;
+    if (replaceSearchQuerySuffix(entry.daku, entry.handaku != nullptr ? entry.handaku : entry.base)) return;
+    if (replaceSearchQuerySuffix(entry.base, entry.daku)) return;
+  }
+}
+
+void applySearchSmallToggle() {
+  static const struct { const char* normal; const char* small; } table[] = {
+      {"ア", "ァ"}, {"イ", "ィ"}, {"ウ", "ゥ"}, {"エ", "ェ"}, {"オ", "ォ"},
+      {"ヤ", "ャ"}, {"ユ", "ュ"}, {"ヨ", "ョ"}, {"ツ", "ッ"}, {"ワ", "ヮ"},
+      {"ァ", "ア"}, {"ィ", "イ"}, {"ゥ", "ウ"}, {"ェ", "エ"}, {"ォ", "オ"},
+      {"ャ", "ヤ"}, {"ュ", "ユ"}, {"ョ", "ヨ"}, {"ッ", "ツ"}, {"ヮ", "ワ"},
+  };
+  for (const auto& entry : table) {
+    if (replaceSearchQuerySuffix(entry.normal, entry.small)) return;
+  }
 }
 
 enum PressedControl {
@@ -167,6 +263,7 @@ enum PressedControl {
   PRESS_SEARCH_OPEN,
   PRESS_SEARCH_MENU,
   PRESS_SEARCH_MODE,
+  PRESS_SEARCH_NAME_QUERY,
   PRESS_SEARCH_NAME_PAGE_PREV,
   PRESS_SEARCH_NAME_PAGE_NEXT,
   PRESS_SEARCH_NAME_RESULT_0,
@@ -186,12 +283,16 @@ enum PressedControl {
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
   PRESS_MENU_VOL_MUTE,
+  PRESS_SEARCH_INPUT_BACK,
+  PRESS_SEARCH_INPUT_DELETE,
+  PRESS_SEARCH_INPUT_CLEAR,
+  PRESS_SEARCH_INPUT_KEY_0,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
   PRESS_EVOLUTION_1,
   PRESS_EVOLUTION_2,
-  PRESS_TAB_0 = 32,
+  PRESS_TAB_0 = 128,
 };
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
@@ -224,6 +325,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
       return PRESS_NONE;
     }
 
+    if (hitTest(tx, ty, 20, 52, 280, 24, 6)) return PRESS_SEARCH_NAME_QUERY;
     const int resultX[2] = {20, 166};
     const int resultY = 84;
     const int resultW = 134;
@@ -237,6 +339,17 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     }
     if (hitTest(tx, ty, 20, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_PREV;
     if (hitTest(tx, ty, 236, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_SEARCH_INPUT) {
+    if (hitTest(tx, ty, 12, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_BACK;
+    if (hitTest(tx, ty, 116, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_DELETE;
+    if (hitTest(tx, ty, 220, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_CLEAR;
+    const int keyIndex = getSearchInputKeyIndexAt(tx, ty);
+    if (keyIndex >= 0) {
+      return static_cast<PressedControl>(PRESS_SEARCH_INPUT_KEY_0 + keyIndex);
+    }
     return PRESS_NONE;
   }
 
@@ -263,6 +376,12 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_SEARCH_TO_MENU,
   ACTION_SEARCH_TOGGLE_MODE,
+  ACTION_SEARCH_OPEN_INPUT,
+  ACTION_SEARCH_CLOSE_INPUT,
+  ACTION_SEARCH_INPUT_ROW,
+  ACTION_SEARCH_INPUT_APPEND,
+  ACTION_SEARCH_INPUT_DELETE,
+  ACTION_SEARCH_INPUT_CLEAR,
   ACTION_SEARCH_NAME_PAGE,
   ACTION_SEARCH_NAME_OPEN,
   ACTION_SET_QUIZ_VOLUME,
@@ -820,8 +939,23 @@ void loop() {
       latchedControl = pressedControl;
       needsRedraw = true;
 
-      if (screenMode == SCREEN_SEARCH) {
-        if (pressedControl == PRESS_SEARCH_MODE) {
+      if (screenMode == SCREEN_SEARCH_INPUT) {
+        if (pressedControl == PRESS_SEARCH_INPUT_BACK) {
+          pendingAction = makePendingAction(ACTION_SEARCH_CLOSE_INPUT);
+        } else if (pressedControl == PRESS_SEARCH_INPUT_DELETE) {
+          pendingAction = makePendingAction(ACTION_SEARCH_INPUT_DELETE);
+        } else if (pressedControl == PRESS_SEARCH_INPUT_CLEAR) {
+          pendingAction = makePendingAction(ACTION_SEARCH_INPUT_CLEAR);
+        } else if (pressedControl >= PRESS_SEARCH_INPUT_KEY_0 && pressedControl < (PRESS_SEARCH_INPUT_KEY_0 + 12)) {
+          const int keyIndex = pressedControl - PRESS_SEARCH_INPUT_KEY_0;
+          pendingAction = makePendingAction(
+              searchInputVowelMode ? ACTION_SEARCH_INPUT_APPEND : ACTION_SEARCH_INPUT_ROW,
+              keyIndex);
+        }
+      } else if (screenMode == SCREEN_SEARCH) {
+        if (pressedControl == PRESS_SEARCH_NAME_QUERY) {
+          pendingAction = makePendingAction(ACTION_SEARCH_OPEN_INPUT);
+        } else if (pressedControl == PRESS_SEARCH_MODE) {
           pendingAction = makePendingAction(ACTION_SEARCH_TOGGLE_MODE);
         } else if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
           const int digitStep[4] = {1000, 100, 10, 1};
@@ -909,6 +1043,62 @@ void loop() {
         searchMode = (searchMode == SEARCH_MODE_NUMBER) ? SEARCH_MODE_NAME : SEARCH_MODE_NUMBER;
         searchNameOffset = 0;
         break;
+      case ACTION_SEARCH_OPEN_INPUT:
+        screenMode = SCREEN_SEARCH_INPUT;
+        searchInputVowelMode = false;
+        searchInputRowIndex = -1;
+        break;
+      case ACTION_SEARCH_CLOSE_INPUT:
+        if (searchInputVowelMode) {
+          searchInputVowelMode = false;
+          searchInputRowIndex = -1;
+        } else {
+          screenMode = SCREEN_SEARCH;
+        }
+        break;
+      case ACTION_SEARCH_INPUT_ROW:
+        if (pendingAction.value == 10) {
+          applySearchDakutenToggle();
+          searchNameOffset = 0;
+        } else if (pendingAction.value == 11) {
+          applySearchSmallToggle();
+          searchNameOffset = 0;
+        } else if (pendingAction.value >= 0 && pendingAction.value < 10) {
+          searchInputVowelMode = true;
+          searchInputRowIndex = pendingAction.value;
+        }
+        break;
+      case ACTION_SEARCH_INPUT_APPEND: {
+        if (pendingAction.value == 10) {
+          applySearchDakutenToggle();
+          searchNameOffset = 0;
+        } else if (pendingAction.value == 11) {
+          applySearchSmallToggle();
+          searchNameOffset = 0;
+        } else {
+          const String input = getSearchInputGlyph(pendingAction.value);
+          if (input.length() == 0) {
+            break;
+          }
+          searchNameQuery += input;
+          searchNameOffset = 0;
+          searchInputVowelMode = false;
+          searchInputRowIndex = -1;
+        }
+        break;
+      }
+      case ACTION_SEARCH_INPUT_DELETE:
+        if (searchNameQuery.length() > 0) {
+          removeLastUtf8Glyph(searchNameQuery);
+          searchNameOffset = 0;
+        }
+        break;
+      case ACTION_SEARCH_INPUT_CLEAR:
+        searchNameQuery = "";
+        searchNameOffset = 0;
+        searchInputVowelMode = false;
+        searchInputRowIndex = -1;
+        break;
       case ACTION_SEARCH_ADJUST:
         searchId = adjustSearchDigit(
             searchId,
@@ -927,7 +1117,10 @@ void loop() {
         break;
       }
       case ACTION_SEARCH_NAME_OPEN: {
-        auto candidateIds = dataMgr.findPokemonIdsByName(searchNameQuery, searchNameOffset, 10);
+        auto candidateIds = dataMgr.findPokemonIdsByName(
+            searchNameQuery,
+            screenMode == SCREEN_SEARCH_INPUT ? 0 : searchNameOffset,
+            screenMode == SCREEN_SEARCH_INPUT ? 5 : 10);
         const int index = pendingAction.value;
         if (index >= 0 && index < static_cast<int>(candidateIds.size())) {
           currentId = candidateIds[index];
@@ -1130,6 +1323,17 @@ void loop() {
           visualControl == PRESS_SEARCH_NAME_PAGE_NEXT,
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
+    } else if (screenMode == SCREEN_SEARCH_INPUT) {
+      ui.drawSearchInputScreen(
+          searchNameQuery,
+          searchInputVowelMode,
+          getSearchInputRowLabel(searchInputRowIndex),
+          visualControl == PRESS_SEARCH_INPUT_BACK,
+          visualControl == PRESS_SEARCH_INPUT_CLEAR,
+          visualControl == PRESS_SEARCH_INPUT_DELETE,
+          (visualControl >= PRESS_SEARCH_INPUT_KEY_0 && visualControl < (PRESS_SEARCH_INPUT_KEY_0 + 12))
+              ? (visualControl - PRESS_SEARCH_INPUT_KEY_0)
+              : -1);
     } else if (screenMode == SCREEN_PREVIEW) {
       ui.drawFullscreenPreview(false, currentId);
       if (previewCacheReady
