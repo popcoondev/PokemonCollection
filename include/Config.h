@@ -19,7 +19,8 @@
 // Layout Constants
 #define MARGIN            10
 #define HEADER_H          48
-#define TAB_BAR_H         36
+#define TAB_BAR_H         40
+#define TAB_BAR_Y         (SCREEN_HEIGHT - TAB_BAR_H)
 
 // Pokemon Data Limits
 #define MIN_POKEMON_ID    1
