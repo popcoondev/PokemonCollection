@@ -35,6 +35,7 @@ public:
       uint16_t selectedId,
       const String& selectedName,
       int pressedDigitDelta,
+      bool menuPressed,
       bool cancelPressed,
       bool openPressed);
   

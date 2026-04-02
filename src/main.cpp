@@ -157,6 +157,7 @@ enum PressedControl {
   PRESS_SEARCH_DIGIT_DOWN_3,
   PRESS_SEARCH_CANCEL,
   PRESS_SEARCH_OPEN,
+  PRESS_SEARCH_MENU,
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
@@ -188,13 +189,14 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SEARCH) {
-    const int digitX[4] = {70, 115, 160, 205};
+    const int digitX[4] = {60, 110, 160, 210};
     for (int i = 0; i < 4; ++i) {
-      if (hitTest(tx, ty, digitX[i], 66, 32, 28, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
-      if (hitTest(tx, ty, digitX[i], 148, 32, 28, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
+      if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
+      if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
     }
-    if (hitTest(tx, ty, 24, 196, 126, 34, 10)) return PRESS_SEARCH_CANCEL;
-    if (hitTest(tx, ty, 170, 196, 126, 34, 10)) return PRESS_SEARCH_OPEN;
+    if (hitTest(tx, ty, 236, 18, 58, 26, 8)) return PRESS_SEARCH_MENU;
+    if (hitTest(tx, ty, 20, 178, 132, 40, 10)) return PRESS_SEARCH_CANCEL;
+    if (hitTest(tx, ty, 168, 178, 132, 40, 10)) return PRESS_SEARCH_OPEN;
     return PRESS_NONE;
   }
 
@@ -203,13 +205,13 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
-  if (hitTest(tx, ty, 0, 0, 40, 204)) return PRESS_NAV_PREV;
-  if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, 204)) return PRESS_NAV_NEXT;
+  if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y)) return PRESS_NAV_PREV;
+  if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y)) return PRESS_NAV_NEXT;
   if (currentTab == TAB_APPEARANCE && hitTest(tx, ty, 46, 54, 100, 140, 0)) return PRESS_APPEARANCE_PREVIEW;
   if (hitTest(tx, ty, 22, 80, 84, 80)) return PRESS_EVOLUTION_0;
   if (hitTest(tx, ty, 118, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 1);
   if (hitTest(tx, ty, 214, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 2);
-  if (ty >= 194) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
+  if (ty >= TAB_BAR_Y) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
   return PRESS_NONE;
 }
 
@@ -219,6 +221,7 @@ enum PendingActionType {
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
   ACTION_CLOSE_QUIZ,
+  ACTION_SEARCH_TO_MENU,
   ACTION_SET_QUIZ_VOLUME,
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
@@ -785,6 +788,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_SEARCH_CANCEL);
         } else if (pressedControl == PRESS_SEARCH_OPEN) {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
+        } else if (pressedControl == PRESS_SEARCH_MENU) {
+          pendingAction = makePendingAction(ACTION_SEARCH_TO_MENU);
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
@@ -855,6 +860,9 @@ void loop() {
         break;
       case ACTION_SEARCH_CANCEL:
         screenMode = SCREEN_DETAIL;
+        break;
+      case ACTION_SEARCH_TO_MENU:
+        screenMode = SCREEN_MENU;
         break;
       case ACTION_SEARCH_OPEN:
         if (searchId >= MIN_POKEMON_ID
@@ -1026,6 +1034,7 @@ void loop() {
           searchId,
           dataMgr.getPokemonName(searchId),
           pressedDigitDelta,
+          visualControl == PRESS_SEARCH_MENU,
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
     } else if (screenMode == SCREEN_PREVIEW) {

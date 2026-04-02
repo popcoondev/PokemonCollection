@@ -298,10 +298,10 @@ void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
   sprite->drawCenterString("▶", SCREEN_WIDTH - 18, 50);
 
   if (prevPressed) {
-    drawPressedOverlay(0, 0, 40, 204);
+    drawPressedOverlay(0, 0, 40, TAB_BAR_Y);
   }
   if (nextPressed) {
-    drawPressedOverlay(SCREEN_WIDTH - 40, 0, 40, 204);
+    drawPressedOverlay(SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y);
   }
 }
 
@@ -445,21 +445,19 @@ void UIController::drawSearchScreen(
     uint16_t selectedId,
     const String& selectedName,
     int pressedDigitDelta,
+    bool menuPressed,
     bool cancelPressed,
     bool openPressed) {
-  const int digitX[4] = {70, 115, 160, 205};
+  const int digitX[4] = {60, 110, 160, 210};
   const int digitStep[4] = {1000, 100, 10, 1};
 
-  sprite->fillRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_CARD);
-  sprite->drawRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, 14, COLOR_PK_BORDER);
-
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawString("SEARCH", 26, 24);
+  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_CARD);
+  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("えらびたい No. を へんこう", 26, 48);
+  sprite->drawString("えらびたい No. を へんこう", 20, 22);
+  drawActionButton(236, 18, 58, 26, "メニュー", COLOR_PK_BG, COLOR_PK_TEXT, menuPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
   char idText[12];
   snprintf(idText, sizeof(idText), "%04d", selectedId);
@@ -469,30 +467,28 @@ void UIController::drawSearchScreen(
     const bool upPressed = pressedDigitDelta == digitStep[i];
     const bool downPressed = pressedDigitDelta == -digitStep[i];
 
-    drawActionButton(digitX[i], 66, 32, 28, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+    drawActionButton(digitX[i], 52, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(upPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-    sprite->drawCenterString("▲", digitX[i] + 16, 72);
+    sprite->drawCenterString("▲", digitX[i] + 20, 61);
 
-    sprite->fillRoundRect(digitX[i], 100, 32, 42, 8, COLOR_PK_BG);
-    sprite->drawRoundRect(digitX[i], 100, 32, 42, 8, COLOR_PK_BORDER);
     char digitText[2] = {idText[i], '\0'};
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(COLOR_PK_RED);
-    sprite->drawCenterString(digitText, digitX[i] + 16, 112);
+    sprite->drawCenterString(digitText, digitX[i] + 20, 92);
 
-    drawActionButton(digitX[i], 148, 32, 28, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+    drawActionButton(digitX[i], 120, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(downPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-    sprite->drawCenterString("▼", digitX[i] + 16, 154);
+    sprite->drawCenterString("▼", digitX[i] + 20, 129);
   }
 
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(validId ? COLOR_PK_TEXT : COLOR_PK_SUB);
-  sprite->drawCenterString(validId ? selectedName : "データなし", 160, 178);
+  sprite->drawCenterString(validId ? selectedName : "データなし", 160, 156);
 
-  drawActionButton(24, 196, 126, 34, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(170, 196, 126, 34, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  drawActionButton(20, 178, 132, 40, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(168, 178, 132, 40, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
 }
 
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
@@ -567,11 +563,11 @@ void UIController::drawTabBar(TabType activeTab, int pressedTab) {
     const bool isPressed = (i == pressedTab);
     uint16_t bg = isPressed ? COLOR_PK_TEXT : (isActive ? COLOR_PK_RED : COLOR_PK_CARD);
     uint16_t tx = (isActive || isPressed) ? COLOR_PK_CARD : COLOR_PK_TEXT;
-    sprite->fillRect(i * tabW, 204, tabW, TAB_BAR_H, bg);
-    sprite->drawRect(i * tabW, 204, tabW, TAB_BAR_H, COLOR_PK_BORDER);
+    sprite->fillRect(i * tabW, TAB_BAR_Y, tabW, TAB_BAR_H, bg);
+    sprite->drawRect(i * tabW, TAB_BAR_Y, tabW, TAB_BAR_H, COLOR_PK_BORDER);
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(tx);
-    sprite->drawCenterString(labels[i], (i * tabW) + (tabW / 2), 214);
+    sprite->drawCenterString(labels[i], (i * tabW) + (tabW / 2), TAB_BAR_Y + 11);
   }
 }
 
