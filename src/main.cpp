@@ -46,6 +46,11 @@ enum QuizPhase {
   QUIZ_B_SIDE,
 };
 
+enum SearchMode {
+  SEARCH_MODE_NUMBER = 0,
+  SEARCH_MODE_NAME,
+};
+
 struct AppearanceImageRequest {
   uint16_t pokemonId;
   uint32_t generation;
@@ -138,6 +143,9 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+SearchMode searchMode = SEARCH_MODE_NUMBER;
+size_t searchNameOffset = 0;
+String searchNameQuery = "";
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -158,6 +166,19 @@ enum PressedControl {
   PRESS_SEARCH_CANCEL,
   PRESS_SEARCH_OPEN,
   PRESS_SEARCH_MENU,
+  PRESS_SEARCH_MODE,
+  PRESS_SEARCH_NAME_PAGE_PREV,
+  PRESS_SEARCH_NAME_PAGE_NEXT,
+  PRESS_SEARCH_NAME_RESULT_0,
+  PRESS_SEARCH_NAME_RESULT_1,
+  PRESS_SEARCH_NAME_RESULT_2,
+  PRESS_SEARCH_NAME_RESULT_3,
+  PRESS_SEARCH_NAME_RESULT_4,
+  PRESS_SEARCH_NAME_RESULT_5,
+  PRESS_SEARCH_NAME_RESULT_6,
+  PRESS_SEARCH_NAME_RESULT_7,
+  PRESS_SEARCH_NAME_RESULT_8,
+  PRESS_SEARCH_NAME_RESULT_9,
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
@@ -189,14 +210,33 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SEARCH) {
-    const int digitX[4] = {60, 110, 160, 210};
-    for (int i = 0; i < 4; ++i) {
-      if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
-      if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
-    }
     if (hitTest(tx, ty, 236, 18, 58, 26, 8)) return PRESS_SEARCH_MENU;
-    if (hitTest(tx, ty, 20, 178, 132, 40, 10)) return PRESS_SEARCH_CANCEL;
-    if (hitTest(tx, ty, 168, 178, 132, 40, 10)) return PRESS_SEARCH_OPEN;
+    if (hitTest(tx, ty, 168, 18, 58, 26, 8)) return PRESS_SEARCH_MODE;
+
+    if (searchMode == SEARCH_MODE_NUMBER) {
+      const int digitX[4] = {60, 110, 160, 210};
+      for (int i = 0; i < 4; ++i) {
+        if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
+        if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
+      }
+      if (hitTest(tx, ty, 20, 178, 132, 40, 10)) return PRESS_SEARCH_CANCEL;
+      if (hitTest(tx, ty, 168, 178, 132, 40, 10)) return PRESS_SEARCH_OPEN;
+      return PRESS_NONE;
+    }
+
+    const int resultX[2] = {20, 166};
+    const int resultY = 84;
+    const int resultW = 134;
+    const int resultH = 22;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      if (hitTest(tx, ty, resultX[col], resultY + (row * 24), resultW, resultH, 6)) {
+        return static_cast<PressedControl>(PRESS_SEARCH_NAME_RESULT_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 20, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_PREV;
+    if (hitTest(tx, ty, 236, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_NEXT;
     return PRESS_NONE;
   }
 
@@ -222,6 +262,9 @@ enum PendingActionType {
   ACTION_OPEN_QUIZ,
   ACTION_CLOSE_QUIZ,
   ACTION_SEARCH_TO_MENU,
+  ACTION_SEARCH_TOGGLE_MODE,
+  ACTION_SEARCH_NAME_PAGE,
+  ACTION_SEARCH_NAME_OPEN,
   ACTION_SET_QUIZ_VOLUME,
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
@@ -778,7 +821,9 @@ void loop() {
       needsRedraw = true;
 
       if (screenMode == SCREEN_SEARCH) {
-        if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+        if (pressedControl == PRESS_SEARCH_MODE) {
+          pendingAction = makePendingAction(ACTION_SEARCH_TOGGLE_MODE);
+        } else if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
           const int digitStep[4] = {1000, 100, 10, 1};
           pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, digitStep[pressedControl - PRESS_SEARCH_DIGIT_UP_0]);
         } else if (pressedControl >= PRESS_SEARCH_DIGIT_DOWN_0 && pressedControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
@@ -790,6 +835,12 @@ void loop() {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
         } else if (pressedControl == PRESS_SEARCH_MENU) {
           pendingAction = makePendingAction(ACTION_SEARCH_TO_MENU);
+        } else if (pressedControl == PRESS_SEARCH_NAME_PAGE_PREV) {
+          pendingAction = makePendingAction(ACTION_SEARCH_NAME_PAGE, -10);
+        } else if (pressedControl == PRESS_SEARCH_NAME_PAGE_NEXT) {
+          pendingAction = makePendingAction(ACTION_SEARCH_NAME_PAGE, 10);
+        } else if (pressedControl >= PRESS_SEARCH_NAME_RESULT_0 && pressedControl <= PRESS_SEARCH_NAME_RESULT_9) {
+          pendingAction = makePendingAction(ACTION_SEARCH_NAME_OPEN, pressedControl - PRESS_SEARCH_NAME_RESULT_0);
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
@@ -851,6 +902,12 @@ void loop() {
         screenMode = SCREEN_SEARCH;
         returnId = currentId;
         searchId = currentId;
+        searchMode = SEARCH_MODE_NUMBER;
+        searchNameOffset = 0;
+        break;
+      case ACTION_SEARCH_TOGGLE_MODE:
+        searchMode = (searchMode == SEARCH_MODE_NUMBER) ? SEARCH_MODE_NAME : SEARCH_MODE_NUMBER;
+        searchNameOffset = 0;
         break;
       case ACTION_SEARCH_ADJUST:
         searchId = adjustSearchDigit(
@@ -864,6 +921,22 @@ void loop() {
       case ACTION_SEARCH_TO_MENU:
         screenMode = SCREEN_MENU;
         break;
+      case ACTION_SEARCH_NAME_PAGE: {
+        const int nextOffset = static_cast<int>(searchNameOffset) + pendingAction.value;
+        searchNameOffset = static_cast<size_t>(nextOffset < 0 ? 0 : nextOffset);
+        break;
+      }
+      case ACTION_SEARCH_NAME_OPEN: {
+        auto candidateIds = dataMgr.findPokemonIdsByName(searchNameQuery, searchNameOffset, 10);
+        const int index = pendingAction.value;
+        if (index >= 0 && index < static_cast<int>(candidateIds.size())) {
+          currentId = candidateIds[index];
+          returnId = currentId;
+          screenMode = SCREEN_DETAIL;
+          dataMgr.loadPokemonDetail(currentId);
+        }
+        break;
+      }
       case ACTION_SEARCH_OPEN:
         if (searchId >= MIN_POKEMON_ID
             && searchId <= MAX_POKEMON_ID
@@ -1023,6 +1096,8 @@ void loop() {
       ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
       int pressedDigitDelta = 0;
+      std::vector<uint16_t> nameCandidateIds;
+      std::vector<String> nameCandidateLabels;
       if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
         const int digitStep[4] = {1000, 100, 10, 1};
         pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
@@ -1030,11 +1105,29 @@ void loop() {
         const int digitStep[4] = {1000, 100, 10, 1};
         pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
       }
+      if (searchMode == SEARCH_MODE_NAME) {
+        nameCandidateIds = dataMgr.findPokemonIdsByName(searchNameQuery, searchNameOffset, 10);
+        for (uint16_t id : nameCandidateIds) {
+          char prefix[8];
+          snprintf(prefix, sizeof(prefix), "%04d", id);
+          nameCandidateLabels.push_back(String(prefix) + " " + dataMgr.getPokemonName(id));
+        }
+      }
       ui.drawSearchScreen(
+          searchMode == SEARCH_MODE_NAME,
           searchId,
           dataMgr.getPokemonName(searchId),
+          searchNameQuery,
+          nameCandidateIds,
+          nameCandidateLabels,
           pressedDigitDelta,
           visualControl == PRESS_SEARCH_MENU,
+          visualControl == PRESS_SEARCH_MODE,
+          (visualControl >= PRESS_SEARCH_NAME_RESULT_0 && visualControl <= PRESS_SEARCH_NAME_RESULT_9)
+              ? (visualControl - PRESS_SEARCH_NAME_RESULT_0)
+              : -1,
+          visualControl == PRESS_SEARCH_NAME_PAGE_PREV,
+          visualControl == PRESS_SEARCH_NAME_PAGE_NEXT,
           visualControl == PRESS_SEARCH_CANCEL,
           visualControl == PRESS_SEARCH_OPEN);
     } else if (screenMode == SCREEN_PREVIEW) {

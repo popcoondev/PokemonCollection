@@ -34,11 +34,13 @@ public:
   bool loadPokemonDetail(uint16_t id);
   const PokemonDetail& getCurrentPokemon() const { return currentPokemon; }
   const String& getPokemonName(uint16_t id) const;
+  std::vector<uint16_t> findPokemonIdsByName(const String& query, size_t offset, size_t limit) const;
 
 private:
   bool loadPokemonIndex();
   PokemonDetail currentPokemon;
   std::vector<String> pokemonNames;
+  std::vector<uint16_t> pokemonIdsSortedByName;
 };
 
 #endif

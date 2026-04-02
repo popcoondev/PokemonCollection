@@ -3,6 +3,7 @@
 
 #include "ImageLoader.h"
 #include <M5Unified.h>
+#include <vector>
 #include "Config.h"
 #include "DataManager.h"
 
@@ -32,10 +33,18 @@ public:
   void blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex);
   void pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex);
   void drawSearchScreen(
+      bool nameMode,
       uint16_t selectedId,
       const String& selectedName,
+      const String& nameQuery,
+      const std::vector<uint16_t>& nameCandidateIds,
+      const std::vector<String>& nameCandidateLabels,
       int pressedDigitDelta,
       bool menuPressed,
+      bool modePressed,
+      int pressedCandidateIndex,
+      bool pagePrevPressed,
+      bool pageNextPressed,
       bool cancelPressed,
       bool openPressed);
   
