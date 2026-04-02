@@ -442,53 +442,102 @@ void UIController::pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int ima
 }
 
 void UIController::drawSearchScreen(
+    bool nameMode,
     uint16_t selectedId,
     const String& selectedName,
+    const String& nameQuery,
+    const std::vector<uint16_t>& nameCandidateIds,
+    const std::vector<String>& nameCandidateLabels,
     int pressedDigitDelta,
     bool menuPressed,
+    bool modePressed,
+    int pressedCandidateIndex,
+    bool pagePrevPressed,
+    bool pageNextPressed,
     bool cancelPressed,
     bool openPressed) {
-  const int digitX[4] = {60, 110, 160, 210};
-  const int digitStep[4] = {1000, 100, 10, 1};
-
   sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_CARD);
   sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
 
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("えらびたい No. を へんこう", 20, 22);
   drawActionButton(236, 18, 58, 26, "メニュー", COLOR_PK_BG, COLOR_PK_TEXT, menuPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(168, 18, 58, 26, nameMode ? "No" : "名前", COLOR_PK_BG, COLOR_PK_TEXT, modePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
-  char idText[12];
-  snprintf(idText, sizeof(idText), "%04d", selectedId);
-  const bool validId = selectedId >= MIN_POKEMON_ID && selectedId <= MAX_POKEMON_ID && selectedName.length() > 0;
+  if (!nameMode) {
+    const int digitX[4] = {60, 110, 160, 210};
+    const int digitStep[4] = {1000, 100, 10, 1};
 
-  for (int i = 0; i < 4; ++i) {
-    const bool upPressed = pressedDigitDelta == digitStep[i];
-    const bool downPressed = pressedDigitDelta == -digitStep[i];
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->drawString("No.でえらぶ", 20, 22);
 
-    drawActionButton(digitX[i], 52, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+    char idText[12];
+    snprintf(idText, sizeof(idText), "%04d", selectedId);
+    const bool validId = selectedId >= MIN_POKEMON_ID && selectedId <= MAX_POKEMON_ID && selectedName.length() > 0;
+
+    for (int i = 0; i < 4; ++i) {
+      const bool upPressed = pressedDigitDelta == digitStep[i];
+      const bool downPressed = pressedDigitDelta == -digitStep[i];
+
+      drawActionButton(digitX[i], 52, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+      sprite->setFont(&fonts::efontJA_16_b);
+      sprite->setTextColor(upPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+      sprite->drawCenterString("▲", digitX[i] + 20, 61);
+
+      char digitText[2] = {idText[i], '\0'};
+      sprite->setFont(&fonts::efontJA_16_b);
+      sprite->setTextColor(COLOR_PK_RED);
+      sprite->drawCenterString(digitText, digitX[i] + 20, 92);
+
+      drawActionButton(digitX[i], 120, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+      sprite->setFont(&fonts::efontJA_16_b);
+      sprite->setTextColor(downPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+      sprite->drawCenterString("▼", digitX[i] + 20, 129);
+    }
+
     sprite->setFont(&fonts::efontJA_16_b);
-    sprite->setTextColor(upPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-    sprite->drawCenterString("▲", digitX[i] + 20, 61);
+    sprite->setTextColor(validId ? COLOR_PK_TEXT : COLOR_PK_SUB);
+    sprite->drawCenterString(validId ? selectedName : "データなし", 160, 156);
 
-    char digitText[2] = {idText[i], '\0'};
-    sprite->setFont(&fonts::efontJA_16_b);
-    sprite->setTextColor(COLOR_PK_RED);
-    sprite->drawCenterString(digitText, digitX[i] + 20, 92);
-
-    drawActionButton(digitX[i], 120, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
-    sprite->setFont(&fonts::efontJA_16_b);
-    sprite->setTextColor(downPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
-    sprite->drawCenterString("▼", digitX[i] + 20, 129);
+    drawActionButton(20, 178, 132, 40, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+    drawActionButton(168, 178, 132, 40, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+    return;
   }
 
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(validId ? COLOR_PK_TEXT : COLOR_PK_SUB);
-  sprite->drawCenterString(validId ? selectedName : "データなし", 160, 156);
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("なまえで えらぶ", 20, 22);
 
-  drawActionButton(20, 178, 132, 40, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(168, 178, 132, 40, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  sprite->fillRoundRect(20, 52, 280, 24, 6, COLOR_PK_BG);
+  sprite->drawRoundRect(20, 52, 280, 24, 6, COLOR_PK_BORDER);
+  sprite->setTextColor(nameQuery.length() > 0 ? COLOR_PK_TEXT : COLOR_PK_SUB);
+  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "フリックにゅうりょくは つぎでたいおう", 28, 58);
+
+  const int itemX[2] = {20, 166};
+  const int itemW = 134;
+  const int itemH = 22;
+  const int startY = 84;
+  for (int i = 0; i < 10; ++i) {
+    const int col = i % 2;
+    const int row = i / 2;
+    const int x = itemX[col];
+    const int y = startY + (row * 24);
+    const bool pressed = pressedCandidateIndex == i;
+
+    uint16_t fill = pressed ? COLOR_PK_TEXT : COLOR_PK_BG;
+    uint16_t textColor = pressed ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    sprite->fillRoundRect(x, y, itemW, itemH, 6, fill);
+    sprite->drawRoundRect(x, y, itemW, itemH, 6, COLOR_PK_BORDER);
+
+    if (i < static_cast<int>(nameCandidateIds.size())) {
+      const uint16_t candidateId = nameCandidateIds[i];
+      const String candidateText = nameCandidateLabels[i];
+      sprite->setTextColor(textColor);
+      sprite->drawString(candidateText, x + 8, y + 5);
+    }
+  }
+
+  drawActionButton(20, 206, 64, 22, "↑", COLOR_PK_BG, COLOR_PK_TEXT, pagePrevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(236, 206, 64, 22, "↓", COLOR_PK_BG, COLOR_PK_TEXT, pageNextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
 void UIController::drawInfoRow(const char* label, const String& value, int y) {

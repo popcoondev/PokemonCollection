@@ -1,4 +1,5 @@
 #include "DataManager.h"
+#include <algorithm>
 #include <SD.h>
 
 DataManager::DataManager() {
@@ -28,6 +29,20 @@ bool DataManager::loadPokemonIndex() {
     if (id >= pokemonNames.size()) continue;
     pokemonNames[id] = entry["n"].as<String>();
   }
+
+  pokemonIdsSortedByName.clear();
+  for (uint16_t id = MIN_POKEMON_ID; id <= MAX_POKEMON_ID; ++id) {
+    if (pokemonNames[id].length() > 0) {
+      pokemonIdsSortedByName.push_back(id);
+    }
+  }
+  std::sort(
+      pokemonIdsSortedByName.begin(),
+      pokemonIdsSortedByName.end(),
+      [this](uint16_t lhs, uint16_t rhs) {
+        const int cmp = pokemonNames[lhs].compareTo(pokemonNames[rhs]);
+        return (cmp == 0) ? (lhs < rhs) : (cmp < 0);
+      });
 
   return true;
 }
@@ -70,4 +85,29 @@ const String& DataManager::getPokemonName(uint16_t id) const {
   static const String emptyName = "";
   if (id >= pokemonNames.size()) return emptyName;
   return pokemonNames[id];
+}
+
+std::vector<uint16_t> DataManager::findPokemonIdsByName(const String& query, size_t offset, size_t limit) const {
+  std::vector<uint16_t> results;
+  if (limit == 0) {
+    return results;
+  }
+
+  size_t skipped = 0;
+  for (uint16_t id : pokemonIdsSortedByName) {
+    const String& name = pokemonNames[id];
+    if (query.length() > 0 && name.indexOf(query) < 0) {
+      continue;
+    }
+    if (skipped < offset) {
+      ++skipped;
+      continue;
+    }
+    results.push_back(id);
+    if (results.size() >= limit) {
+      break;
+    }
+  }
+
+  return results;
 }
