@@ -510,7 +510,7 @@ void UIController::drawSearchScreen(
   sprite->fillRoundRect(20, 52, 280, 24, 6, COLOR_PK_BG);
   sprite->drawRoundRect(20, 52, 280, 24, 6, COLOR_PK_BORDER);
   sprite->setTextColor(nameQuery.length() > 0 ? COLOR_PK_TEXT : COLOR_PK_SUB);
-  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "フリックにゅうりょくは つぎでたいおう", 28, 58);
+  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "にゅうりょくらんを タップ", 28, 58);
 
   const int itemX[2] = {20, 166};
   const int itemW = 134;
@@ -529,7 +529,6 @@ void UIController::drawSearchScreen(
     sprite->drawRoundRect(x, y, itemW, itemH, 6, COLOR_PK_BORDER);
 
     if (i < static_cast<int>(nameCandidateIds.size())) {
-      const uint16_t candidateId = nameCandidateIds[i];
       const String candidateText = nameCandidateLabels[i];
       sprite->setTextColor(textColor);
       sprite->drawString(candidateText, x + 8, y + 5);
@@ -538,6 +537,124 @@ void UIController::drawSearchScreen(
 
   drawActionButton(20, 206, 64, 22, "↑", COLOR_PK_BG, COLOR_PK_TEXT, pagePrevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(236, 206, 64, 22, "↓", COLOR_PK_BG, COLOR_PK_TEXT, pageNextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+}
+
+void UIController::drawSearchInputScreen(
+    const String& nameQuery,
+    bool vowelMode,
+    const String& selectedRowLabel,
+    bool backPressed,
+    bool clearPressed,
+    bool deletePressed,
+    int pressedKeyIndex) {
+  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_CARD);
+  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
+
+  drawActionButton(12, 202, 88, 28, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(116, 202, 88, 28, "けす", COLOR_PK_BG, COLOR_PK_TEXT, deletePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(220, 202, 88, 28, "クリア", COLOR_PK_BG, COLOR_PK_TEXT, clearPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("おとを えらぶ", 12, 16);
+
+  sprite->fillRoundRect(12, 32, 296, 24, 6, COLOR_PK_BG);
+  sprite->drawRoundRect(12, 32, 296, 24, 6, COLOR_PK_BORDER);
+  sprite->setTextColor(nameQuery.length() > 0 ? COLOR_PK_TEXT : COLOR_PK_SUB);
+  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "ここに なまえが はいります", 20, 38);
+  sprite->fillRoundRect(12, 56, 120, 16, 6, vowelMode ? COLOR_PK_RED : COLOR_PK_BG);
+  sprite->drawRoundRect(12, 56, 120, 16, 6, COLOR_PK_BORDER);
+  sprite->setTextColor(vowelMode ? COLOR_PK_CARD : COLOR_PK_SUB);
+  sprite->drawCenterString(vowelMode ? "もじを えらぶ" : "ぎょうを えらぶ", 72, 60);
+
+  if (!vowelMode) {
+    static constexpr const char* rowLabels[12] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ", "゛゜", "小"};
+    const int keyX[3] = {30, 120, 210};
+    const int keyY[4] = {76, 106, 136, 166};
+    for (int i = 0; i < 12; ++i) {
+      const int col = i % 3;
+      const int row = i / 3;
+      drawActionButton(
+          keyX[col],
+          keyY[row],
+          80,
+          24,
+          rowLabels[i],
+          COLOR_PK_BG,
+          (i >= 10) ? COLOR_PK_SUB : COLOR_PK_TEXT,
+          pressedKeyIndex == i,
+          COLOR_PK_RED,
+          COLOR_PK_BORDER);
+    }
+    return;
+  }
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawCenterString(selectedRowLabel + "ぎょう", 160, 78);
+
+  static constexpr const char* rowKanaTable[10][5] = {
+      {"ア","イ","ウ","エ","オ"},
+      {"カ","キ","ク","ケ","コ"},
+      {"サ","シ","ス","セ","ソ"},
+      {"タ","チ","ツ","テ","ト"},
+      {"ナ","ニ","ヌ","ネ","ノ"},
+      {"ハ","ヒ","フ","ヘ","ホ"},
+      {"マ","ミ","ム","メ","モ"},
+      {"ヤ","","ユ","","ヨ"},
+      {"ラ","リ","ル","レ","ロ"},
+      {"ワ","","ン","ー","ヲ"}
+  };
+  static constexpr const char* extraLabels[3] = {"ン", "ー", "ッ"};
+  const int keyX[3] = {30, 120, 210};
+  const int keyY[4] = {76, 106, 136, 166};
+  for (int i = 0; i < 12; ++i) {
+    const int col = i % 3;
+    const int row = i / 3;
+    const char* label = "";
+    bool disabled = false;
+    if (i <= 4) {
+      if (selectedRowLabel == "ア") label = rowKanaTable[0][i];
+      else if (selectedRowLabel == "カ") label = rowKanaTable[1][i];
+      else if (selectedRowLabel == "サ") label = rowKanaTable[2][i];
+      else if (selectedRowLabel == "タ") label = rowKanaTable[3][i];
+      else if (selectedRowLabel == "ナ") label = rowKanaTable[4][i];
+      else if (selectedRowLabel == "ハ") label = rowKanaTable[5][i];
+      else if (selectedRowLabel == "マ") label = rowKanaTable[6][i];
+      else if (selectedRowLabel == "ヤ") label = rowKanaTable[7][i];
+      else if (selectedRowLabel == "ラ") label = rowKanaTable[8][i];
+      else if (selectedRowLabel == "ワ") label = rowKanaTable[9][i];
+      if (label[0] == '\0') disabled = true;
+    } else if (i >= 5 && i <= 7) {
+      label = extraLabels[i - 5];
+    } else if (i == 8) {
+      label = "";
+      disabled = true;
+    } else if (i == 9) {
+      label = "";
+      disabled = true;
+    } else if (i == 10) {
+      label = "";
+      disabled = true;
+    } else if (i == 11) {
+      label = "";
+      disabled = true;
+    } else {
+      label = "";
+      disabled = true;
+    }
+    drawActionButton(
+        keyX[col],
+        keyY[row],
+        80,
+        24,
+        label,
+        COLOR_PK_BG,
+        disabled ? COLOR_PK_SUB : COLOR_PK_TEXT,
+        pressedKeyIndex == i,
+        COLOR_PK_RED,
+        COLOR_PK_BORDER);
+  }
 }
 
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
