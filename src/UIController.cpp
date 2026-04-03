@@ -376,7 +376,18 @@ void UIController::drawPreviewPocScreenLayered(
   iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::applyBlackFade(uint8_t alpha) {
+  if (alpha == 0 || sprite == nullptr || sprite->getBuffer() == nullptr) {
+    return;
+  }
+  uint16_t* buffer = static_cast<uint16_t*>(sprite->getBuffer());
+  const size_t pixelCount = static_cast<size_t>(SCREEN_WIDTH) * static_cast<size_t>(SCREEN_HEIGHT);
+  for (size_t i = 0; i < pixelCount; ++i) {
+    buffer[i] = blend565(0x0000, buffer[i], alpha);
+  }
+}
+
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -398,10 +409,11 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pr
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawCenterString("モードを えらんでください", SCREEN_WIDTH / 2, 82);
+  sprite->drawCenterString("モードを えらんでください", SCREEN_WIDTH / 2, 74);
 
-  drawActionButton(44, 102, SCREEN_WIDTH - 88, 42, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
-  drawActionButton(44, 158, SCREEN_WIDTH - 88, 42, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(44, 92, SCREEN_WIDTH - 88, 34, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  drawActionButton(44, 136, SCREEN_WIDTH - 88, 34, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(44, 180, SCREEN_WIDTH - 88, 24, "スライドショー", COLOR_PK_CARD, COLOR_PK_TEXT, slideshowPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
