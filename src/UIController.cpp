@@ -347,6 +347,35 @@ void UIController::drawPreviewPocScreenCached(LGFX_Sprite& silhouetteSprite, LGF
   iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
 }
 
+void UIController::drawPreviewPocScreenLayered(
+    LGFX_Sprite* backgroundSprite,
+    LGFX_Sprite& silhouetteSprite,
+    LGFX_Sprite& iconSprite,
+    int shiftX,
+    int shiftY,
+    uint16_t transparentColor) {
+  sprite->fillScreen(TFT_WHITE);
+
+  const int bgOffsetX = shiftX / 4;
+  const int bgOffsetY = shiftY / 5;
+
+  if (backgroundSprite != nullptr) {
+    const int bgX = -((backgroundSprite->width() - SCREEN_WIDTH) / 2) + bgOffsetX;
+    const int bgY = -((backgroundSprite->height() - SCREEN_HEIGHT) / 2) + bgOffsetY;
+    backgroundSprite->pushSprite(sprite, bgX, bgY);
+  }
+
+  const int baseX = 64;
+  const int baseY = 24;
+  const int shadowX = baseX + 3 - (shiftX / 2);
+  const int shadowY = baseY + 5 - (shiftY / 2);
+  const int iconX = baseX + shiftX;
+  const int iconY = baseY + shiftY;
+
+  silhouetteSprite.pushSprite(sprite, shadowX, shadowY, transparentColor);
+  iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
+}
+
 void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pocPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 

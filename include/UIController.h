@@ -25,6 +25,13 @@ public:
   void drawFullscreenPreview(bool drawImage = true, uint16_t pokemonId = 0);
   void drawPreviewPocScreen(uint16_t pokemonId, int shiftX, int shiftY);
   void drawPreviewPocScreenCached(LGFX_Sprite& silhouetteSprite, LGFX_Sprite& iconSprite, int shiftX, int shiftY, uint16_t transparentColor);
+  void drawPreviewPocScreenLayered(
+      LGFX_Sprite* backgroundSprite,
+      LGFX_Sprite& silhouetteSprite,
+      LGFX_Sprite& iconSprite,
+      int shiftX,
+      int shiftY,
+      uint16_t transparentColor);
   void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pocPressed, int selectedVolumeIndex, int pressedVolumeIndex);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);

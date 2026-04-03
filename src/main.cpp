@@ -38,7 +38,8 @@ constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
 constexpr int kPreviewPocImageSize = 192;
-constexpr uint16_t kPreviewPocTransparentColor = 0xF81F;
+constexpr int kPreviewPocBackgroundMargin = 16;
+constexpr uint16_t kPreviewPocTransparentColor = 0x0001;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
@@ -110,6 +111,32 @@ enum QuizVolumeSetting {
   QUIZ_VOLUME_MUTE,
 };
 
+const char* getParallaxBackgroundPathForType(const String& type) {
+  if (type == "ノーマル") return "/pokemon/parallax/bg_normal.png";
+  if (type == "ほのお") return "/pokemon/parallax/bg_fire.png";
+  if (type == "みず") return "/pokemon/parallax/bg_water.png";
+  if (type == "でんき") return "/pokemon/parallax/bg_electric.png";
+  if (type == "くさ") return "/pokemon/parallax/bg_grass.png";
+  if (type == "こおり") return "/pokemon/parallax/bg_ice.png";
+  if (type == "かくとう") return "/pokemon/parallax/bg_fighting.png";
+  if (type == "どく") return "/pokemon/parallax/bg_poison.png";
+  if (type == "じめん") return "/pokemon/parallax/bg_ground.png";
+  if (type == "ひこう") return "/pokemon/parallax/bg_flying.png";
+  if (type == "エスパー") return "/pokemon/parallax/bg_psychic.png";
+  if (type == "むし") return "/pokemon/parallax/bg_bug.png";
+  if (type == "いわ") return "/pokemon/parallax/bg_rock.png";
+  if (type == "ゴースト") return "/pokemon/parallax/bg_ghost.png";
+  if (type == "ドラゴン") return "/pokemon/parallax/bg_dragon.png";
+  if (type == "あく") return "/pokemon/parallax/bg_dark.png";
+  if (type == "はがね") return "/pokemon/parallax/bg_steel.png";
+  if (type == "フェアリー") return "/pokemon/parallax/bg_fairy.png";
+  return "/pokemon/parallax/bg_normal.png";
+}
+
+const char* getPreviewPocBackgroundPath() {
+  return getParallaxBackgroundPathForType("くさ");
+}
+
 QueueHandle_t appearanceRequestQueue = nullptr;
 QueueHandle_t appearanceResultQueue = nullptr;
 SemaphoreHandle_t appearanceSpriteMutex = nullptr;
@@ -135,6 +162,7 @@ uint16_t previewRequestedId = 0;
 uint32_t previewRequestedGeneration = 0;
 LGFX_Sprite* previewPocShadowSprite = nullptr;
 LGFX_Sprite* previewPocIconSprite = nullptr;
+LGFX_Sprite* previewPocBackgroundSprite = nullptr;
 ImageLoader previewPocImageLoader;
 bool previewPocCacheReady = false;
 
@@ -791,8 +819,25 @@ bool ensurePreviewPocCacheReady() {
     }
   }
 
+  if (previewPocBackgroundSprite == nullptr) {
+    previewPocBackgroundSprite = new LGFX_Sprite(&M5.Display);
+    if (previewPocBackgroundSprite != nullptr) {
+      previewPocBackgroundSprite->setColorDepth(16);
+      previewPocBackgroundSprite->setPsram(true);
+      if (!previewPocBackgroundSprite->createSprite(
+              SCREEN_WIDTH + (kPreviewPocBackgroundMargin * 2),
+              SCREEN_HEIGHT + (kPreviewPocBackgroundMargin * 2))) {
+        delete previewPocBackgroundSprite;
+        previewPocBackgroundSprite = nullptr;
+      }
+    }
+  }
+
   previewPocShadowSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
   previewPocIconSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
+  if (previewPocBackgroundSprite != nullptr) {
+    previewPocBackgroundSprite->fillScreen(TFT_WHITE);
+  }
 
   const bool shadowReady = previewPocImageLoader.loadAndDisplayPNGPath(
       *previewPocShadowSprite,
@@ -810,8 +855,21 @@ bool ensurePreviewPocCacheReady() {
       kPreviewPocImageSize,
       kPreviewPocImageSize,
       false);
+  const bool backgroundReady = (previewPocBackgroundSprite == nullptr)
+      ? false
+      : previewPocImageLoader.loadAndDisplayPNGPath(
+            *previewPocBackgroundSprite,
+            getPreviewPocBackgroundPath(),
+            0,
+            0,
+            SCREEN_WIDTH + (kPreviewPocBackgroundMargin * 2),
+            SCREEN_HEIGHT + (kPreviewPocBackgroundMargin * 2),
+            false);
 
   previewPocCacheReady = shadowReady && iconReady;
+  if (!backgroundReady && previewPocBackgroundSprite != nullptr) {
+    previewPocBackgroundSprite->fillScreen(TFT_WHITE);
+  }
   return previewPocCacheReady;
 }
 
@@ -1104,6 +1162,7 @@ void loop() {
         playQuizSound(quizPhase);
         break;
       case ACTION_OPEN_PREVIEW_POC:
+        previewPocCacheReady = false;
         ensurePreviewPocCacheReady();
         screenMode = SCREEN_PREVIEW_POC;
         break;
@@ -1465,7 +1524,8 @@ void loop() {
       }
     } else if (screenMode == SCREEN_PREVIEW_POC) {
       if (ensurePreviewPocCacheReady() && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
-        ui.drawPreviewPocScreenCached(
+        ui.drawPreviewPocScreenLayered(
+            previewPocBackgroundSprite,
             *previewPocShadowSprite,
             *previewPocIconSprite,
             previewPocShiftX,
