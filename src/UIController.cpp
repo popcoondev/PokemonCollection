@@ -376,7 +376,7 @@ void UIController::drawPreviewPocScreenLayered(
   iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pocPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -384,7 +384,17 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool po
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawCenterString("ポケモン図鑑", SCREEN_WIDTH / 2, 22);
-  drawActionButton(256, 14, 40, 18, "POC", COLOR_PK_BG, COLOR_PK_TEXT, pocPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(
+      246,
+      14,
+      50,
+      18,
+      "3D",
+      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BG,
+      preview3dEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
+      preview3dPressed,
+      preview3dEnabled ? COLOR_PK_TEXT : COLOR_PK_BORDER,
+      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);

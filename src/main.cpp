@@ -133,10 +133,6 @@ const char* getParallaxBackgroundPathForType(const String& type) {
   return "/pokemon/parallax/bg_normal.png";
 }
 
-const char* getPreviewPocBackgroundPath() {
-  return getParallaxBackgroundPathForType("くさ");
-}
-
 QueueHandle_t appearanceRequestQueue = nullptr;
 QueueHandle_t appearanceResultQueue = nullptr;
 SemaphoreHandle_t appearanceSpriteMutex = nullptr;
@@ -165,6 +161,8 @@ LGFX_Sprite* previewPocIconSprite = nullptr;
 LGFX_Sprite* previewPocBackgroundSprite = nullptr;
 ImageLoader previewPocImageLoader;
 bool previewPocCacheReady = false;
+uint16_t previewPocCachedId = 0;
+String previewPocCachedType = "";
 
 QueueHandle_t evolutionRequestQueue = nullptr;
 QueueHandle_t evolutionResultQueue = nullptr;
@@ -180,6 +178,7 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+bool preview3dEnabled = false;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -314,7 +313,7 @@ enum PressedControl {
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
-  PRESS_MENU_POC,
+  PRESS_MENU_3D,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -335,7 +334,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
     if (hitTest(tx, ty, 44, 102, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_POKEDEX;
     if (hitTest(tx, ty, 44, 158, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_QUIZ;
-    if (hitTest(tx, ty, 256, 14, 40, 18, 6)) return PRESS_MENU_POC;
+    if (hitTest(tx, ty, 246, 14, 50, 18, 6)) return PRESS_MENU_3D;
     if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
     if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
     if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
@@ -395,7 +394,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_PREVIEW_POC) {
-    return PRESS_MENU_POC;
+    return PRESS_MENU_3D;
   }
 
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
@@ -414,9 +413,9 @@ enum PendingActionType {
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
-  ACTION_OPEN_PREVIEW_POC,
   ACTION_CLOSE_PREVIEW_POC,
   ACTION_CLOSE_QUIZ,
+  ACTION_TOGGLE_PREVIEW_3D,
   ACTION_SEARCH_TO_MENU,
   ACTION_SEARCH_TOGGLE_MODE,
   ACTION_SEARCH_OPEN_INPUT,
@@ -492,6 +491,7 @@ void applyQuizVolume() {
 bool saveSettings() {
   JsonDocument doc;
   doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
+  doc["preview_3d"] = preview3dEnabled;
 
   if (SD.exists(kSettingsPath)) {
     SD.remove(kSettingsPath);
@@ -507,6 +507,7 @@ bool saveSettings() {
 
 void loadSettings() {
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+  preview3dEnabled = false;
 
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
@@ -518,6 +519,7 @@ void loadSettings() {
   JsonDocument doc;
   if (deserializeJson(doc, file) == DeserializationError::Ok) {
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
+    preview3dEnabled = doc["preview_3d"] | false;
   }
   file.close();
   applyQuizVolume();
@@ -782,8 +784,10 @@ void queuePreviewImageRequest(uint16_t pokemonId) {
   xQueueOverwrite(previewRequestQueue, &request);
 }
 
-bool ensurePreviewPocCacheReady() {
-  if (previewPocCacheReady) {
+bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
+  if (previewPocCacheReady
+      && previewPocCachedId == pokemonId
+      && previewPocCachedType == primaryType) {
     return true;
   }
 
@@ -839,9 +843,14 @@ bool ensurePreviewPocCacheReady() {
     previewPocBackgroundSprite->fillScreen(TFT_WHITE);
   }
 
+  char silhouettePath[64];
+  char iconPath[64];
+  snprintf(silhouettePath, sizeof(silhouettePath), "/pokemon/silhouettes/%04d.png", pokemonId);
+  snprintf(iconPath, sizeof(iconPath), "/pokemon/icons/%04d.png", pokemonId);
+
   const bool shadowReady = previewPocImageLoader.loadAndDisplayPNGPath(
       *previewPocShadowSprite,
-      "/pokemon/silhouettes/0003.png",
+      silhouettePath,
       0,
       0,
       kPreviewPocImageSize,
@@ -849,7 +858,7 @@ bool ensurePreviewPocCacheReady() {
       false);
   const bool iconReady = previewPocImageLoader.loadAndDisplayPNGPath(
       *previewPocIconSprite,
-      "/pokemon/icons/0003.png",
+      iconPath,
       0,
       0,
       kPreviewPocImageSize,
@@ -859,7 +868,7 @@ bool ensurePreviewPocCacheReady() {
       ? false
       : previewPocImageLoader.loadAndDisplayPNGPath(
             *previewPocBackgroundSprite,
-            getPreviewPocBackgroundPath(),
+            getParallaxBackgroundPathForType(primaryType),
             0,
             0,
             SCREEN_WIDTH + (kPreviewPocBackgroundMargin * 2),
@@ -867,6 +876,10 @@ bool ensurePreviewPocCacheReady() {
             false);
 
   previewPocCacheReady = shadowReady && iconReady;
+  if (previewPocCacheReady) {
+    previewPocCachedId = pokemonId;
+    previewPocCachedType = primaryType;
+  }
   if (!backgroundReady && previewPocBackgroundSprite != nullptr) {
     previewPocBackgroundSprite->fillScreen(TFT_WHITE);
   }
@@ -1119,8 +1132,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
         } else if (pressedControl == PRESS_MENU_QUIZ) {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
-        } else if (pressedControl == PRESS_MENU_POC) {
-          pendingAction = makePendingAction(ACTION_OPEN_PREVIEW_POC);
+        } else if (pressedControl == PRESS_MENU_3D) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -1161,13 +1174,12 @@ void loop() {
         quizPokemonId = chooseNextQuizPokemonId(0);
         playQuizSound(quizPhase);
         break;
-      case ACTION_OPEN_PREVIEW_POC:
-        previewPocCacheReady = false;
-        ensurePreviewPocCacheReady();
-        screenMode = SCREEN_PREVIEW_POC;
-        break;
       case ACTION_CLOSE_PREVIEW_POC:
-        screenMode = SCREEN_MENU;
+        screenMode = SCREEN_DETAIL;
+        break;
+      case ACTION_TOGGLE_PREVIEW_3D:
+        preview3dEnabled = !preview3dEnabled;
+        saveSettings();
         break;
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
@@ -1287,8 +1299,18 @@ void loop() {
         }
         break;
       case ACTION_PREVIEW_OPEN:
-        screenMode = SCREEN_PREVIEW;
-        queuePreviewImageRequest(currentId);
+        if (preview3dEnabled) {
+          previewPocCacheReady = false;
+          {
+            const auto& pk = dataMgr.getCurrentPokemon();
+            const String previewType = pk.types.empty() ? String("ノーマル") : pk.types[0];
+            ensurePreviewPocCacheReady(currentId, previewType);
+          }
+          screenMode = SCREEN_PREVIEW_POC;
+        } else {
+          screenMode = SCREEN_PREVIEW;
+          queuePreviewImageRequest(currentId);
+        }
         break;
       case ACTION_PREVIEW_CLOSE:
         screenMode = SCREEN_DETAIL;
@@ -1456,7 +1478,8 @@ void loop() {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
-          visualControl == PRESS_MENU_POC,
+          preview3dEnabled,
+          visualControl == PRESS_MENU_3D,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
@@ -1523,7 +1546,8 @@ void loop() {
         queuePreviewImageRequest(currentId);
       }
     } else if (screenMode == SCREEN_PREVIEW_POC) {
-      if (ensurePreviewPocCacheReady() && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
+      const String previewType = pk.types.empty() ? String("ノーマル") : pk.types[0];
+      if (ensurePreviewPocCacheReady(currentId, previewType) && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
         ui.drawPreviewPocScreenLayered(
             previewPocBackgroundSprite,
             *previewPocShadowSprite,
