@@ -26,6 +26,7 @@ enum ScreenMode {
   SCREEN_SEARCH,
   SCREEN_SEARCH_INPUT,
   SCREEN_PREVIEW,
+  SCREEN_PREVIEW_POC,
   SCREEN_QUIZ,
 };
 
@@ -36,6 +37,8 @@ constexpr int kAppearanceImageX = 6;
 constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
+constexpr int kPreviewPocImageSize = 192;
+constexpr uint16_t kPreviewPocTransparentColor = 0xF81F;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
@@ -130,6 +133,10 @@ uint32_t previewCachedGeneration = 0;
 bool previewCacheReady = false;
 uint16_t previewRequestedId = 0;
 uint32_t previewRequestedGeneration = 0;
+LGFX_Sprite* previewPocShadowSprite = nullptr;
+LGFX_Sprite* previewPocIconSprite = nullptr;
+ImageLoader previewPocImageLoader;
+bool previewPocCacheReady = false;
 
 QueueHandle_t evolutionRequestQueue = nullptr;
 QueueHandle_t evolutionResultQueue = nullptr;
@@ -279,6 +286,7 @@ enum PressedControl {
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
+  PRESS_MENU_POC,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -299,6 +307,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
     if (hitTest(tx, ty, 44, 102, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_POKEDEX;
     if (hitTest(tx, ty, 44, 158, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 256, 14, 40, 18, 6)) return PRESS_MENU_POC;
     if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
     if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
     if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
@@ -357,6 +366,10 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_APPEARANCE_PREVIEW;
   }
 
+  if (mode == SCREEN_PREVIEW_POC) {
+    return PRESS_MENU_POC;
+  }
+
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y)) return PRESS_NAV_NEXT;
@@ -373,6 +386,8 @@ enum PendingActionType {
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
+  ACTION_OPEN_PREVIEW_POC,
+  ACTION_CLOSE_PREVIEW_POC,
   ACTION_CLOSE_QUIZ,
   ACTION_SEARCH_TO_MENU,
   ACTION_SEARCH_TOGGLE_MODE,
@@ -739,6 +754,67 @@ void queuePreviewImageRequest(uint16_t pokemonId) {
   xQueueOverwrite(previewRequestQueue, &request);
 }
 
+bool ensurePreviewPocCacheReady() {
+  if (previewPocCacheReady) {
+    return true;
+  }
+
+  if (!previewPocImageLoader.begin()) {
+    return false;
+  }
+
+  if (previewPocShadowSprite == nullptr) {
+    previewPocShadowSprite = new LGFX_Sprite(&M5.Display);
+    if (previewPocShadowSprite == nullptr) {
+      return false;
+    }
+    previewPocShadowSprite->setColorDepth(16);
+    previewPocShadowSprite->setPsram(true);
+    if (!previewPocShadowSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
+      delete previewPocShadowSprite;
+      previewPocShadowSprite = nullptr;
+      return false;
+    }
+  }
+
+  if (previewPocIconSprite == nullptr) {
+    previewPocIconSprite = new LGFX_Sprite(&M5.Display);
+    if (previewPocIconSprite == nullptr) {
+      return false;
+    }
+    previewPocIconSprite->setColorDepth(16);
+    previewPocIconSprite->setPsram(true);
+    if (!previewPocIconSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
+      delete previewPocIconSprite;
+      previewPocIconSprite = nullptr;
+      return false;
+    }
+  }
+
+  previewPocShadowSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
+  previewPocIconSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
+
+  const bool shadowReady = previewPocImageLoader.loadAndDisplayPNGPath(
+      *previewPocShadowSprite,
+      "/pokemon/silhouettes/0003.png",
+      0,
+      0,
+      kPreviewPocImageSize,
+      kPreviewPocImageSize,
+      false);
+  const bool iconReady = previewPocImageLoader.loadAndDisplayPNGPath(
+      *previewPocIconSprite,
+      "/pokemon/icons/0003.png",
+      0,
+      0,
+      kPreviewPocImageSize,
+      kPreviewPocImageSize,
+      false);
+
+  previewPocCacheReady = shadowReady && iconReady;
+  return previewPocCacheReady;
+}
+
 void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
   evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kEvolutionImageW, kEvolutionImageH, false);
@@ -978,11 +1054,15 @@ void loop() {
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
+      } else if (screenMode == SCREEN_PREVIEW_POC) {
+        pendingAction = makePendingAction(ACTION_CLOSE_PREVIEW_POC);
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
         } else if (pressedControl == PRESS_MENU_QUIZ) {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
+        } else if (pressedControl == PRESS_MENU_POC) {
+          pendingAction = makePendingAction(ACTION_OPEN_PREVIEW_POC);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -1022,6 +1102,13 @@ void loop() {
         quizPhaseStartedAt = millis();
         quizPokemonId = chooseNextQuizPokemonId(0);
         playQuizSound(quizPhase);
+        break;
+      case ACTION_OPEN_PREVIEW_POC:
+        ensurePreviewPocCacheReady();
+        screenMode = SCREEN_PREVIEW_POC;
+        break;
+      case ACTION_CLOSE_PREVIEW_POC:
+        screenMode = SCREEN_MENU;
         break;
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
@@ -1192,6 +1279,35 @@ void loop() {
     }
   }
 
+  static float previewPocShiftXF = 0.0f;
+  static float previewPocShiftYF = 0.0f;
+  static int previewPocShiftX = 0;
+  static int previewPocShiftY = 0;
+  if (screenMode == SCREEN_PREVIEW_POC) {
+    float ax = 0.0f;
+    float ay = 0.0f;
+    float az = 0.0f;
+    if (M5.Imu.getAccel(&ax, &ay, &az)) {
+      const float targetShiftX = constrain(ax * -10.0f, -4.0f, 4.0f);
+      const float targetShiftY = constrain(ay * 10.0f, -4.0f, 4.0f);
+      previewPocShiftXF += (targetShiftX - previewPocShiftXF) * 0.45f;
+      previewPocShiftYF += (targetShiftY - previewPocShiftYF) * 0.45f;
+      const int nextShiftX = static_cast<int>(roundf(previewPocShiftXF));
+      const int nextShiftY = static_cast<int>(roundf(previewPocShiftYF));
+      if (nextShiftX != previewPocShiftX || nextShiftY != previewPocShiftY) {
+        previewPocShiftX = nextShiftX;
+        previewPocShiftY = nextShiftY;
+        needsRedraw = true;
+      }
+    }
+    needsRedraw = true;
+  } else {
+    previewPocShiftXF = 0.0f;
+    previewPocShiftYF = 0.0f;
+    previewPocShiftX = 0;
+    previewPocShiftY = 0;
+  }
+
   const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
   const bool tabChanged = lastRenderedTab != currentTab;
   if (tabChanged) {
@@ -1281,6 +1397,7 @@ void loop() {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
+          visualControl == PRESS_MENU_POC,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
@@ -1345,6 +1462,17 @@ void loop() {
         xSemaphoreGive(previewSpriteMutex);
       } else {
         queuePreviewImageRequest(currentId);
+      }
+    } else if (screenMode == SCREEN_PREVIEW_POC) {
+      if (ensurePreviewPocCacheReady() && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
+        ui.drawPreviewPocScreenCached(
+            *previewPocShadowSprite,
+            *previewPocIconSprite,
+            previewPocShiftX,
+            previewPocShiftY,
+            kPreviewPocTransparentColor);
+      } else {
+        ui.drawPreviewPocScreen(3, previewPocShiftX, previewPocShiftY);
       }
     } else {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);

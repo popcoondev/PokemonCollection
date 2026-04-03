@@ -313,7 +313,41 @@ void UIController::drawFullscreenPreview(bool drawImage, uint16_t pokemonId) {
   }
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::drawPreviewPocScreen(uint16_t pokemonId, int shiftX, int shiftY) {
+  sprite->fillScreen(TFT_WHITE);
+
+  char silhouettePath[64];
+  char iconPath[64];
+  snprintf(silhouettePath, sizeof(silhouettePath), "/pokemon/silhouettes/%04d.png", pokemonId);
+  snprintf(iconPath, sizeof(iconPath), "/pokemon/icons/%04d.png", pokemonId);
+
+  const int baseX = 64;
+  const int baseY = 24;
+  const int size = 192;
+  const int shadowX = baseX + 4 - (shiftX / 3);
+  const int shadowY = baseY + 6 - (shiftY / 3);
+  const int iconX = baseX + shiftX;
+  const int iconY = baseY + shiftY;
+
+  imageLoader.loadAndDisplayPNGPath(*sprite, silhouettePath, shadowX, shadowY, size, size, false);
+  imageLoader.loadAndDisplayPNGPath(*sprite, iconPath, iconX, iconY, size, size, false);
+}
+
+void UIController::drawPreviewPocScreenCached(LGFX_Sprite& silhouetteSprite, LGFX_Sprite& iconSprite, int shiftX, int shiftY, uint16_t transparentColor) {
+  sprite->fillScreen(TFT_WHITE);
+
+  const int baseX = 64;
+  const int baseY = 24;
+  const int shadowX = baseX + 3 - (shiftX / 2);
+  const int shadowY = baseY + 5 - (shiftY / 2);
+  const int iconX = baseX + shiftX;
+  const int iconY = baseY + shiftY;
+
+  silhouetteSprite.pushSprite(sprite, shadowX, shadowY, transparentColor);
+  iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
+}
+
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pocPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -321,6 +355,7 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, int sel
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawCenterString("ポケモン図鑑", SCREEN_WIDTH / 2, 22);
+  drawActionButton(256, 14, 40, 18, "POC", COLOR_PK_BG, COLOR_PK_TEXT, pocPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);

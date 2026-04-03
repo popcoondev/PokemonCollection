@@ -23,7 +23,9 @@ public:
   void drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex = -1, bool drawImages = true);
   void drawDetailNavigation(bool prevPressed, bool nextPressed);
   void drawFullscreenPreview(bool drawImage = true, uint16_t pokemonId = 0);
-  void drawMenuScreen(bool pokedexPressed, bool quizPressed, int selectedVolumeIndex, int pressedVolumeIndex);
+  void drawPreviewPocScreen(uint16_t pokemonId, int shiftX, int shiftY);
+  void drawPreviewPocScreenCached(LGFX_Sprite& silhouetteSprite, LGFX_Sprite& iconSprite, int shiftX, int shiftY, uint16_t transparentColor);
+  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool pocPressed, int selectedVolumeIndex, int pressedVolumeIndex);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
