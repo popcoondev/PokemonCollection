@@ -1196,7 +1196,7 @@ void loop() {
         break;
       case ACTION_OPEN_SLIDESHOW:
         screenMode = SCREEN_SLIDESHOW;
-        slideshowPokemonId = chooseNextQuizPokemonId(0);
+        slideshowPokemonId = MIN_POKEMON_ID;
         slideshowPhaseStartedAt = millis();
         dataMgr.loadPokemonDetail(slideshowPokemonId);
         if (preview3dEnabled) {
@@ -1397,7 +1397,7 @@ void loop() {
   if (screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
     const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
     if (elapsed >= kSlideshowSlideDurationMs) {
-      slideshowPokemonId = chooseNextQuizPokemonId(slideshowPokemonId);
+      slideshowPokemonId = (slideshowPokemonId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (slideshowPokemonId + 1);
       slideshowPhaseStartedAt = millis();
       dataMgr.loadPokemonDetail(slideshowPokemonId);
       if (preview3dEnabled) {
@@ -1638,6 +1638,9 @@ void loop() {
           xSemaphoreGive(appearanceSpriteMutex);
         } else {
           queueAppearanceImageRequest(currentId);
+        }
+        if (visualControl == PRESS_APPEARANCE_PREVIEW) {
+          ui.drawAppearancePreviewFeedback();
         }
       } else if (currentTab == TAB_DESCRIPTION) {
         ui.drawDescriptionTab(pk);

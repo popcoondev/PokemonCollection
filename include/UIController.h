@@ -17,6 +17,7 @@ public:
   void drawTabBar(TabType activeTab, int pressedTab);
   
   void drawAppearanceTab(const PokemonDetail& pk, bool drawImage = true);
+  void drawAppearancePreviewFeedback();
   void drawDescriptionTab(const PokemonDetail& pk);
   void drawBodyTab(const PokemonDetail& pk);
   void drawAbilityTab(const PokemonDetail& pk);

@@ -213,6 +213,10 @@ void UIController::drawAppearanceTab(const PokemonDetail& pk, bool drawImage) {
   sprite->drawString(pk.weight, cardX + 58, 167);
 }
 
+void UIController::drawAppearancePreviewFeedback() {
+  drawPressedOverlay(kAppearanceImageX, kAppearanceImageY, kAppearanceImageW, kAppearanceImageH, 0);
+}
+
 void UIController::drawDescriptionTab(const PokemonDetail& pk) {
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
