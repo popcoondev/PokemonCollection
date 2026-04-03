@@ -1639,6 +1639,9 @@ void loop() {
         } else {
           queueAppearanceImageRequest(currentId);
         }
+        if (visualControl == PRESS_APPEARANCE_PREVIEW) {
+          ui.drawAppearancePreviewFeedback();
+        }
       } else if (currentTab == TAB_DESCRIPTION) {
         ui.drawDescriptionTab(pk);
       } else if (currentTab == TAB_BODY) {
