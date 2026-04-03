@@ -27,6 +27,7 @@ enum ScreenMode {
   SCREEN_SEARCH_INPUT,
   SCREEN_PREVIEW,
   SCREEN_PREVIEW_POC,
+  SCREEN_SLIDESHOW,
   SCREEN_QUIZ,
 };
 
@@ -40,6 +41,7 @@ constexpr int kAppearanceImageH = 140;
 constexpr int kPreviewPocImageSize = 192;
 constexpr int kPreviewPocBackgroundMargin = 16;
 constexpr uint16_t kPreviewPocTransparentColor = 0x0001;
+constexpr uint32_t kSlideshowSlideDurationMs = 5000;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
@@ -184,10 +186,16 @@ size_t searchNameOffset = 0;
 String searchNameQuery = "";
 bool searchInputVowelMode = false;
 int searchInputRowIndex = -1;
+uint16_t slideshowPokemonId = MIN_POKEMON_ID;
+uint32_t slideshowPhaseStartedAt = 0;
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
       && ty >= (y - pad) && ty <= (y + h + pad);
+}
+
+String getPrimaryTypeOrNormal(const PokemonDetail& pk) {
+  return pk.types.empty() ? String("ノーマル") : pk.types[0];
 }
 
 void removeLastUtf8Glyph(String& text) {
@@ -313,6 +321,7 @@ enum PressedControl {
   PRESS_APPEARANCE_PREVIEW,
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
+  PRESS_MENU_SLIDESHOW,
   PRESS_MENU_3D,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
@@ -332,8 +341,9 @@ enum PressedControl {
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
-    if (hitTest(tx, ty, 44, 102, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_POKEDEX;
-    if (hitTest(tx, ty, 44, 158, SCREEN_WIDTH - 88, 42, 8)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 44, 92, SCREEN_WIDTH - 88, 34, 8)) return PRESS_MENU_POKEDEX;
+    if (hitTest(tx, ty, 44, 136, SCREEN_WIDTH - 88, 34, 8)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 44, 180, SCREEN_WIDTH - 88, 24, 8)) return PRESS_MENU_SLIDESHOW;
     if (hitTest(tx, ty, 246, 14, 50, 18, 6)) return PRESS_MENU_3D;
     if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
     if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
@@ -344,6 +354,10 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_QUIZ) {
     return PRESS_MENU_QUIZ;
+  }
+
+  if (mode == SCREEN_SLIDESHOW) {
+    return PRESS_MENU_SLIDESHOW;
   }
 
   if (mode == SCREEN_SEARCH) {
@@ -413,6 +427,8 @@ enum PendingActionType {
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
+  ACTION_OPEN_SLIDESHOW,
+  ACTION_CLOSE_SLIDESHOW,
   ACTION_CLOSE_PREVIEW_POC,
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
@@ -1127,11 +1143,15 @@ void loop() {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
       } else if (screenMode == SCREEN_PREVIEW_POC) {
         pendingAction = makePendingAction(ACTION_CLOSE_PREVIEW_POC);
+      } else if (screenMode == SCREEN_SLIDESHOW) {
+        pendingAction = makePendingAction(ACTION_CLOSE_SLIDESHOW);
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
         } else if (pressedControl == PRESS_MENU_QUIZ) {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
+        } else if (pressedControl == PRESS_MENU_SLIDESHOW) {
+          pendingAction = makePendingAction(ACTION_OPEN_SLIDESHOW);
         } else if (pressedControl == PRESS_MENU_3D) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
@@ -1173,6 +1193,20 @@ void loop() {
         quizPhaseStartedAt = millis();
         quizPokemonId = chooseNextQuizPokemonId(0);
         playQuizSound(quizPhase);
+        break;
+      case ACTION_OPEN_SLIDESHOW:
+        screenMode = SCREEN_SLIDESHOW;
+        slideshowPokemonId = chooseNextQuizPokemonId(0);
+        slideshowPhaseStartedAt = millis();
+        dataMgr.loadPokemonDetail(slideshowPokemonId);
+        if (preview3dEnabled) {
+          previewPocCacheReady = false;
+          ensurePreviewPocCacheReady(slideshowPokemonId, getPrimaryTypeOrNormal(dataMgr.getCurrentPokemon()));
+        }
+        break;
+      case ACTION_CLOSE_SLIDESHOW:
+        screenMode = SCREEN_MENU;
+        dataMgr.loadPokemonDetail(currentId);
         break;
       case ACTION_CLOSE_PREVIEW_POC:
         screenMode = SCREEN_DETAIL;
@@ -1360,11 +1394,25 @@ void loop() {
     }
   }
 
+  if (screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
+    const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
+    if (elapsed >= kSlideshowSlideDurationMs) {
+      slideshowPokemonId = chooseNextQuizPokemonId(slideshowPokemonId);
+      slideshowPhaseStartedAt = millis();
+      dataMgr.loadPokemonDetail(slideshowPokemonId);
+      if (preview3dEnabled) {
+        previewPocCacheReady = false;
+        ensurePreviewPocCacheReady(slideshowPokemonId, getPrimaryTypeOrNormal(dataMgr.getCurrentPokemon()));
+      }
+      needsRedraw = true;
+    }
+  }
+
   static float previewPocShiftXF = 0.0f;
   static float previewPocShiftYF = 0.0f;
   static int previewPocShiftX = 0;
   static int previewPocShiftY = 0;
-  if (screenMode == SCREEN_PREVIEW_POC) {
+  if (screenMode == SCREEN_PREVIEW_POC || (screenMode == SCREEN_SLIDESHOW && preview3dEnabled)) {
     float ax = 0.0f;
     float ay = 0.0f;
     float az = 0.0f;
@@ -1478,6 +1526,7 @@ void loop() {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
+          visualControl == PRESS_MENU_SLIDESHOW,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           static_cast<int>(quizVolumeSetting),
@@ -1557,6 +1606,23 @@ void loop() {
             kPreviewPocTransparentColor);
       } else {
         ui.drawPreviewPocScreen(3, previewPocShiftX, previewPocShiftY);
+      }
+    } else if (screenMode == SCREEN_SLIDESHOW) {
+      if (preview3dEnabled) {
+        const String previewType = getPrimaryTypeOrNormal(pk);
+        if (ensurePreviewPocCacheReady(slideshowPokemonId, previewType) && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
+          ui.drawPreviewPocScreenLayered(
+              previewPocBackgroundSprite,
+              *previewPocShadowSprite,
+              *previewPocIconSprite,
+              previewPocShiftX,
+              previewPocShiftY,
+              kPreviewPocTransparentColor);
+        } else {
+          ui.drawPreviewPocScreen(slideshowPokemonId, previewPocShiftX, previewPocShiftY);
+        }
+      } else {
+        ui.drawFullscreenPreview(true, slideshowPokemonId);
       }
     } else {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);

@@ -32,7 +32,8 @@ public:
       int shiftX,
       int shiftY,
       uint16_t transparentColor);
-  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
+  void applyBlackFade(uint8_t alpha);
+  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
