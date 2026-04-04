@@ -24,6 +24,7 @@ enum ScreenMode {
   SCREEN_MENU = 0,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
+  SCREEN_GUIDE_LOCATION_LIST,
   SCREEN_DETAIL,
   SCREEN_SEARCH,
   SCREEN_SEARCH_INPUT,
@@ -111,6 +112,11 @@ struct QuizSoundCache {
   bool ready = false;
 };
 
+struct GuideLocationEntry {
+  String id;
+  String name;
+};
+
 enum QuizVolumeSetting {
   QUIZ_VOLUME_LARGE = 0,
   QUIZ_VOLUME_MEDIUM,
@@ -185,6 +191,7 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+std::vector<GuideLocationEntry> guideLocations;
 bool preview3dEnabled = false;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
@@ -431,6 +438,24 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_NONE;
   }
 
+  if (mode == SCREEN_GUIDE_LOCATION_LIST) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_LIST_BACK;
+    constexpr int listX = 12;
+    constexpr int listY = 48;
+    constexpr int listW = SCREEN_WIDTH - 24;
+    constexpr int rowH = 14;
+    constexpr int rowGap = 1;
+    for (int i = 0; i < 10; ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (hitTest(tx, ty, listX, y, listW, rowH + 2, 6)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
   if (mode == SCREEN_QUIZ) {
     return PRESS_MENU_QUIZ;
   }
@@ -512,6 +537,9 @@ enum PendingActionType {
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
+  ACTION_OPEN_GUIDE_LOCATION_LIST,
+  ACTION_CLOSE_GUIDE_LOCATION_LIST,
+  ACTION_GUIDE_LOCATION_LIST_PAGE,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
@@ -576,6 +604,41 @@ std::vector<uint16_t> getGuidePokemonPageIds(size_t offset, size_t limit) {
     }
   }
   return ids;
+}
+
+bool loadGuideLocations() {
+  guideLocations.clear();
+
+  File file = SD.open("/pokemon/firered/locations.json");
+  if (!file) {
+    return false;
+  }
+
+  JsonDocument doc;
+  const DeserializationError error = deserializeJson(doc, file);
+  file.close();
+  if (error || !doc.is<JsonArray>()) {
+    return false;
+  }
+
+  for (JsonObject item : doc.as<JsonArray>()) {
+    GuideLocationEntry entry;
+    entry.id = item["id"].as<String>();
+    entry.name = item["name"].as<String>();
+    if (entry.name.length() > 0) {
+      guideLocations.push_back(entry);
+    }
+  }
+
+  return !guideLocations.empty();
+}
+
+std::vector<String> getGuideLocationPageLabels(size_t offset, size_t limit) {
+  std::vector<String> labels;
+  for (size_t i = offset; i < guideLocations.size() && labels.size() < limit; ++i) {
+    labels.push_back(guideLocations[i].name);
+  }
+  return labels;
 }
 
 uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction) {
@@ -1104,6 +1167,7 @@ void setup() {
     M5.Display.print("SD Error");
     while(1) delay(100);
   }
+  loadGuideLocations();
 
   if (!ui.begin()) {
     M5.Display.print("UI Error");
@@ -1202,6 +1266,7 @@ void loop() {
   static uint32_t quizPhaseStartedAt = 0;
   static uint16_t quizPokemonId = MIN_POKEMON_ID;
   static size_t guidePokemonListOffset = 0;
+  static size_t guideLocationListOffset = 0;
 
   PressedControl pressedControl = PRESS_NONE;
 
@@ -1274,6 +1339,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_MENU);
         } else if (pressedControl == PRESS_GUIDE_POKEMON) {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_POKEMON_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LOCATION) {
+          pendingAction = makePendingAction(ACTION_OPEN_GUIDE_LOCATION_LIST);
         }
       } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
@@ -1282,6 +1349,14 @@ void loop() {
           pendingAction = makePendingAction(ACTION_GUIDE_POKEMON_LIST_PAGE, -10);
         } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
           pendingAction = makePendingAction(ACTION_GUIDE_POKEMON_LIST_PAGE, 10);
+        }
+      } else if (screenMode == SCREEN_GUIDE_LOCATION_LIST) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_LOCATION_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_GUIDE_LOCATION_LIST_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_GUIDE_LOCATION_LIST_PAGE, 10);
         }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
@@ -1340,6 +1415,18 @@ void loop() {
       case ACTION_GUIDE_POKEMON_LIST_PAGE: {
         const int nextOffset = static_cast<int>(guidePokemonListOffset) + pendingAction.value;
         guidePokemonListOffset = static_cast<size_t>(nextOffset < 0 ? 0 : nextOffset);
+        break;
+      }
+      case ACTION_OPEN_GUIDE_LOCATION_LIST:
+        screenMode = SCREEN_GUIDE_LOCATION_LIST;
+        guideLocationListOffset = 0;
+        break;
+      case ACTION_CLOSE_GUIDE_LOCATION_LIST:
+        screenMode = SCREEN_GUIDE_MENU;
+        break;
+      case ACTION_GUIDE_LOCATION_LIST_PAGE: {
+        const int nextOffset = static_cast<int>(guideLocationListOffset) + pendingAction.value;
+        guideLocationListOffset = static_cast<size_t>(nextOffset < 0 ? 0 : nextOffset);
         break;
       }
       case ACTION_OPEN_POKEDEX:
@@ -1715,6 +1802,15 @@ void loop() {
       }
       ui.drawGuidePokemonListScreen(
           pageLabels,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
+    } else if (screenMode == SCREEN_GUIDE_LOCATION_LIST) {
+      ui.drawGuideLocationListScreen(
+          getGuideLocationPageLabels(guideLocationListOffset, 10),
           visualControl == PRESS_GUIDE_LIST_BACK,
           (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
               ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)

@@ -562,6 +562,41 @@ void UIController::drawGuidePokemonListScreen(const std::vector<String>& labels,
   drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
+void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("場所からみる", SCREEN_WIDTH / 2, 22);
+  drawActionButton(236, 14, 58, 18, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  constexpr int listX = 12;
+  constexpr int listY = 48;
+  constexpr int listW = SCREEN_WIDTH - 24;
+  constexpr int rowH = 14;
+  constexpr int rowGap = 1;
+
+  sprite->setFont(&fonts::efontJA_12);
+  if (labels.empty()) {
+    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 110);
+  } else {
+    for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (pressedItemIndex == i) {
+        drawPressedOverlay(listX, y, listW, rowH + 2, 6);
+      }
+      sprite->setTextColor(COLOR_PK_TEXT);
+      sprite->drawString(labels[i], listX + 6, y + 2);
+    }
+  }
+
+  drawActionButton(16, 198, 72, 30, "◀", COLOR_PK_BG, COLOR_PK_TEXT, prevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+}
+
 void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName) {
   sprite->fillScreen(TFT_BLACK);
   if (SD.exists(kQuizBackgroundPath)) {
