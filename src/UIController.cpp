@@ -49,6 +49,69 @@ uint16_t typeBadgeColor(const String& type) {
   if (type == "フェアリー") return 0xFDB8;
   return COLOR_PK_TEXT;
 }
+
+struct EvolutionCardLayout {
+  int x;
+  int y;
+  int w;
+  int h;
+  int imageX;
+  int imageY;
+  int imageW;
+  int imageH;
+  int idCenterY;
+  int nameX;
+  int nameY;
+  int nameMaxW;
+  int nameLineH;
+};
+
+EvolutionCardLayout getEvolutionCardLayout(int index, int totalCount) {
+  if (totalCount <= 3) {
+    return {
+        kEvolutionCardX[index],
+        kEvolutionCardY,
+        84,
+        80,
+        kEvolutionCardX[index] + kEvolutionImageOffsetX,
+        kEvolutionCardY + kEvolutionImageOffsetY,
+        kEvolutionImageW,
+        kEvolutionImageH,
+        kEvolutionCardY + 40,
+        kEvolutionCardX[index] + 8,
+        kEvolutionCardY + 56,
+        68,
+        14,
+    };
+  }
+
+  constexpr int cols = 4;
+  constexpr int cardW = 62;
+  constexpr int cardH = 62;
+  constexpr int gapX = 8;
+  constexpr int gapY = 8;
+  constexpr int startX = 24;
+  constexpr int startY = 66;
+  const int col = index % cols;
+  const int row = index / cols;
+  const int x = startX + (col * (cardW + gapX));
+  const int y = startY + (row * (cardH + gapY));
+  return {
+      x,
+      y,
+      cardW,
+      cardH,
+      x + 6,
+      y + 8,
+      50,
+      32,
+      y + 28,
+      x + 4,
+      y + 36,
+      54,
+      11,
+  };
+}
 }
 
 UIController::UIController() : sprite(nullptr) {}
@@ -264,33 +327,38 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutio
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
 
-  for (size_t i = 0; i < pk.evolutions.size() && i < 3; ++i) {
-    const int x = kEvolutionCardX[i];
-    const int y = kEvolutionCardY;
-    sprite->fillRoundRect(x, y, 84, 80, 8, COLOR_PK_BG);
-    sprite->drawRoundRect(x, y, 84, 80, 8, COLOR_PK_BORDER);
+  const int totalCount = std::min<int>(pk.evolutions.size(), 8);
+  for (int i = 0; i < totalCount; ++i) {
+    const auto layout = getEvolutionCardLayout(i, totalCount);
+    sprite->fillRoundRect(layout.x, layout.y, layout.w, layout.h, 8, COLOR_PK_BG);
+    sprite->drawRoundRect(layout.x, layout.y, layout.w, layout.h, 8, COLOR_PK_BORDER);
 
-    sprite->fillRect(x + kEvolutionImageOffsetX, y + kEvolutionImageOffsetY, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
+    sprite->fillRect(layout.imageX, layout.imageY, layout.imageW, layout.imageH, COLOR_PK_BG);
     if (drawImages) {
       imageLoader.loadAndDisplayPNG(
           *sprite,
           pk.evolutions[i].id,
-          x + kEvolutionImageOffsetX,
-          y + kEvolutionImageOffsetY,
-          kEvolutionImageW,
-          kEvolutionImageH);
+          layout.imageX,
+          layout.imageY,
+          layout.imageW,
+          layout.imageH);
     }
 
     char idStr[12];
     snprintf(idStr, sizeof(idStr), "No.%04d", pk.evolutions[i].id);
-    sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(COLOR_PK_SUB);
-    sprite->drawCenterString(idStr, x + 42, y + 40);
-    sprite->setTextColor(COLOR_PK_TEXT);
-    drawWrappedText(pk.evolutions[i].name, x + 8, y + 56, 68, 14, 2);
+    if (totalCount <= 3) {
+      sprite->setFont(&fonts::efontJA_12);
+      sprite->drawCenterString(idStr, layout.x + (layout.w / 2), layout.idCenterY);
+      sprite->setTextColor(COLOR_PK_TEXT);
+      drawWrappedText(pk.evolutions[i].name, layout.nameX, layout.nameY, layout.nameMaxW, layout.nameLineH, 2);
+    } else {
+      sprite->setFont(&fonts::efontJA_10);
+      sprite->drawCenterString(idStr, layout.x + (layout.w / 2), layout.y + layout.h - 10);
+    }
 
     if (static_cast<int>(i) == pressedEvolutionIndex) {
-      drawPressedOverlay(x, y, 84, 80, 8);
+      drawPressedOverlay(layout.x, layout.y, layout.w, layout.h, 8);
     }
   }
 }
@@ -509,26 +577,28 @@ void UIController::pushPreviewImageToDisplay(LGFX_Sprite& imageSprite) {
   imageSprite.pushSprite(&M5.Display, 0, 0);
 }
 
-void UIController::blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex) {
-  if (imageIndex < 0 || imageIndex > 2) {
+void UIController::blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex, int totalCount) {
+  if (imageIndex < 0 || imageIndex >= totalCount) {
     return;
   }
+  const auto layout = getEvolutionCardLayout(imageIndex, totalCount);
   sprite->pushImage(
-      kEvolutionCardX[imageIndex] + kEvolutionImageOffsetX,
-      kEvolutionCardY + kEvolutionImageOffsetY,
-      kEvolutionImageW,
-      kEvolutionImageH,
+      layout.imageX,
+      layout.imageY,
+      layout.imageW,
+      layout.imageH,
       static_cast<const uint16_t*>(imageSprite.getBuffer()));
 }
 
-void UIController::pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex) {
-  if (imageIndex < 0 || imageIndex > 2) {
+void UIController::pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex, int totalCount) {
+  if (imageIndex < 0 || imageIndex >= totalCount) {
     return;
   }
+  const auto layout = getEvolutionCardLayout(imageIndex, totalCount);
   imageSprite.pushSprite(
       &M5.Display,
-      kEvolutionCardX[imageIndex] + kEvolutionImageOffsetX,
-      kEvolutionCardY + kEvolutionImageOffsetY);
+      layout.imageX,
+      layout.imageY);
 }
 
 void UIController::drawSearchScreen(
@@ -562,7 +632,7 @@ void UIController::drawSearchScreen(
 
     char idText[12];
     snprintf(idText, sizeof(idText), "%04d", selectedId);
-    const bool validId = selectedId >= MIN_POKEMON_ID && selectedId <= MAX_POKEMON_ID && selectedName.length() > 0;
+    const bool validId = selectedId >= MIN_POKEMON_ID && selectedName.length() > 0;
 
     for (int i = 0; i < 4; ++i) {
       const bool upPressed = pressedDigitDelta == digitStep[i];

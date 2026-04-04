@@ -4,7 +4,8 @@
 
 DataManager::DataManager() {
   currentPokemon = {};
-  pokemonNames.resize(MAX_POKEMON_ID + 1);
+  pokemonNames.resize(MIN_POKEMON_ID + 1);
+  maxPokemonId = MIN_POKEMON_ID;
 }
 
 bool DataManager::begin() {
@@ -20,6 +21,18 @@ bool DataManager::loadPokemonIndex() {
   file.close();
   if (error || !doc.is<JsonArray>()) return false;
 
+  uint16_t detectedMaxId = MIN_POKEMON_ID;
+  for (JsonObject entry : doc.as<JsonArray>()) {
+    const uint16_t id = static_cast<uint16_t>(entry["id"] | 0);
+    if (id > detectedMaxId) {
+      detectedMaxId = id;
+    }
+  }
+
+  maxPokemonId = detectedMaxId;
+  pokemonNames.clear();
+  pokemonNames.resize(maxPokemonId + 1);
+
   for (auto& name : pokemonNames) {
     name = "";
   }
@@ -31,7 +44,7 @@ bool DataManager::loadPokemonIndex() {
   }
 
   pokemonIdsSortedByName.clear();
-  for (uint16_t id = MIN_POKEMON_ID; id <= MAX_POKEMON_ID; ++id) {
+  for (uint16_t id = MIN_POKEMON_ID; id <= maxPokemonId; ++id) {
     if (pokemonNames[id].length() > 0) {
       pokemonIdsSortedByName.push_back(id);
     }
