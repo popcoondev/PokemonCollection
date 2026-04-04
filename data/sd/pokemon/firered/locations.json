@@ -1,0 +1,17 @@
+[
+  {
+    "id": "route_01",
+    "name": "1ばんどうろ",
+    "pokemon": [16, 19]
+  },
+  {
+    "id": "viridian_forest",
+    "name": "トキワのもり",
+    "pokemon": [10, 11, 13, 14, 25]
+  },
+  {
+    "id": "route_02",
+    "name": "2ばんどうろ",
+    "pokemon": [16, 19]
+  }
+]

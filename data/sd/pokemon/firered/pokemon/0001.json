@@ -1,0 +1,17 @@
+{
+  "id": 1,
+  "locations": [
+    { "area": "マサラタウン", "method": "もらう", "rate": "-" }
+  ],
+  "evolution": [
+    "Lv16"
+  ],
+  "level_up_moves": [
+    { "level": 1, "name": "たいあたり" },
+    { "level": 1, "name": "なきごえ" },
+    { "level": 7, "name": "やどりぎのタネ" },
+    { "level": 13, "name": "つるのムチ" }
+  ],
+  "machines": [],
+  "hms": []
+}
