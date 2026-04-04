@@ -41,8 +41,8 @@ public:
   void redrawDetailNavigationToDisplay();
   void blitPreviewImageToCanvas(LGFX_Sprite& imageSprite);
   void pushPreviewImageToDisplay(LGFX_Sprite& imageSprite);
-  void blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex);
-  void pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex);
+  void blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex, int totalCount);
+  void pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int imageIndex, int totalCount);
   void drawSearchScreen(
       bool nameMode,
       uint16_t selectedId,

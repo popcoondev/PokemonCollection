@@ -38,6 +38,7 @@ constexpr int kAppearanceImageX = 6;
 constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
 constexpr int kAppearanceImageH = 140;
+constexpr int kMaxEvolutionCards = 8;
 constexpr int kPreviewPocImageSize = 192;
 constexpr int kPreviewPocBackgroundMargin = 16;
 constexpr uint16_t kPreviewPocTransparentColor = 0x0001;
@@ -85,6 +86,8 @@ struct EvolutionImageRequest {
   uint16_t pokemonId;
   uint16_t sourcePokemonId;
   uint8_t imageIndex;
+  uint8_t renderW;
+  uint8_t renderH;
   uint32_t generation;
 };
 
@@ -170,12 +173,12 @@ QueueHandle_t evolutionRequestQueue = nullptr;
 QueueHandle_t evolutionResultQueue = nullptr;
 SemaphoreHandle_t evolutionSpriteMutex = nullptr;
 TaskHandle_t evolutionWorkerTaskHandle = nullptr;
-LGFX_Sprite* evolutionImageSprites[3] = {nullptr, nullptr, nullptr};
+LGFX_Sprite* evolutionImageSprites[kMaxEvolutionCards] = {};
 ImageLoader evolutionImageLoader;
 uint16_t evolutionSourcePokemonId = 0;
 uint32_t evolutionRequestedGeneration = 0;
-uint16_t evolutionRequestedIds[3] = {0, 0, 0};
-uint16_t evolutionRenderedIds[3] = {0, 0, 0};
+uint16_t evolutionRequestedIds[kMaxEvolutionCards] = {};
+uint16_t evolutionRenderedIds[kMaxEvolutionCards] = {};
 uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
@@ -196,6 +199,37 @@ bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
 
 String getPrimaryTypeOrNormal(const PokemonDetail& pk) {
   return pk.types.empty() ? String("ノーマル") : pk.types[0];
+}
+
+int getEvolutionCardIndexAt(int tx, int ty, int totalCount) {
+  if (totalCount <= 0) return -1;
+  if (totalCount <= 3) {
+    const int cardX[3] = {22, 118, 214};
+    for (int i = 0; i < totalCount; ++i) {
+      if (hitTest(tx, ty, cardX[i], 80, 84, 80)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  constexpr int cols = 4;
+  constexpr int cardW = 62;
+  constexpr int cardH = 62;
+  constexpr int gapX = 8;
+  constexpr int gapY = 8;
+  constexpr int startX = 24;
+  constexpr int startY = 66;
+  for (int i = 0; i < totalCount; ++i) {
+    const int col = i % cols;
+    const int row = i / cols;
+    const int x = startX + (col * (cardW + gapX));
+    const int y = startY + (row * (cardH + gapY));
+    if (hitTest(tx, ty, x, y, cardW, cardH)) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 void removeLastUtf8Glyph(String& text) {
@@ -411,13 +445,17 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_MENU_3D;
   }
 
+  const int evolutionIndex = (currentTab == TAB_EVOLUTION)
+      ? getEvolutionCardIndexAt(tx, ty, std::min<int>(dataMgr.getCurrentPokemon().evolutions.size(), kMaxEvolutionCards))
+      : -1;
+  if (evolutionIndex >= 0) {
+    return static_cast<PressedControl>(PRESS_EVOLUTION_0 + evolutionIndex);
+  }
+
   if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y)) return PRESS_NAV_NEXT;
   if (currentTab == TAB_APPEARANCE && hitTest(tx, ty, 46, 54, 100, 140, 0)) return PRESS_APPEARANCE_PREVIEW;
-  if (hitTest(tx, ty, 22, 80, 84, 80)) return PRESS_EVOLUTION_0;
-  if (hitTest(tx, ty, 118, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 1);
-  if (hitTest(tx, ty, 214, 80, 84, 80)) return static_cast<PressedControl>(PRESS_EVOLUTION_0 + 2);
   if (ty >= TAB_BAR_Y) return static_cast<PressedControl>(PRESS_TAB_0 + constrain(tx / (SCREEN_WIDTH / 5), 0, 4));
   return PRESS_NONE;
 }
@@ -464,6 +502,11 @@ PendingAction makePendingAction(PendingActionType type, int value = 0) {
   action.type = type;
   action.value = value;
   return action;
+}
+
+uint16_t getAvailableMaxPokemonId() {
+  const uint16_t maxId = dataMgr.getMaxPokemonId();
+  return (maxId >= MIN_POKEMON_ID) ? maxId : MIN_POKEMON_ID;
 }
 
 uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction) {
@@ -674,13 +717,14 @@ void playQuizSound(QuizPhase phase) {
 }
 
 uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
-  if (MAX_POKEMON_ID <= MIN_POKEMON_ID) {
+  const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+  if (maxPokemonId <= MIN_POKEMON_ID) {
     return MIN_POKEMON_ID;
   }
 
   uint16_t nextId = lastId;
   while (nextId == lastId) {
-    nextId = static_cast<uint16_t>(random(MIN_POKEMON_ID, MAX_POKEMON_ID + 1));
+    nextId = static_cast<uint16_t>(random(MIN_POKEMON_ID, maxPokemonId + 1));
   }
   return nextId;
 }
@@ -902,9 +946,9 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
   return previewPocCacheReady;
 }
 
-void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId) {
+void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId, uint16_t renderW, uint16_t renderH) {
   target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
-  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kEvolutionImageW, kEvolutionImageH, false);
+  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, renderW, renderH, false);
 }
 
 void evolutionImageWorker(void*) {
@@ -916,10 +960,14 @@ void evolutionImageWorker(void*) {
     }
 
     bool success = false;
-    if (request.imageIndex < 3
+    if (request.imageIndex < kMaxEvolutionCards
         && evolutionImageSprites[request.imageIndex] != nullptr
         && xSemaphoreTake(evolutionSpriteMutex, portMAX_DELAY) == pdTRUE) {
-      renderEvolutionImage(*evolutionImageSprites[request.imageIndex], request.pokemonId);
+      renderEvolutionImage(
+          *evolutionImageSprites[request.imageIndex],
+          request.pokemonId,
+          request.renderW,
+          request.renderH);
       xSemaphoreGive(evolutionSpriteMutex);
       success = true;
     }
@@ -942,17 +990,19 @@ void queueEvolutionImageRequests(const PokemonDetail& pk) {
   evolutionSourcePokemonId = pk.id;
   evolutionRequestedGeneration += 1;
   evolutionRenderedGeneration = 0;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < kMaxEvolutionCards; ++i) {
     evolutionRequestedIds[i] = 0;
     evolutionRenderedIds[i] = 0;
   }
 
-  for (size_t i = 0; i < pk.evolutions.size() && i < 3; ++i) {
+  for (size_t i = 0; i < pk.evolutions.size() && i < kMaxEvolutionCards; ++i) {
     evolutionRequestedIds[i] = pk.evolutions[i].id;
     const EvolutionImageRequest request = {
       pk.evolutions[i].id,
       pk.id,
       static_cast<uint8_t>(i),
+      kEvolutionImageW,
+      kEvolutionImageH,
       evolutionRequestedGeneration,
     };
     xQueueSend(evolutionRequestQueue, &request, 0);
@@ -1000,8 +1050,8 @@ void setup() {
   previewRequestQueue = xQueueCreate(1, sizeof(PreviewImageRequest));
   previewResultQueue = xQueueCreate(4, sizeof(PreviewImageResult));
   previewSpriteMutex = xSemaphoreCreateMutex();
-  evolutionRequestQueue = xQueueCreate(6, sizeof(EvolutionImageRequest));
-  evolutionResultQueue = xQueueCreate(6, sizeof(EvolutionImageResult));
+  evolutionRequestQueue = xQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageRequest));
+  evolutionResultQueue = xQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageResult));
   evolutionSpriteMutex = xSemaphoreCreateMutex();
   for (auto& sprite : evolutionImageSprites) {
     sprite = new LGFX_Sprite(&M5.Display);
@@ -1017,14 +1067,18 @@ void setup() {
       || evolutionRequestQueue == nullptr
       || evolutionResultQueue == nullptr
       || evolutionSpriteMutex == nullptr
-      || evolutionImageSprites[0] == nullptr
-      || evolutionImageSprites[1] == nullptr
-      || evolutionImageSprites[2] == nullptr
       || !appearanceImageLoader.begin()
       || !previewImageLoader.begin()
       || !evolutionImageLoader.begin()) {
     M5.Display.print("Image Queue Error");
     while(1) delay(100);
+  }
+
+  for (auto* sprite : evolutionImageSprites) {
+    if (sprite == nullptr) {
+      M5.Display.print("Image Queue Error");
+      while(1) delay(100);
+    }
   }
 
   appearanceImageSprite->setColorDepth(16);
@@ -1168,7 +1222,7 @@ void loop() {
           pendingAction = makePendingAction(ACTION_NAV_NEXT);
         } else if (currentTab == TAB_EVOLUTION
             && pressedControl >= PRESS_EVOLUTION_0
-            && pressedControl <= (PRESS_EVOLUTION_0 + 2)) {
+            && pressedControl <= (PRESS_EVOLUTION_0 + (kMaxEvolutionCards - 1))) {
           pendingAction = makePendingAction(ACTION_OPEN_EVOLUTION, pressedControl - PRESS_EVOLUTION_0);
         } else if (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4)) {
           pendingAction = makePendingAction(ACTION_SET_TAB, pressedControl - PRESS_TAB_0);
@@ -1323,8 +1377,10 @@ void loop() {
         break;
       }
       case ACTION_SEARCH_OPEN:
+        if (searchId > getAvailableMaxPokemonId()) {
+          break;
+        }
         if (searchId >= MIN_POKEMON_ID
-            && searchId <= MAX_POKEMON_ID
             && dataMgr.getPokemonName(searchId).length() > 0) {
           currentId = searchId;
           returnId = currentId;
@@ -1349,14 +1405,18 @@ void loop() {
       case ACTION_PREVIEW_CLOSE:
         screenMode = SCREEN_DETAIL;
         break;
-      case ACTION_NAV_PREV:
-        currentId = (currentId <= MIN_POKEMON_ID) ? MAX_POKEMON_ID : (currentId - 1);
+      case ACTION_NAV_PREV: {
+        const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+        currentId = (currentId <= MIN_POKEMON_ID) ? maxPokemonId : (currentId - 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
-      case ACTION_NAV_NEXT:
-        currentId = (currentId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (currentId + 1);
+      }
+      case ACTION_NAV_NEXT: {
+        const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+        currentId = (currentId >= maxPokemonId) ? MIN_POKEMON_ID : (currentId + 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
+      }
       case ACTION_OPEN_EVOLUTION: {
         const auto& pk = dataMgr.getCurrentPokemon();
         const int index = pendingAction.value;
@@ -1397,7 +1457,8 @@ void loop() {
   if (screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
     const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
     if (elapsed >= kSlideshowSlideDurationMs) {
-      slideshowPokemonId = (slideshowPokemonId >= MAX_POKEMON_ID) ? MIN_POKEMON_ID : (slideshowPokemonId + 1);
+      const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+      slideshowPokemonId = (slideshowPokemonId >= maxPokemonId) ? MIN_POKEMON_ID : (slideshowPokemonId + 1);
       slideshowPhaseStartedAt = millis();
       dataMgr.loadPokemonDetail(slideshowPokemonId);
       if (preview3dEnabled) {
@@ -1505,7 +1566,7 @@ void loop() {
     }
     if (evolutionResult.generation != evolutionRequestedGeneration
         || evolutionResult.sourcePokemonId != evolutionSourcePokemonId
-        || evolutionResult.imageIndex > 2) {
+        || evolutionResult.imageIndex >= kMaxEvolutionCards) {
       continue;
     }
 
@@ -1649,22 +1710,24 @@ void loop() {
       } else if (currentTab == TAB_ABILITY) {
         ui.drawAbilityTab(pk);
       } else {
+        const int totalEvolutionCount = std::min<int>(pk.evolutions.size(), kMaxEvolutionCards);
         ui.drawEvolutionTab(
             pk,
-            (visualControl >= PRESS_EVOLUTION_0 && visualControl <= (PRESS_EVOLUTION_0 + 2))
+            (visualControl >= PRESS_EVOLUTION_0
+                && visualControl <= (PRESS_EVOLUTION_0 + totalEvolutionCount - 1))
                 ? (visualControl - PRESS_EVOLUTION_0)
                 : -1,
             false);
         if (evolutionSourcePokemonId != pk.id) {
           queueEvolutionImageRequests(pk);
         }
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < totalEvolutionCount; ++i) {
           if (evolutionRequestedIds[i] != 0
               && evolutionRenderedGeneration == evolutionRequestedGeneration
               && evolutionRenderedIds[i] == evolutionRequestedIds[i]
               && evolutionImageSprites[i] != nullptr
               && xSemaphoreTake(evolutionSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-            ui.blitEvolutionImageToCanvas(*evolutionImageSprites[i], i);
+            ui.blitEvolutionImageToCanvas(*evolutionImageSprites[i], i, totalEvolutionCount);
             xSemaphoreGive(evolutionSpriteMutex);
           }
         }
