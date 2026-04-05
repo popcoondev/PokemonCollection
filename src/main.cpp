@@ -506,6 +506,59 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return PRESS_NONE;
   }
 
+  if (mode == SCREEN_GUIDE_MENU) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_POKEMON;
+    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_LOCATION;
+    if (hitTest(tx, ty, 180, 184, 116, 30, 8)) return PRESS_GUIDE_HALL_OF_FAME;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_LIST) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_LIST_BACK;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      const int x = (col == 0) ? 12 : 164;
+      const int y = 48 + (row * 30);
+      if (hitTest(tx, ty, x, y, 144, 24, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_LOCATION_LIST) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_LIST_BACK;
+    constexpr int listX = 12;
+    constexpr int listY = 48;
+    constexpr int listW = SCREEN_WIDTH - 24;
+    constexpr int rowH = 14;
+    constexpr int rowGap = 1;
+    for (int i = 0; i < 10; ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (hitTest(tx, ty, listX, y, listW, rowH + 2, 6)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    for (int i = 0; i < 5; ++i) {
+      const int x = i * (SCREEN_WIDTH / 5);
+      if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_DETAIL_TAB_0 + i);
+      }
+    }
+    return PRESS_NONE;
+  }
+
   if (mode == SCREEN_QUIZ) {
     return PRESS_MENU_QUIZ;
   }
