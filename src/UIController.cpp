@@ -482,8 +482,19 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
   drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "せってい", COLOR_PK_CARD, COLOR_PK_TEXT, preview3dPressed || pressedVolumeIndex >= 0, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
-void UIController::drawSettingsScreen(bool backPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::drawSettingsScreen(
+    bool backPressed,
+    bool preview3dEnabled,
+    bool preview3dPressed,
+    int selectedVolumeIndex,
+    int pressedVolumeIndex,
+    bool secretPressed,
+    bool secretFlashed) {
   sprite->fillScreen(COLOR_PK_BG);
+
+  if (secretFlashed) {
+    sprite->fillScreen(COLOR_PK_BAR);
+  }
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
@@ -531,6 +542,10 @@ void UIController::drawSettingsScreen(bool backPressed, bool preview3dEnabled, b
         selected ? COLOR_PK_SUB : COLOR_PK_BORDER,
         border);
   }
+
+  if (secretPressed) {
+    drawPressedOverlay(8, 208, 88, 24, 6);
+  }
 }
 
 void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed) {
@@ -549,7 +564,14 @@ void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed
   drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, "場所からみる", COLOR_PK_CARD, COLOR_PK_TEXT, locationPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
-void UIController::drawGuidePokemonListScreen(const char* title, const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
+void UIController::drawGuidePokemonListScreen(
+    const char* title,
+    const std::vector<String>& labels,
+    const std::vector<bool>& caughtFlags,
+    bool backPressed,
+    int pressedItemIndex,
+    bool prevPressed,
+    bool nextPressed) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -560,11 +582,12 @@ void UIController::drawGuidePokemonListScreen(const char* title, const std::vect
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawCenterString(title, SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
 
   sprite->setFont(&fonts::efontJA_12);
-  constexpr int itemX[2] = {12, 164};
+  constexpr int itemX[2] = {44, 162};
   constexpr int itemYStart = 48;
-  constexpr int itemW = 144;
+  constexpr int itemW = 114;
   constexpr int itemH = 24;
   constexpr int itemGapY = 6;
   for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
@@ -583,10 +606,16 @@ void UIController::drawGuidePokemonListScreen(const char* title, const std::vect
         pressedItemIndex == i,
         COLOR_PK_RED,
         COLOR_PK_BORDER);
+    if (i < static_cast<int>(caughtFlags.size()) && caughtFlags[i]) {
+      const int cx = x + itemW - 18;
+      const int cy = y + (itemH / 2);
+      sprite->drawLine(cx - 4, cy, cx - 1, cy + 3, COLOR_PK_RED);
+      sprite->drawLine(cx - 1, cy + 3, cx + 6, cy - 4, COLOR_PK_RED);
+      sprite->drawLine(cx - 4, cy + 1, cx - 1, cy + 4, COLOR_PK_RED);
+      sprite->drawLine(cx - 1, cy + 4, cx + 6, cy - 3, COLOR_PK_RED);
+    }
   }
 
-  drawActionButton(16, 198, 72, 30, "◀", COLOR_PK_BG, COLOR_PK_TEXT, prevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
 void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
@@ -600,10 +629,11 @@ void UIController::drawGuideLocationListScreen(const std::vector<String>& labels
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawCenterString("場所からみる", SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
 
-  constexpr int listX = 12;
+  constexpr int listX = 44;
   constexpr int listY = 48;
-  constexpr int listW = SCREEN_WIDTH - 24;
+  constexpr int listW = SCREEN_WIDTH - 88;
   constexpr int rowH = 14;
   constexpr int rowGap = 1;
 
@@ -621,9 +651,6 @@ void UIController::drawGuideLocationListScreen(const std::vector<String>& labels
       sprite->drawString(labels[i], listX + 6, y + 2);
     }
   }
-
-  drawActionButton(16, 198, 72, 30, "◀", COLOR_PK_BG, COLOR_PK_TEXT, prevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
 void UIController::drawGuidePokemonDetailScreen(
@@ -832,7 +859,7 @@ void UIController::drawSearchScreen(
   }
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawCenterString("No.でえらぶ", SCREEN_WIDTH / 2, 22);
+  sprite->drawCenterString(nameMode ? "ポケモンずかん" : "No.でえらぶ", SCREEN_WIDTH / 2, 22);
 
   if (!nameMode) {
     const int digitX[4] = {60, 110, 160, 210};
@@ -870,20 +897,24 @@ void UIController::drawSearchScreen(
     return;
   }
 
-  sprite->fillRoundRect(20, 52, 280, 24, 6, COLOR_PK_BG);
-  sprite->drawRoundRect(20, 52, 280, 24, 6, COLOR_PK_BORDER);
-  sprite->setTextColor(nameQuery.length() > 0 ? COLOR_PK_TEXT : COLOR_PK_SUB);
-  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "にゅうりょくらんを タップ", 28, 58);
+  const bool hasKeyword = nameQuery.length() > 0;
+  const String keywordLabel = hasKeyword ? nameQuery : "キーワード";
+  const uint16_t keywordFill = hasKeyword ? COLOR_PK_RED : COLOR_PK_BG;
+  const uint16_t keywordText = hasKeyword ? COLOR_PK_CARD : COLOR_PK_TEXT;
+  drawActionButton(44, 52, 114, 24, keywordLabel.c_str(), keywordFill, keywordText, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(162, 52, 114, 24, "ばんごう", COLOR_PK_BG, COLOR_PK_TEXT, modePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
-  const int itemX[2] = {20, 166};
-  const int itemW = 134;
-  const int itemH = 22;
-  const int startY = 84;
+  drawDetailNavigation(pagePrevPressed, pageNextPressed);
+
+  const int itemX[2] = {44, 162};
+  const int itemW = 114;
+  const int itemH = 26;
+  const int startY = 82;
   for (int i = 0; i < 10; ++i) {
     const int col = i % 2;
     const int row = i / 2;
     const int x = itemX[col];
-    const int y = startY + (row * 24);
+    const int y = startY + (row * 28);
     const bool pressed = pressedCandidateIndex == i;
 
     uint16_t fill = pressed ? COLOR_PK_TEXT : COLOR_PK_BG;
@@ -893,13 +924,11 @@ void UIController::drawSearchScreen(
 
     if (i < static_cast<int>(nameCandidateIds.size())) {
       const String candidateText = nameCandidateLabels[i];
+      sprite->setFont(&fonts::efontJA_12);
       sprite->setTextColor(textColor);
-      sprite->drawString(candidateText, x + 8, y + 5);
+      sprite->drawString(candidateText, x + 6, y + 6);
     }
   }
-
-  drawActionButton(20, 206, 64, 22, "↑", COLOR_PK_BG, COLOR_PK_TEXT, pagePrevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(236, 206, 64, 22, "↓", COLOR_PK_BG, COLOR_PK_TEXT, pageNextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
 void UIController::drawSearchInputScreen(
