@@ -1,0 +1,151 @@
+{
+  "id": 93,
+  "locations": [
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 21,
+      "max_level": 21,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 25,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "こうかん"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "さいみんじゅつ"
+    },
+    {
+      "level": 16,
+      "name": "ナイトヘッド"
+    },
+    {
+      "level": 21,
+      "name": "あやしいひかり"
+    },
+    {
+      "level": 1,
+      "name": "したでなめる"
+    },
+    {
+      "level": 31,
+      "name": "ゆめくい"
+    },
+    {
+      "level": 53,
+      "name": "あくむ"
+    },
+    {
+      "level": 13,
+      "name": "のろい"
+    },
+    {
+      "level": 1,
+      "name": "うらみ"
+    },
+    {
+      "level": 8,
+      "name": "うらみ"
+    },
+    {
+      "level": 39,
+      "name": "みちづれ"
+    },
+    {
+      "level": 64,
+      "name": "くろいまなざし"
+    },
+    {
+      "level": 45,
+      "name": "シャドーボール"
+    },
+    {
+      "level": 25,
+      "name": "シャドーパンチ"
+    }
+  ],
+  "machines": [
+    "１０まんボルト",
+    "どくどく",
+    "サイコキネシス",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "ヘドロばくだん",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "にほんばれ",
+    "シャドーボール",
+    "いちゃもん",
+    "からげんき",
+    "ちょうはつ",
+    "スキルスワップ",
+    "よこどり",
+    "ひみつのちから"
+  ],
+  "hms": []
+}

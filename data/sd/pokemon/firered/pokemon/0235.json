@@ -1,0 +1,49 @@
+{
+  "id": 235,
+  "locations": [],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "スケッチ"
+    },
+    {
+      "level": 11,
+      "name": "スケッチ"
+    },
+    {
+      "level": 21,
+      "name": "スケッチ"
+    },
+    {
+      "level": 31,
+      "name": "スケッチ"
+    },
+    {
+      "level": 41,
+      "name": "スケッチ"
+    },
+    {
+      "level": 51,
+      "name": "スケッチ"
+    },
+    {
+      "level": 61,
+      "name": "スケッチ"
+    },
+    {
+      "level": 71,
+      "name": "スケッチ"
+    },
+    {
+      "level": 81,
+      "name": "スケッチ"
+    },
+    {
+      "level": 91,
+      "name": "スケッチ"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}

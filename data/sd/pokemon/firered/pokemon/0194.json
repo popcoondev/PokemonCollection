@@ -1,0 +1,160 @@
+{
+  "id": 194,
+  "locations": [
+    {
+      "area": "4のしま",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 20,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 20,
+      "max_level": 25,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv20",
+    "Lv20"
+  ],
+  "level_up_moves": [
+    {
+      "level": 11,
+      "name": "たたきつける"
+    },
+    {
+      "level": 1,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 51,
+      "name": "しろいきり"
+    },
+    {
+      "level": 1,
+      "name": "みずでっぽう"
+    },
+    {
+      "level": 36,
+      "name": "じしん"
+    },
+    {
+      "level": 51,
+      "name": "くろいきり"
+    },
+    {
+      "level": 21,
+      "name": "ドわすれ"
+    },
+    {
+      "level": 41,
+      "name": "あまごい"
+    },
+    {
+      "level": 31,
+      "name": "あくび"
+    },
+    {
+      "level": 16,
+      "name": "マッドショット"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "ヘドロばくだん",
+    "すなあらし",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "たきのぼり",
+    "フラッシュ",
+    "いわくだき",
+    "ダイビング"
+  ]
+}

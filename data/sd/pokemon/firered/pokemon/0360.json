@@ -1,0 +1,39 @@
+{
+  "id": 360,
+  "locations": [],
+  "evolution": [
+    "Lv15"
+  ],
+  "level_up_moves": [
+    {
+      "level": 15,
+      "name": "カウンター"
+    },
+    {
+      "level": 1,
+      "name": "はねる"
+    },
+    {
+      "level": 15,
+      "name": "みちづれ"
+    },
+    {
+      "level": 1,
+      "name": "あまえる"
+    },
+    {
+      "level": 15,
+      "name": "しんぴのまもり"
+    },
+    {
+      "level": 1,
+      "name": "アンコール"
+    },
+    {
+      "level": 15,
+      "name": "ミラーコート"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}

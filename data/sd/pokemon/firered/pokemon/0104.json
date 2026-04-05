@@ -1,0 +1,176 @@
+{
+  "id": 104,
+  "locations": [
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 19,
+      "max_level": 19,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ポケモンタワー",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 19,
+      "max_level": 19,
+      "postgame_only": false
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 46,
+      "max_level": 46,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv28"
+  ],
+  "level_up_moves": [
+    {
+      "level": 13,
+      "name": "ずつき"
+    },
+    {
+      "level": 37,
+      "name": "あばれる"
+    },
+    {
+      "level": 45,
+      "name": "すてみタックル"
+    },
+    {
+      "level": 5,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 17,
+      "name": "にらみつける"
+    },
+    {
+      "level": 1,
+      "name": "なきごえ"
+    },
+    {
+      "level": 29,
+      "name": "いかり"
+    },
+    {
+      "level": 21,
+      "name": "きあいだめ"
+    },
+    {
+      "level": 9,
+      "name": "ホネこんぼう"
+    },
+    {
+      "level": 25,
+      "name": "ホネブーメラン"
+    },
+    {
+      "level": 41,
+      "name": "ボーンラッシュ"
+    },
+    {
+      "level": 33,
+      "name": "みねうち"
+    }
+  ],
+  "machines": [
+    "かえんほうしゃ",
+    "れいとうビーム",
+    "ふぶき",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "だいもんじ",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "すなあらし",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "きあいパンチ",
+    "かわらわり",
+    "ひみつのちから",
+    "がんせきふうじ",
+    "つばめがえし"
+  ],
+  "hms": [
+    "かいりき",
+    "いわくだき"
+  ]
+}

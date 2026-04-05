@@ -1,0 +1,132 @@
+{
+  "id": 100,
+  "locations": [
+    {
+      "area": "10ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "むじんはつでんしょ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "むじんはつでんしょ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 25,
+      "max_level": 25,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv30"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 15,
+      "name": "ソニックブーム"
+    },
+    {
+      "level": 8,
+      "name": "いやなおと"
+    },
+    {
+      "level": 37,
+      "name": "ひかりのかべ"
+    },
+    {
+      "level": 27,
+      "name": "じばく"
+    },
+    {
+      "level": 42,
+      "name": "スピードスター"
+    },
+    {
+      "level": 46,
+      "name": "だいばくはつ"
+    },
+    {
+      "level": 32,
+      "name": "ころがる"
+    },
+    {
+      "level": 21,
+      "name": "スパーク"
+    },
+    {
+      "level": 49,
+      "name": "ミラーコート"
+    },
+    {
+      "level": 1,
+      "name": "じゅうでん"
+    }
+  ],
+  "machines": [
+    "１０まんボルト",
+    "かみなり",
+    "どくどく",
+    "かげぶんしん",
+    "ひかりのかべ",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "いちゃもん",
+    "からげんき",
+    "ちょうはつ",
+    "ひみつのちから",
+    "でんげきは"
+  ],
+  "hms": [
+    "フラッシュ"
+  ]
+}

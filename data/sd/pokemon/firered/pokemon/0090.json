@@ -1,0 +1,99 @@
+{
+  "id": 90,
+  "locations": [
+    {
+      "area": "グレンじま",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしま",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "マサラタウン",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "みずのいし"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 36,
+      "name": "にらみつける"
+    },
+    {
+      "level": 15,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 50,
+      "name": "れいとうビーム"
+    },
+    {
+      "level": 22,
+      "name": "オーロラビーム"
+    },
+    {
+      "level": 1,
+      "name": "からにこもる"
+    },
+    {
+      "level": 43,
+      "name": "からではさむ"
+    },
+    {
+      "level": 29,
+      "name": "まもる"
+    },
+    {
+      "level": 8,
+      "name": "つららばり"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "ダイビング"
+  ]
+}

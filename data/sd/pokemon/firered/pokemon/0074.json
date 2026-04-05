@@ -1,0 +1,343 @@
+{
+  "id": 74,
+  "locations": [
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 30,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "4%",
+      "min_level": 40,
+      "max_level": 50,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "1%",
+      "min_level": 40,
+      "max_level": 50,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 35,
+      "max_level": 45,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "4%",
+      "min_level": 45,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "1%",
+      "min_level": 45,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 40,
+      "max_level": 50,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "4%",
+      "min_level": 50,
+      "max_level": 60,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いわくだき",
+      "rate": "1%",
+      "min_level": 50,
+      "max_level": 60,
+      "postgame_only": true
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "いわくだき",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "いわくだき",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 33,
+      "max_level": 33,
+      "postgame_only": false
+    },
+    {
+      "area": "おつきみやま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 7,
+      "max_level": 7,
+      "postgame_only": false
+    },
+    {
+      "area": "おつきみやま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": false
+    },
+    {
+      "area": "おつきみやま",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 9,
+      "max_level": 9,
+      "postgame_only": false
+    },
+    {
+      "area": "おつきみやま",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 9,
+      "max_level": 9,
+      "postgame_only": false
+    },
+    {
+      "area": "おつきみやま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "いわくだき",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "いわくだき",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "いわくだき",
+      "rate": "60%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "いわくだき",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "いわくだき",
+      "rate": "1%",
+      "min_level": 30,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 46,
+      "max_level": 46,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv25"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 46,
+      "name": "すてみタックル"
+    },
+    {
+      "level": 11,
+      "name": "いわおとし"
+    },
+    {
+      "level": 36,
+      "name": "じしん"
+    },
+    {
+      "level": 1,
+      "name": "まるくなる"
+    },
+    {
+      "level": 21,
+      "name": "じばく"
+    },
+    {
+      "level": 41,
+      "name": "だいばくはつ"
+    },
+    {
+      "level": 26,
+      "name": "ころがる"
+    },
+    {
+      "level": 16,
+      "name": "マグニチュード"
+    },
+    {
+      "level": 6,
+      "name": "どろあそび"
+    },
+    {
+      "level": 31,
+      "name": "ロックブラスト"
+    }
+  ],
+  "machines": [
+    "かえんほうしゃ",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "だいもんじ",
+    "ねむる",
+    "まもる",
+    "すなあらし",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "きあいパンチ",
+    "かわらわり",
+    "ひみつのちから",
+    "がんせきふうじ"
+  ],
+  "hms": [
+    "かいりき",
+    "いわくだき"
+  ]
+}

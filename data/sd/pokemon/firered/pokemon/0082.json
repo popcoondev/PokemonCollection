@@ -1,0 +1,121 @@
+{
+  "id": 82,
+  "locations": [
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 49,
+      "max_level": 49,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 52,
+      "max_level": 52,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 55,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "むじんはつでんしょ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 31,
+      "max_level": 31,
+      "postgame_only": false
+    },
+    {
+      "area": "むじんはつでんしょ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 1,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 11,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 16,
+      "name": "ソニックブーム"
+    },
+    {
+      "level": 1,
+      "name": "でんきショック"
+    },
+    {
+      "level": 6,
+      "name": "でんきショック"
+    },
+    {
+      "level": 21,
+      "name": "でんじは"
+    },
+    {
+      "level": 53,
+      "name": "いやなおと"
+    },
+    {
+      "level": 44,
+      "name": "トライアタック"
+    },
+    {
+      "level": 62,
+      "name": "でんじほう"
+    },
+    {
+      "level": 35,
+      "name": "ロックオン"
+    },
+    {
+      "level": 26,
+      "name": "スパーク"
+    },
+    {
+      "level": 1,
+      "name": "きんぞくおん"
+    }
+  ],
+  "machines": [
+    "はかいこうせん",
+    "１０まんボルト",
+    "かみなり",
+    "どくどく",
+    "かげぶんしん",
+    "リフレクター",
+    "ねむる",
+    "まもる",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "にほんばれ",
+    "からげんき",
+    "ひみつのちから",
+    "でんげきは"
+  ],
+  "hms": [
+    "フラッシュ"
+  ]
+}

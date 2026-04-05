@@ -1,0 +1,52 @@
+{
+  "id": 11,
+  "locations": [
+    {
+      "area": "24ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 9,
+      "max_level": 9,
+      "postgame_only": false
+    },
+    {
+      "area": "しるしのはやし",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 9,
+      "max_level": 9,
+      "postgame_only": true
+    },
+    {
+      "area": "トキワのもり",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv10"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "かたくなる"
+    },
+    {
+      "level": 7,
+      "name": "かたくなる"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}

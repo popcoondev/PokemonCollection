@@ -1,0 +1,165 @@
+{
+  "id": 98,
+  "locations": [
+    {
+      "area": "ハナダシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv28"
+  ],
+  "level_up_moves": [
+    {
+      "level": 12,
+      "name": "はさむ"
+    },
+    {
+      "level": 34,
+      "name": "ハサミギロチン"
+    },
+    {
+      "level": 27,
+      "name": "ふみつけ"
+    },
+    {
+      "level": 5,
+      "name": "にらみつける"
+    },
+    {
+      "level": 16,
+      "name": "かたくなる"
+    },
+    {
+      "level": 1,
+      "name": "あわ"
+    },
+    {
+      "level": 45,
+      "name": "クラブハンマー"
+    },
+    {
+      "level": 49,
+      "name": "じたばた"
+    },
+    {
+      "level": 38,
+      "name": "まもる"
+    },
+    {
+      "level": 23,
+      "name": "マッドショット"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "がんせきふうじ",
+    "みずのはどう"
+  ],
+  "hms": [
+    "いあいぎり",
+    "なみのり",
+    "かいりき",
+    "いわくだき",
+    "ダイビング"
+  ]
+}

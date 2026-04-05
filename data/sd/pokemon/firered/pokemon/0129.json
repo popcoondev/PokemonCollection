@@ -1,0 +1,872 @@
+{
+  "id": 129,
+  "locations": [
+    {
+      "area": "3のしま きのみのもり",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きのみのもり",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きのみのもり",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "いいつりざお",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "すごいつりざお",
+      "rate": "4%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "タマムシシティ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "マサラタウン",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "ふたごじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "たからのはま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "たからのはま",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "たからのはま",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "トキワシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "トキワシティ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "トキワシティ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "ボロのつりざお",
+      "rate": "70%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "ボロのつりざお",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv20"
+  ],
+  "level_up_moves": [
+    {
+      "level": 15,
+      "name": "たいあたり"
+    },
+    {
+      "level": 1,
+      "name": "はねる"
+    },
+    {
+      "level": 30,
+      "name": "じたばた"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}

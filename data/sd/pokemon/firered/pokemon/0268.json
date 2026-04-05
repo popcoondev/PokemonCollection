@@ -1,0 +1,19 @@
+{
+  "id": 268,
+  "locations": [],
+  "evolution": [
+    "Lv10"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "かたくなる"
+    },
+    {
+      "level": 7,
+      "name": "かたくなる"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}
