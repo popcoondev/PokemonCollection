@@ -44,17 +44,29 @@ public:
       bool secretPressed,
       bool secretFlashed);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);
-  void drawGuidePokemonListScreen(const char* title, const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed);
+  void drawGuidePokemonListScreen(
+      const char* title,
+      const std::vector<String>& labels,
+      const std::vector<bool>& caughtFlags,
+      bool backPressed,
+      int pressedItemIndex,
+      bool prevPressed,
+      bool nextPressed);
   void drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed);
   void drawGuidePokemonDetailScreen(
       uint16_t pokemonId,
       const String& headerLabel,
       const std::vector<String>& lines,
       int activeTab,
+      int pageIndex,
+      int pageCount,
       bool caughtEnabled,
       bool caughtPressed,
       bool backPressed,
-      int pressedTab);
+      int pressedTab,
+      bool pagePressed,
+      bool prevPressed,
+      bool nextPressed);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);
