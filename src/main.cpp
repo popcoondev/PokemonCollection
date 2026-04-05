@@ -22,6 +22,7 @@ TabType currentTab = TAB_APPEARANCE;
 
 enum ScreenMode {
   SCREEN_MENU = 0,
+  SCREEN_SETTINGS,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
   SCREEN_GUIDE_LOCATION_LIST,
@@ -36,6 +37,7 @@ enum ScreenMode {
 };
 
 ScreenMode screenMode = SCREEN_MENU;
+ScreenMode detailReturnScreen = SCREEN_MENU;
 
 namespace {
 constexpr int kAppearanceImageX = 6;
@@ -391,6 +393,7 @@ enum PressedControl {
   PRESS_MENU_QUIZ,
   PRESS_MENU_SLIDESHOW,
   PRESS_MENU_GUIDE,
+  PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
@@ -437,11 +440,69 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 24, 106, 130, 34, 8)) return PRESS_MENU_QUIZ;
     if (hitTest(tx, ty, 24, 148, 130, 34, 8)) return PRESS_MENU_SLIDESHOW;
     if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
-    if (hitTest(tx, ty, 246, 14, 50, 18, 6)) return PRESS_MENU_3D;
-    if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 242, 204, 42, 24, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_SETTINGS) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
+    if (hitTest(tx, ty, 24, 138, 58, 32, 6)) return PRESS_MENU_VOL_LARGE;
+    if (hitTest(tx, ty, 94, 138, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
+    if (hitTest(tx, ty, 164, 138, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
+    if (hitTest(tx, ty, 234, 138, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_MENU) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_POKEMON;
+    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_LOCATION;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_LIST) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      const int x = (col == 0) ? 12 : 164;
+      const int y = 48 + (row * 30);
+      if (hitTest(tx, ty, x, y, 144, 24, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_LOCATION_LIST) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    constexpr int listX = 12;
+    constexpr int listY = 48;
+    constexpr int listW = SCREEN_WIDTH - 24;
+    constexpr int rowH = 14;
+    constexpr int rowGap = 1;
+    for (int i = 0; i < 10; ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (hitTest(tx, ty, listX, y, listW, rowH + 2, 6)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    for (int i = 0; i < 5; ++i) {
+      const int x = i * (SCREEN_WIDTH / 5);
+      if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_DETAIL_TAB_0 + i);
+      }
+    }
     return PRESS_NONE;
   }
 
@@ -507,8 +568,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SEARCH) {
-    if (hitTest(tx, ty, 236, 18, 58, 26, 8)) return PRESS_SEARCH_MENU;
-    if (hitTest(tx, ty, 168, 18, 58, 26, 8)) return PRESS_SEARCH_MODE;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_MENU;
 
     if (searchMode == SEARCH_MODE_NUMBER) {
       const int digitX[4] = {60, 110, 160, 210};
@@ -516,8 +576,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
         if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
         if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
       }
-      if (hitTest(tx, ty, 20, 178, 132, 40, 10)) return PRESS_SEARCH_CANCEL;
-      if (hitTest(tx, ty, 168, 178, 132, 40, 10)) return PRESS_SEARCH_OPEN;
+      if (hitTest(tx, ty, 20, 178, 280, 40, 10)) return PRESS_SEARCH_OPEN;
       return PRESS_NONE;
     }
 
@@ -564,7 +623,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return static_cast<PressedControl>(PRESS_EVOLUTION_0 + evolutionIndex);
   }
 
-  if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12)) return PRESS_SEARCH_HEADER;
+  if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y)) return PRESS_NAV_NEXT;
   if (currentTab == TAB_APPEARANCE && hitTest(tx, ty, 46, 54, 100, 140, 0)) return PRESS_APPEARANCE_PREVIEW;
@@ -576,6 +635,8 @@ enum PendingActionType {
   ACTION_NONE = 0,
   ACTION_OPEN_GUIDE_MENU,
   ACTION_CLOSE_GUIDE_MENU,
+  ACTION_OPEN_SETTINGS,
+  ACTION_CLOSE_SETTINGS,
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
@@ -608,6 +669,7 @@ enum PendingActionType {
   ACTION_SEARCH_ADJUST,
   ACTION_SEARCH_CANCEL,
   ACTION_SEARCH_OPEN,
+  ACTION_DETAIL_BACK,
   ACTION_PREVIEW_OPEN,
   ACTION_PREVIEW_CLOSE,
   ACTION_NAV_PREV,
@@ -1532,8 +1594,6 @@ void loop() {
       } else if (screenMode == SCREEN_SEARCH) {
         if (pressedControl == PRESS_SEARCH_NAME_QUERY) {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN_INPUT);
-        } else if (pressedControl == PRESS_SEARCH_MODE) {
-          pendingAction = makePendingAction(ACTION_SEARCH_TOGGLE_MODE);
         } else if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
           const int digitStep[4] = {1000, 100, 10, 1};
           pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, digitStep[pressedControl - PRESS_SEARCH_DIGIT_UP_0]);
@@ -1566,8 +1626,6 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_POKEMON_LIST);
         } else if (pressedControl == PRESS_GUIDE_LOCATION) {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_LOCATION_LIST);
-        } else if (pressedControl == PRESS_GUIDE_HALL_OF_FAME) {
-          pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_HALL_OF_FAME);
         }
       } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
@@ -1597,6 +1655,14 @@ void loop() {
         } else if (pressedControl >= PRESS_GUIDE_DETAIL_TAB_0 && pressedControl <= PRESS_GUIDE_DETAIL_TAB_4) {
           pendingAction = makePendingAction(ACTION_SET_GUIDE_POKEMON_TAB, pressedControl - PRESS_GUIDE_DETAIL_TAB_0);
         }
+      } else if (screenMode == SCREEN_SETTINGS) {
+        if (pressedControl == PRESS_GUIDE_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
+        } else if (pressedControl == PRESS_MENU_3D) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
+        } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
+          pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
+        }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
@@ -1606,14 +1672,12 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_SLIDESHOW);
         } else if (pressedControl == PRESS_MENU_GUIDE) {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_MENU);
-        } else if (pressedControl == PRESS_MENU_3D) {
-          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
-        } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
-          pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
+        } else if (pressedControl == PRESS_MENU_SETTINGS) {
+          pendingAction = makePendingAction(ACTION_OPEN_SETTINGS);
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
-          pendingAction = makePendingAction(ACTION_OPEN_SEARCH);
+          pendingAction = makePendingAction(ACTION_DETAIL_BACK);
         } else if (pressedControl == PRESS_APPEARANCE_PREVIEW) {
           pendingAction = makePendingAction(ACTION_PREVIEW_OPEN);
         } else if (pressedControl == PRESS_NAV_PREV) {
@@ -1642,6 +1706,12 @@ void loop() {
         screenMode = SCREEN_GUIDE_MENU;
         break;
       case ACTION_CLOSE_GUIDE_MENU:
+        screenMode = SCREEN_MENU;
+        break;
+      case ACTION_OPEN_SETTINGS:
+        screenMode = SCREEN_SETTINGS;
+        break;
+      case ACTION_CLOSE_SETTINGS:
         screenMode = SCREEN_MENU;
         break;
       case ACTION_OPEN_GUIDE_POKEMON_LIST:
@@ -1705,6 +1775,7 @@ void loop() {
         guidePokemonTab = constrain(pendingAction.value, 0, 4);
         break;
       case ACTION_OPEN_POKEDEX:
+        detailReturnScreen = SCREEN_MENU;
         screenMode = SCREEN_DETAIL;
         break;
       case ACTION_OPEN_QUIZ:
@@ -1821,7 +1892,7 @@ void loop() {
         screenMode = SCREEN_DETAIL;
         break;
       case ACTION_SEARCH_TO_MENU:
-        screenMode = SCREEN_MENU;
+        screenMode = SCREEN_DETAIL;
         break;
       case ACTION_SEARCH_NAME_PAGE: {
         const int nextOffset = static_cast<int>(searchNameOffset) + pendingAction.value;
@@ -1837,6 +1908,7 @@ void loop() {
         if (index >= 0 && index < static_cast<int>(candidateIds.size())) {
           currentId = candidateIds[index];
           returnId = currentId;
+          detailReturnScreen = SCREEN_SEARCH;
           screenMode = SCREEN_DETAIL;
           dataMgr.loadPokemonDetail(currentId);
         }
@@ -1850,9 +1922,13 @@ void loop() {
             && dataMgr.getPokemonName(searchId).length() > 0) {
           currentId = searchId;
           returnId = currentId;
+          detailReturnScreen = SCREEN_SEARCH;
           screenMode = SCREEN_DETAIL;
           dataMgr.loadPokemonDetail(currentId);
         }
+        break;
+      case ACTION_DETAIL_BACK:
+        screenMode = detailReturnScreen;
         break;
       case ACTION_PREVIEW_OPEN:
         if (preview3dEnabled) {
@@ -2056,6 +2132,15 @@ void loop() {
           visualControl == PRESS_MENU_SLIDESHOW,
           visualControl == PRESS_MENU_GUIDE,
           preview3dEnabled,
+          visualControl == PRESS_MENU_SETTINGS,
+          static_cast<int>(quizVolumeSetting),
+          (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
+              ? (visualControl - PRESS_MENU_VOL_LARGE)
+              : -1);
+    } else if (screenMode == SCREEN_SETTINGS) {
+      ui.drawSettingsScreen(
+          visualControl == PRESS_GUIDE_BACK,
+          preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
@@ -2065,9 +2150,7 @@ void loop() {
       ui.drawGuideMenuScreen(
           visualControl == PRESS_GUIDE_POKEMON,
           visualControl == PRESS_GUIDE_LOCATION,
-          visualControl == PRESS_GUIDE_BACK,
-          guideHallOfFameEnabled,
-          visualControl == PRESS_GUIDE_HALL_OF_FAME);
+          visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
       const auto pageIds = getGuidePokemonPageIds(guidePokemonListOffset, 10);
       std::vector<String> pageLabels;
