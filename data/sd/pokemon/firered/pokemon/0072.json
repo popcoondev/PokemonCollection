@@ -1,0 +1,680 @@
+{
+  "id": 72,
+  "locations": [
+    {
+      "area": "3のしま きずなばし",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしま",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしま",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "マサラタウン",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "マサラタウン",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "たからのはま",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "たからのはま",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "たからのはま",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 10,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv30"
+  ],
+  "level_up_moves": [
+    {
+      "level": 30,
+      "name": "まきつく"
+    },
+    {
+      "level": 1,
+      "name": "どくばり"
+    },
+    {
+      "level": 6,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 19,
+      "name": "ようかいえき"
+    },
+    {
+      "level": 49,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 25,
+      "name": "バブルこうせん"
+    },
+    {
+      "level": 43,
+      "name": "いやなおと"
+    },
+    {
+      "level": 36,
+      "name": "バリアー"
+    },
+    {
+      "level": 12,
+      "name": "からみつく"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "ヘドロばくだん",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "いあいぎり",
+    "なみのり",
+    "たきのぼり",
+    "ダイビング"
+  ]
+}

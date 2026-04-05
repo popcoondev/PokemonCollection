@@ -1,0 +1,271 @@
+{
+  "id": 73,
+  "locations": [
+    {
+      "area": "3のしま きずなばし",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしま",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "たからのはま",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "たからのはま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 30,
+      "name": "まきつく"
+    },
+    {
+      "level": 1,
+      "name": "どくばり"
+    },
+    {
+      "level": 1,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 6,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 19,
+      "name": "ようかいえき"
+    },
+    {
+      "level": 55,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 25,
+      "name": "バブルこうせん"
+    },
+    {
+      "level": 47,
+      "name": "いやなおと"
+    },
+    {
+      "level": 38,
+      "name": "バリアー"
+    },
+    {
+      "level": 1,
+      "name": "からみつく"
+    },
+    {
+      "level": 12,
+      "name": "からみつく"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "はかいこうせん",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "ヘドロばくだん",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "いあいぎり",
+    "なみのり",
+    "たきのぼり",
+    "ダイビング"
+  ]
+}

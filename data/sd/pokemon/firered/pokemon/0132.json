@@ -1,0 +1,102 @@
+{
+  "id": 132,
+  "locations": [
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 52,
+      "max_level": 52,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 61,
+      "max_level": 61,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 55,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 64,
+      "max_level": 64,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 58,
+      "max_level": 58,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 67,
+      "max_level": 67,
+      "postgame_only": true
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 25,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "14ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "14ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "14ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 23,
+      "max_level": 23,
+      "postgame_only": false
+    },
+    {
+      "area": "15ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 25,
+      "max_level": 25,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "へんしん"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}

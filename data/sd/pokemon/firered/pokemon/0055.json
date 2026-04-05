@@ -1,0 +1,220 @@
+{
+  "id": 55,
+  "locations": [
+    {
+      "area": "3のしま きのみのもり",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きのみのもり",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 40,
+      "max_level": 50,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 45,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 50,
+      "max_level": 60,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 55,
+      "max_level": 65,
+      "postgame_only": true
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 33,
+      "max_level": 33,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "ひっかく"
+    },
+    {
+      "level": 1,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 5,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 1,
+      "name": "かなしばり"
+    },
+    {
+      "level": 10,
+      "name": "かなしばり"
+    },
+    {
+      "level": 58,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 16,
+      "name": "ねんりき"
+    },
+    {
+      "level": 23,
+      "name": "いやなおと"
+    },
+    {
+      "level": 44,
+      "name": "みだれひっかき"
+    },
+    {
+      "level": 31,
+      "name": "じこあんじ"
+    },
+    {
+      "level": 1,
+      "name": "みずあそび"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "はかいこうせん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "きあいパンチ",
+    "かわらわり",
+    "ひみつのちから",
+    "つばめがえし",
+    "めいそう",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "かいりき",
+    "たきのぼり",
+    "フラッシュ",
+    "いわくだき",
+    "ダイビング"
+  ]
+}

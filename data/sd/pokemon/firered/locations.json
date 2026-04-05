@@ -1,17 +1,1017 @@
 [
   {
-    "id": "route_01",
-    "name": "1ばんどうろ",
-    "pokemon": [16, 19]
+    "id": "pallet_town_area",
+    "name": "マサラタウン",
+    "order": 10,
+    "postgame_only": false,
+    "pokemon": [
+      1,
+      4,
+      7,
+      54,
+      72,
+      90,
+      98,
+      116,
+      117,
+      129,
+      130
+    ]
   },
   {
-    "id": "viridian_forest",
+    "id": "viridian_city_area",
+    "name": "トキワシティ",
+    "order": 20,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      60,
+      61,
+      118,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "viridian_forest_area",
     "name": "トキワのもり",
-    "pokemon": [10, 11, 13, 14, 25]
+    "order": 30,
+    "postgame_only": false,
+    "pokemon": [
+      10,
+      11,
+      13,
+      14,
+      25
+    ]
   },
   {
-    "id": "route_02",
+    "id": "kanto_route_1_area",
+    "name": "1ばんどうろ",
+    "order": 40,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      19
+    ]
+  },
+  {
+    "id": "kanto_route_2_south_towards_viridian_city",
     "name": "2ばんどうろ",
-    "pokemon": [16, 19]
+    "order": 50,
+    "postgame_only": false,
+    "pokemon": [
+      10,
+      13,
+      16,
+      19
+    ]
+  },
+  {
+    "id": "kanto_route_2_north_towards_pewter_city",
+    "name": "2ばんどうろ",
+    "order": 50,
+    "postgame_only": false,
+    "pokemon": []
+  },
+  {
+    "id": "kanto_route_3_area",
+    "name": "3ばんどうろ",
+    "order": 70,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      21,
+      29,
+      32,
+      39,
+      56
+    ]
+  },
+  {
+    "id": "mt_moon_1f",
+    "name": "おつきみやま",
+    "order": 80,
+    "postgame_only": false,
+    "pokemon": [
+      35,
+      41,
+      46,
+      74
+    ]
+  },
+  {
+    "id": "mt_moon_b1f",
+    "name": "おつきみやま",
+    "order": 80,
+    "postgame_only": false,
+    "pokemon": [
+      46
+    ]
+  },
+  {
+    "id": "mt_moon_b2f",
+    "name": "おつきみやま",
+    "order": 80,
+    "postgame_only": false,
+    "pokemon": [
+      35,
+      41,
+      46,
+      74
+    ]
+  },
+  {
+    "id": "cerulean_city_area",
+    "name": "ハナダシティ",
+    "order": 90,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      72,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_24_area",
+    "name": "24ばんどうろ",
+    "order": 100,
+    "postgame_only": false,
+    "pokemon": [
+      10,
+      11,
+      13,
+      14,
+      16,
+      43,
+      54,
+      63,
+      72,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_25_area",
+    "name": "25ばんどうろ",
+    "order": 110,
+    "postgame_only": false,
+    "pokemon": [
+      10,
+      11,
+      13,
+      14,
+      16,
+      43,
+      54,
+      60,
+      61,
+      63,
+      118,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_5_area",
+    "name": "5ばんどうろ",
+    "order": 120,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      43,
+      52
+    ]
+  },
+  {
+    "id": "kanto_route_6_area",
+    "name": "6ばんどうろ",
+    "order": 130,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      43,
+      52,
+      54,
+      60,
+      61,
+      118,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "vermilion_city_area",
+    "name": "クチバシティ",
+    "order": 140,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      72,
+      90,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_11_area",
+    "name": "11ばんどうろ",
+    "order": 150,
+    "postgame_only": false,
+    "pokemon": [
+      21,
+      23,
+      54,
+      72,
+      96,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "digletts_cave_area",
+    "name": "ディグダのあな",
+    "order": 160,
+    "postgame_only": false,
+    "pokemon": [
+      50,
+      51
+    ]
+  },
+  {
+    "id": "kanto_route_9_area",
+    "name": "9ばんどうろ",
+    "order": 170,
+    "postgame_only": false,
+    "pokemon": [
+      19,
+      21,
+      23
+    ]
+  },
+  {
+    "id": "kanto_route_10_area",
+    "name": "10ばんどうろ",
+    "order": 180,
+    "postgame_only": false,
+    "pokemon": [
+      21,
+      23,
+      54,
+      72,
+      98,
+      100,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "rock_tunnel_1f",
+    "name": "イワヤマトンネル",
+    "order": 190,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      56,
+      66,
+      74,
+      95
+    ]
+  },
+  {
+    "id": "rock_tunnel_b1f",
+    "name": "イワヤマトンネル",
+    "order": 190,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      56,
+      66,
+      74,
+      75,
+      95
+    ]
+  },
+  {
+    "id": "kanto_route_8_area",
+    "name": "8ばんどうろ",
+    "order": 210,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      23,
+      52,
+      58
+    ]
+  },
+  {
+    "id": "celadon_city_area",
+    "name": "タマムシシティ",
+    "order": 220,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      88,
+      109,
+      129
+    ]
+  },
+  {
+    "id": "pokemon_tower_3f",
+    "name": "ポケモンタワー",
+    "order": 230,
+    "postgame_only": false,
+    "pokemon": [
+      92,
+      93,
+      104
+    ]
+  },
+  {
+    "id": "pokemon_tower_4f",
+    "name": "ポケモンタワー",
+    "order": 230,
+    "postgame_only": false,
+    "pokemon": [
+      92,
+      93,
+      104
+    ]
+  },
+  {
+    "id": "pokemon_tower_5f",
+    "name": "ポケモンタワー",
+    "order": 230,
+    "postgame_only": false,
+    "pokemon": [
+      92,
+      93,
+      104
+    ]
+  },
+  {
+    "id": "pokemon_tower_6f",
+    "name": "ポケモンタワー",
+    "order": 230,
+    "postgame_only": false,
+    "pokemon": [
+      92,
+      93,
+      104
+    ]
+  },
+  {
+    "id": "pokemon_tower_7f",
+    "name": "ポケモンタワー",
+    "order": 230,
+    "postgame_only": false,
+    "pokemon": [
+      92,
+      93,
+      104
+    ]
+  },
+  {
+    "id": "fuchsia_city_area",
+    "name": "セキチクシティ",
+    "order": 240,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      60,
+      118,
+      119,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_12_area",
+    "name": "12ばんどうろ",
+    "order": 260,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      43,
+      44,
+      48,
+      54,
+      72,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "kanto_route_13_area",
+    "name": "13ばんどうろ",
+    "order": 270,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      17,
+      43,
+      44,
+      48,
+      54,
+      72,
+      98,
+      116,
+      129,
+      130,
+      132
+    ]
+  },
+  {
+    "id": "kanto_route_14_area",
+    "name": "14ばんどうろ",
+    "order": 280,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      17,
+      43,
+      44,
+      48,
+      132
+    ]
+  },
+  {
+    "id": "kanto_route_15_area",
+    "name": "15ばんどうろ",
+    "order": 290,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      17,
+      43,
+      44,
+      48,
+      132
+    ]
+  },
+  {
+    "id": "kanto_route_16_area",
+    "name": "16ばんどうろ",
+    "order": 300,
+    "postgame_only": false,
+    "pokemon": [
+      19,
+      20,
+      21,
+      84
+    ]
+  },
+  {
+    "id": "kanto_route_17_area",
+    "name": "17ばんどうろ",
+    "order": 310,
+    "postgame_only": false,
+    "pokemon": [
+      19,
+      20,
+      21,
+      22,
+      84
+    ]
+  },
+  {
+    "id": "kanto_route_18_area",
+    "name": "18ばんどうろ",
+    "order": 320,
+    "postgame_only": false,
+    "pokemon": [
+      19,
+      20,
+      21,
+      22,
+      84
+    ]
+  },
+  {
+    "id": "cinnabar_island_area",
+    "name": "グレンじま",
+    "order": 350,
+    "postgame_only": false,
+    "pokemon": [
+      54,
+      72,
+      90,
+      98,
+      116,
+      117,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "seafoam_islands_1f",
+    "name": "ふたごじま",
+    "order": 360,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      42,
+      54
+    ]
+  },
+  {
+    "id": "seafoam_islands_b1f",
+    "name": "ふたごじま",
+    "order": 360,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      42,
+      54,
+      55,
+      86
+    ]
+  },
+  {
+    "id": "seafoam_islands_b2f",
+    "name": "ふたごじま",
+    "order": 360,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      42,
+      54,
+      55,
+      86
+    ]
+  },
+  {
+    "id": "seafoam_islands_b3f",
+    "name": "ふたごじま",
+    "order": 360,
+    "postgame_only": false,
+    "pokemon": [
+      41,
+      42,
+      54,
+      55,
+      86,
+      87,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "seafoam_islands_b4f",
+    "name": "ふたごじま",
+    "order": 360,
+    "postgame_only": false,
+    "pokemon": [
+      42,
+      54,
+      55,
+      86,
+      87,
+      98,
+      116,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "power_plant_area",
+    "name": "むじんはつでんしょ",
+    "order": 380,
+    "postgame_only": false,
+    "pokemon": [
+      25,
+      81,
+      82,
+      100,
+      125
+    ]
+  },
+  {
+    "id": "kanto_route_22_area",
+    "name": "22ばんどうろ",
+    "order": 410,
+    "postgame_only": false,
+    "pokemon": [
+      19,
+      21,
+      54,
+      56,
+      60,
+      61,
+      118,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "treasure_beach_area",
+    "name": "たからのはま",
+    "order": 510,
+    "postgame_only": false,
+    "pokemon": [
+      21,
+      22,
+      52,
+      53,
+      54,
+      72,
+      73,
+      114,
+      116,
+      117,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "mt_ember_area",
+    "name": "1のしま ひのやま",
+    "order": 520,
+    "postgame_only": false,
+    "pokemon": [
+      21,
+      22,
+      66,
+      74,
+      75,
+      77,
+      78
+    ]
+  },
+  {
+    "id": "berry_forest_area",
+    "name": "3のしま きのみのもり",
+    "order": 530,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      17,
+      43,
+      44,
+      48,
+      49,
+      54,
+      55,
+      60,
+      96,
+      97,
+      102,
+      118,
+      119,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "bond_bridge_area",
+    "name": "3のしま きずなばし",
+    "order": 540,
+    "postgame_only": false,
+    "pokemon": [
+      16,
+      17,
+      43,
+      44,
+      48,
+      52,
+      53,
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130
+    ]
+  },
+  {
+    "id": "cerulean_cave_1f",
+    "name": "ハナダのどうくつ",
+    "order": 900,
+    "postgame_only": true,
+    "pokemon": [
+      42,
+      47,
+      54,
+      55,
+      57,
+      60,
+      61,
+      67,
+      74,
+      75,
+      82,
+      101,
+      118,
+      129,
+      130,
+      132,
+      202
+    ]
+  },
+  {
+    "id": "cerulean_cave_2f",
+    "name": "ハナダのどうくつ",
+    "order": 900,
+    "postgame_only": true,
+    "pokemon": [
+      42,
+      47,
+      64,
+      67,
+      74,
+      75,
+      82,
+      101,
+      132,
+      202
+    ]
+  },
+  {
+    "id": "cerulean_cave_b1f",
+    "name": "ハナダのどうくつ",
+    "order": 900,
+    "postgame_only": true,
+    "pokemon": [
+      42,
+      47,
+      54,
+      55,
+      60,
+      61,
+      64,
+      67,
+      74,
+      75,
+      82,
+      101,
+      118,
+      129,
+      130,
+      132,
+      202
+    ]
+  },
+  {
+    "id": "four_island_area",
+    "name": "4のしま",
+    "order": 910,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      60,
+      61,
+      118,
+      129,
+      130,
+      194
+    ]
+  },
+  {
+    "id": "five_island_area",
+    "name": "5のしま",
+    "order": 930,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      90,
+      116,
+      117,
+      129,
+      130,
+      187
+    ]
+  },
+  {
+    "id": "resort_gorgeous_area",
+    "name": "ゴージャスリゾート",
+    "order": 940,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      187,
+      211
+    ]
+  },
+  {
+    "id": "water_labyrinth_area",
+    "name": "みずのめいろ",
+    "order": 950,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      187,
+      211
+    ]
+  },
+  {
+    "id": "five_isle_meadow_area",
+    "name": "5のしまくさむら",
+    "order": 970,
+    "postgame_only": true,
+    "pokemon": [
+      16,
+      17,
+      52,
+      53,
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      161,
+      187,
+      211
+    ]
+  },
+  {
+    "id": "memorial_pillar_area",
+    "name": "きねんのせきちゅう",
+    "order": 980,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      187,
+      211
+    ]
+  },
+  {
+    "id": "outcast_island_area",
+    "name": "あききち",
+    "order": 990,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      211
+    ]
+  },
+  {
+    "id": "green_path_area",
+    "name": "みどりのさんどう",
+    "order": 1000,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      211
+    ]
+  },
+  {
+    "id": "water_path_area",
+    "name": "みずのさんぽみち",
+    "order": 1010,
+    "postgame_only": true,
+    "pokemon": [
+      21,
+      22,
+      43,
+      44,
+      52,
+      53,
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      161,
+      211
+    ]
+  },
+  {
+    "id": "ruin_valley_area",
+    "name": "いせきのたに",
+    "order": 1020,
+    "postgame_only": true,
+    "pokemon": [
+      21,
+      22,
+      52,
+      53,
+      54,
+      60,
+      61,
+      118,
+      129,
+      130,
+      177,
+      193,
+      194,
+      202
+    ]
+  },
+  {
+    "id": "pattern_bush_area",
+    "name": "しるしのはやし",
+    "order": 1040,
+    "postgame_only": true,
+    "pokemon": [
+      10,
+      11,
+      13,
+      14,
+      165,
+      167,
+      214
+    ]
+  },
+  {
+    "id": "trainer_tower_area",
+    "name": "トレーナータワー",
+    "order": 1070,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      211
+    ]
+  },
+  {
+    "id": "tanoby_ruins_area",
+    "name": "アスカナいせき",
+    "order": 1080,
+    "postgame_only": true,
+    "pokemon": [
+      54,
+      72,
+      73,
+      116,
+      117,
+      129,
+      130,
+      211
+    ]
+  },
+  {
+    "id": "sevault_canyon_area",
+    "name": "ななしまきょうこく",
+    "order": 1090,
+    "postgame_only": true,
+    "pokemon": [
+      22,
+      52,
+      53,
+      74,
+      75,
+      95,
+      104,
+      105,
+      227,
+      231,
+      246
+    ]
   }
 ]

@@ -1,0 +1,172 @@
+{
+  "id": 118,
+  "locations": [
+    {
+      "area": "3のしま きのみのもり",
+      "method": "いいつりざお",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きのみのもり",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "いいつりざお",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "いせきのたに",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "トキワシティ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv33"
+  ],
+  "level_up_moves": [
+    {
+      "level": 15,
+      "name": "つのでつく"
+    },
+    {
+      "level": 29,
+      "name": "みだれづき"
+    },
+    {
+      "level": 43,
+      "name": "つのドリル"
+    },
+    {
+      "level": 1,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 10,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 1,
+      "name": "つつく"
+    },
+    {
+      "level": 52,
+      "name": "こうそくいどう"
+    },
+    {
+      "level": 38,
+      "name": "たきのぼり"
+    },
+    {
+      "level": 24,
+      "name": "じたばた"
+    },
+    {
+      "level": 57,
+      "name": "メガホーン"
+    },
+    {
+      "level": 1,
+      "name": "みずあそび"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "たきのぼり",
+    "ダイビング"
+  ]
+}

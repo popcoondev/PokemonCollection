@@ -1,0 +1,853 @@
+location_id,name,order,postgame_only
+abandoned_ship_area,Abandoned Ship,9999,false
+abundant_shrine_area,Abundant Shrine,9999,false
+acuity_lakefront_area,Acuity Lakefront,9999,false
+agate_village_relic_forest,Agate Village (Relic Forest),9999,false
+hoenn_altering_cave_a,Altering Cave (A),9999,false
+kanto_altering_cave_a,Altering Cave (A),9999,false
+hoenn_altering_cave_b,Altering Cave (B),9999,false
+kanto_altering_cave_b,Altering Cave (B),9999,false
+hoenn_altering_cave_c,Altering Cave (C),9999,false
+kanto_altering_cave_c,Altering Cave (C),9999,false
+hoenn_altering_cave_d,Altering Cave (D),9999,false
+kanto_altering_cave_d,Altering Cave (D),9999,false
+hoenn_altering_cave_e,Altering Cave (E),9999,false
+kanto_altering_cave_e,Altering Cave (E),9999,false
+hoenn_altering_cave_f,Altering Cave (F),9999,false
+kanto_altering_cave_f,Altering Cave (F),9999,false
+hoenn_altering_cave_g,Altering Cave (G),9999,false
+kanto_altering_cave_g,Altering Cave (G),9999,false
+hoenn_altering_cave_h,Altering Cave (H),9999,false
+kanto_altering_cave_h,Altering Cave (H),9999,false
+hoenn_altering_cave_i,Altering Cave (I),9999,false
+kanto_altering_cave_i,Altering Cave (I),9999,false
+ambrette_town_area,Ambrette Town,9999,false
+ancient_tomb_area,Ancient Tomb,9999,false
+artisan_cave_area,Artisan Cave,9999,false
+aspertia_city_area,Aspertia City,9999,false
+azalea_town_area,Azalea Town,9999,false
+azure_bay_area,Azure Bay,9999,false
+battle_resort_area,Battle Resort,9999,false
+bell_tower_10f,Bell Tower (10F),9999,false
+bell_tower_1f,Bell Tower (1F),9999,false
+bell_tower_2f,Bell Tower (2F),9999,false
+bell_tower_3f,Bell Tower (3F),9999,false
+bell_tower_4f,Bell Tower (4F),9999,false
+bell_tower_5f,Bell Tower (5F),9999,false
+bell_tower_6f,Bell Tower (6F),9999,false
+bell_tower_7f,Bell Tower (7F),9999,false
+bell_tower_8f,Bell Tower (8F),9999,false
+bell_tower_9f,Bell Tower (9F),9999,false
+bell_tower_roof,Bell Tower (roof),9999,false
+berry_forest_area,Berry Forest,9999,false
+birth_island_area,Birth Island,9999,false
+blackthorn_city_area,Blackthorn City,9999,false
+bond_bridge_area,Bond Bridge,9999,false
+burned_tower_1f,Burned Tower (1F),9999,false
+burned_tower_b1f,Burned Tower (B1F),9999,false
+canalave_city_area,Canalave City,9999,false
+canyon_entrance_area,Canyon Entrance,9999,false
+cape_brink_area,Cape Brink,9999,false
+castelia_city_area,Castelia City,9999,false
+castelia_sewers_area,Castelia Sewers,9999,false
+castelia_sewers_unknown_area_38,Castelia Sewers (unknown area 38),9999,false
+pokespot_cave,Cave Pokespot ,9999,false
+cave_of_origin_1f,Cave of Origin (1F),9999,false
+cave_of_origin_b1f,Cave of Origin (B1F),9999,false
+cave_of_origin_b2f,Cave of Origin (B2F),9999,false
+cave_of_origin_b3f,Cave of Origin (B3F),9999,false
+cave_of_origin_b4f,Cave of Origin (B4F),9999,false
+cave_of_origin_entrance,Cave of Origin (entrance),9999,false
+celadon_city_area,Celadon City,9999,false
+celadon_city_prize_corner,Celadon City Prize Corner,9999,false
+celadon_city_celadon_mansion,Celadon Mansion rooftop,9999,false
+celestial_tower_3f,Celestial Tower (3F),9999,false
+celestial_tower_4f,Celestial Tower (4F),9999,false
+celestial_tower_5f,Celestial Tower (5F),9999,false
+celestic_town_area,Celestic Town,9999,false
+cerulean_cave_1f,Cerulean Cave (1F),9999,false
+cerulean_cave_2f,Cerulean Cave (2F),9999,false
+cerulean_cave_b1f,Cerulean Cave (B1F),9999,false
+cerulean_city_area,Cerulean City,9999,false
+challengers_cave_1f,Challengers Cave (1F),9999,false
+challengers_cave_b1f,Challengers Cave (B1F),9999,false
+challengers_cave_b2f,Challengers Cave (B2F),9999,false
+chargestone_cave_1f,Chargestone Cave (1F),9999,false
+chargestone_cave_b1f,Chargestone Cave (B1F),9999,false
+chargestone_cave_b2f,Chargestone Cave (B2F),9999,false
+cherrygrove_city_area,Cherrygrove City,9999,false
+cianwood_city_area,Cianwood City,9999,false
+cianwood_city_kirks_house,Cianwood City (Kirk's house),9999,false
+cianwood_city_manias_house,Cianwood City (Mania's house),9999,false
+cinnabar_island_area,Cinnabar Island,9999,false
+cinnabar_island_cinnabar_lab,Cinnabar Lab (Cinnabar Island),9999,false
+cipher_key_lair_outside,Cipher Key Lair (Outside),9999,false
+cipher_key_lair_1f,Cipher Key Lair 1F,9999,false
+cipher_key_lair_2f,Cipher Key Lair 2F,9999,false
+cipher_key_lair_3f,Cipher Key Lair 3F,9999,false
+cipher_key_lair_4f,Cipher Key Lair 4F,9999,false
+cipher_key_lair_5f,Cipher Key Lair 5F,9999,false
+cipher_key_lair_roof,Cipher Key Lair Roof,9999,false
+cipher_lab_outside,Cipher Lab (Outside),9999,false
+cipher_lab_bf1,Cipher Lab B1F,9999,false
+cipher_lab_bf2,Cipher Lab B2F,9999,false
+citadark_isle_outside,Citadark Isle (Outside),9999,false
+citadark_isle_1f,Citadark Isle 1F,9999,false
+citadark_isle_2f,Citadark Isle 2F,9999,false
+citadark_isle_3f,Citadark Isle 3F,9999,false
+citadark_isle_6f,Citadark Isle 6F,9999,false
+citadark_isle_bf1,Citadark Isle B1F,9999,false
+citadark_isle_dome_1f,Citadark Isle Dome 1F,9999,false
+citadark_isle_dome_2f,Citadark Isle Dome 2F,9999,false
+citadark_isle_dome_bf1,Citadark Isle Dome B1F,9999,false
+citadark_isle_dome_exterior,Citadark Isle Dome Exterior,9999,false
+clay_tunnel_area,Clay Tunnel,9999,false
+connecting_cave_area,Connecting Cave,9999,false
+fallarbor_town_contest_hall,Contest Hall (Fallarbor Town),9999,false
+lilycove_city_contest_hall,Contest Hall (Lilycove City),9999,false
+slateport_city_contest_hall,Contest Hall (Slateport City),9999,false
+verdanturf_town_contest_hall,Contest Hall (Verdanturf Town),9999,false
+couriway_town_area,Couriway Town,9999,false
+cyllage_city_area,Cyllage City,9999,false
+dark_cave_blackthorn_city_entrance,Dark Cave (Blackthorn City entrance),9999,false
+dark_cave_violet_city_entrance,Dark Cave (Violet City entrance),9999,false
+desert_resort_area,Desert Resort,9999,false
+desert_resort_entrance,Desert Resort (entrance),9999,false
+desert_ruins_area,Desert Ruins,9999,false
+desert_underpass_area,Desert Underpass,9999,false
+dewford_town_area,Dewford Town,9999,false
+digletts_cave_area,Digletts Cave,9999,false
+dilford_chamber_area,Dilford Chamber,9999,false
+dividing_peak_tunnel,Dividing Peak Tunnel,9999,false
+dragons_den_area,Dragon's Den,9999,false
+dragonspiral_tower_outside,Dragonspiral Tower (outside),9999,false
+dreamyard_area,Dreamyard,9999,false
+dreamyard_b1f,Dreamyard (B1F),9999,false
+driftveil_city_area,Driftveil City,9999,false
+ecruteak_city_area,Ecruteak City,9999,false
+embedded_tower_groundon_room,Embedded Tower (Groudon’s room),9999,false
+embedded_tower_kyogre_room,Embedded Tower (Kyogre’s room),9999,false
+embedded_tower_rayquaza_room,Embedded Tower (Rayquaza’s room),9999,false
+eterna_city_area,Eterna City,9999,false
+eterna_city_west_gate,Eterna City (west gate),9999,false
+eterna_forest_area,Eterna Forest,9999,false
+ever_grande_city_area,Ever Grande City,9999,false
+faraway_island_area,Faraway Island,9999,false
+fiery_path_area,Fiery Path,9999,false
+saffron_city_fighting_dojo,Fighting Dojo,9999,false
+five_island_area,Five Island,9999,false
+five_isle_meadow_area,Five Isle Meadow,9999,false
+floccesy_ranch_inner,Floccesy Ranch (inner),9999,false
+floccesy_ranch_outer,Floccesy Ranch (outer),9999,false
+floccesy_town_area,Floccesy Town,9999,false
+four_island_area,Four Island,9999,false
+frost_cavern_unknown_area_313,Frost Cavern (unknown area 313),9999,false
+frost_cavern_unknown_area_314,Frost Cavern (unknown area 314),9999,false
+frost_cavern_unknown_area_315,Frost Cavern (unknown area 315),9999,false
+frost_cavern_unknown_area_316,Frost Cavern (unknown area 316),9999,false
+frost_cavern_unknown_area_317,Frost Cavern (unknown area 317),9999,false
+fuchsia_city_area,Fuchsia City,9999,false
+fuego_ironworks_area,Fuego Ironworks,9999,false
+gateon_port_across_bridge,Gateon Port (Across Bridge),9999,false
+gateon_port_lighthouse_top,Gateon Port (Lighthouse Top),9999,false
+giant_chasm_area,Giant Chasm,9999,false
+giant_chasm_forest_cave,Giant Chasm (forest cave),9999,false
+giant_chasm_forest,Giant Chasm (forest),9999,false
+giant_chasm_outside,Giant Chasm (outside),9999,false
+glacier_room_area,Glacier Room,9999,false
+glittering_cave_unknown_area_303,Glittering Cave (unknown area 303),9999,false
+glittering_cave_unknown_area_304,Glittering Cave (unknown area 304),9999,false
+goldenrod_city_bills_house,Goldenrod City (Bill's house),9999,false
+goldenrod_city_north_gate,Goldenrod City (north gate),9999,false
+goldenrod_city_game_corner,Goldenrod City Game Corner,9999,false
+granite_cave_1f,Granite Cave (1F),9999,false
+granite_cave_1fsmall_room,Granite Cave (1F/small room),9999,false
+granite_cave_b1f,Granite Cave (B1F),9999,false
+granite_cave_b2f,Granite Cave (B2F),9999,false
+great_marsh_area_1,Great Marsh Area 1,9999,false
+great_marsh_area_2,Great Marsh Area 2,9999,false
+great_marsh_area_3,Great Marsh Area 3,9999,false
+great_marsh_area_4,Great Marsh Area 4,9999,false
+great_marsh_area_5,Great Marsh Area 5,9999,false
+great_marsh_area_6,Great Marsh Area 6,9999,false
+green_path_area,Green Path,9999,false
+guidance_chamber_area,Guidance Chamber,9999,false
+hauoli_city,Hau'oli City,9999,false
+heahea_beach,Heahea Beach,9999,false
+hearthome_city_area,Hearthome City,9999,false
+hoenn_battle_frontier_area,Hoenn Battle Frontier,9999,false
+humilau_city_area,Humilau City,9999,false
+ice_path_1f,Ice Path (1F),9999,false
+ice_path_b1f,Ice Path (B1F),9999,false
+ice_path_b2f,Ice Path (B2F),9999,false
+ice_path_b3f,Ice Path (B3F),9999,false
+icefall_cave_1f,Icefall Cave (1F),9999,false
+icefall_cave_b1f,Icefall Cave (B1F),9999,false
+icefall_cave_entrance,Icefall Cave (entrance),9999,false
+icefall_cave_waterfall,Icefall Cave (waterfall),9999,false
+icirrus_city_area,Icirrus City,9999,false
+ilex_forest_area,Ilex Forest,9999,false
+iron_island_1f,Iron Island (1F),9999,false
+iron_island_b1f_left,Iron Island (B1F left),9999,false
+iron_island_b1f_right,Iron Island (B1F right),9999,false
+iron_island_b2f_left,Iron Island (B2F left),9999,false
+iron_island_b2f_right,Iron Island (B2F right),9999,false
+iron_island_b3f,Iron Island (B3F),9999,false
+iron_island_area,Iron Island area,9999,false
+iron_room_area,Iron Room,9999,false
+island_cave_area,Island Cave,9999,false
+jagged_pass_area,Jagged Pass,9999,false
+kindle_road_area,Kindle Road,9999,false
+lake_acuity_area,Lake Acuity,9999,false
+lake_valor_area,Lake Valor,9999,false
+lake_verity_after_galactic_intervention,Lake Verity (after Galactic intervention),9999,false
+lake_verity_before_galactic_intervention,Lake Verity (before Galactic intervention),9999,false
+lake_of_rage_area,Lake of Rage,9999,false
+lavaridge_town_area,Lavaridge Town,9999,false
+laverre_city_area,Laverre City,9999,false
+liberty_garden_lighthouse_basement,Lighthouse Basement,9999,false
+lilycove_city_area,Lilycove City,9999,false
+liptoo_chamber_area,Liptoo Chamber,9999,false
+littleroot_town_area,Littleroot Town,9999,false
+lost_cave_item_rooms,Lost Cave (item rooms),9999,false
+lost_cave_room_1,Lost Cave (room 1),9999,false
+lost_cave_room_10,Lost Cave (room 10),9999,false
+lost_cave_room_2,Lost Cave (room 2),9999,false
+lost_cave_room_3,Lost Cave (room 3),9999,false
+lost_cave_room_4,Lost Cave (room 4),9999,false
+lost_cave_room_5,Lost Cave (room 5),9999,false
+lost_cave_room_6,Lost Cave (room 6),9999,false
+lost_cave_room_7,Lost Cave (room 7),9999,false
+lost_cave_room_8,Lost Cave (room 8),9999,false
+lost_cave_room_9,Lost Cave (room 9),9999,false
+lost_hotel_area,Lost Hotel,9999,false
+lost_tower_1f,Lost Tower (1F),9999,false
+lost_tower_2f,Lost Tower (2F),9999,false
+lost_tower_3f,Lost Tower (3F),9999,false
+lost_tower_4f,Lost Tower (4F),9999,false
+lost_tower_5f,Lost Tower (5F),9999,false
+lostlorn_forest_area,Lostlorn Forest,9999,false
+lumiose_city_area,Lumiose City,9999,false
+magma_hideout_area,Magma Hideout,9999,false
+malie_city,Malie City,9999,false
+maniac_tunnel_26_plus_different_unown_caught,Maniac Tunnel (26+ different Unown caught),9999,false
+marine_cave_area,Marine Cave,9999,false
+marvelous_bridge_area,Marvelous Bridge,9999,false
+memorial_pillar_area,Memorial Pillar,9999,false
+meteor_falls_area,Meteor Falls,9999,false
+meteor_falls_b1f,Meteor Falls (B1F),9999,false
+meteor_falls_back,Meteor Falls (back),9999,false
+meteor_falls_backsmall_room,Meteor Falls (back/small room),9999,false
+mirage_spot_forest_east_of_mossdeep,Mirage Forest (East of Mossdeep),9999,false
+mirage_spot_forest_north_of_lilycove,Mirage Forest (North of Lilycove),9999,false
+mirage_spot_forest_north_of_route_124,Mirage Forest (North of Route 124),9999,false
+mirage_spot_forest_south_of_route_109,Mirage Forest (South of Route 109),9999,false
+mirage_spot_forest_south_of_route_132,Mirage Forest (South of Route 132),9999,false
+mirage_spot_forest_west_of_route_105,Mirage Forest (West of Route 105),9999,false
+mirage_spot_forest_west_of_route_114,Mirage Forest (West of Route 114),9999,false
+mirage_island_area,Mirage Island,9999,false
+mirage_spot_island_east_of_shoal_cave,Mirage Island (East of Shoal Cave),9999,false
+mirage_spot_island_route_124,Mirage Island (Route 124),9999,false
+mirage_spot_island_route_132,Mirage Island (Route 132),9999,false
+mirage_spot_island_south_of_pacifidlog,Mirage Island (South of Pacofidlog),9999,false
+mirage_spot_island_south_of_route_134,Mirage Island (South of Route 134),9999,false
+mirage_spot_island_west_of_dewford_town,Mirage Island (West Of Dewford Town),9999,false
+mirage_spot_island_west_of_route_104,Mirage Island (West Of Route 104),9999,false
+mirage_tower_area,Mirage Tower,9999,false
+mistralton_cave_area,Mistralton Cave,9999,false
+monean_chamber_area,Monean Chamber,9999,false
+moor_of_icirrus_area,Moor of Icirrus,9999,false
+mossdeep_city_area,Mossdeep City,9999,false
+mossdeep_city_stevens_house,Mossdeep City (Steven's house),9999,false
+mossdeep_space_center_area,Mossdeep Space Center,9999,false
+mt_coronet_1f_route_207,Mount Coronet (1F Road 207),9999,false
+mt_coronet_1f_route_211,Mount Coronet (1F Road 211),9999,false
+mt_coronet_1f_route_216,Mount Coronet (1F Road 216),9999,false
+mt_coronet_1f_from_exterior,Mount Coronet (1F from exterior),9999,false
+mt_coronet_2f,Mount Coronet (2F),9999,false
+mt_coronet_3f,Mount Coronet (3F),9999,false
+mt_coronet_4f_small_room,Mount Coronet (4F small room),9999,false
+mt_coronet_4f,Mount Coronet (4F),9999,false
+mt_coronet_5f,Mount Coronet (5F),9999,false
+mt_coronet_6f,Mount Coronet (6F),9999,false
+mt_coronet_b1f,Mount Coronet (B1F),9999,false
+mt_coronet_exterior_blizzard,Mount Coronet (exterior blizzard),9999,false
+mt_coronet_exterior_snowfall,Mount Coronet (exterior snowfall),9999,false
+mt_ember_area,Mount Ember,9999,false
+mt_ember_1f_cave_behind_team_rocket,"Mount Ember (1F, cave behind team rocket)",9999,false
+mt_ember_b1f,Mount Ember (B1F),9999,false
+mt_ember_b2f,Mount Ember (B2F),9999,false
+mt_ember_b3f,Mount Ember (B3F),9999,false
+mt_ember_cave,Mount Ember (cave),9999,false
+mt_ember_inside,Mount Ember (inside),9999,false
+mt_ember_summit,Mount Ember Summit,9999,false
+mt_moon_1f,Mount Moon (1F),9999,false
+mt_moon_2f,Mount Moon (2F),9999,false
+mt_moon_b1f,Mount Moon (B1F),9999,false
+mt_moon_b2f,Mount Moon (B2F),9999,false
+mt_moon_mt_moon_square,Mount Moon Square,9999,false
+mt_mortar_1f,Mount Mortar (1F),9999,false
+mt_mortar_b1f,Mount Mortar (B1F),9999,false
+mt_mortar_lower_cave,Mount Mortar (Lower Cave),9999,false
+mt_mortar_upper_cave,Mount Mortar (Upper Cave),9999,false
+mt_pyre_1f,Mount Pyre (1F),9999,false
+mt_pyre_2f,Mount Pyre (2F),9999,false
+mt_pyre_3f,Mount Pyre (3F),9999,false
+mt_pyre_4f,Mount Pyre (4F),9999,false
+mt_pyre_5f,Mount Pyre (5F),9999,false
+mt_pyre_6f,Mount Pyre (6F),9999,false
+mt_pyre_outside,Mount Pyre (outside),9999,false
+mt_pyre_summit,Mount Pyre (summit),9999,false
+mt_silver_1f_top,Mount Silver (1F top),9999,false
+mt_silver_1f,Mount Silver (1F),9999,false
+mt_silver_2f,Mount Silver (2F),9999,false
+mt_silver_3f,Mount Silver (3F),9999,false
+mt_silver_4f,Mount Silver (4F),9999,false
+mt_silver_mountainside,Mount Silver (mountainside),9999,false
+mt_silver_outside,Mount Silver (outside),9999,false
+mt_silver_top,Mount Silver (top),9999,false
+mt_battle_100f,Mt. Battle 100F,9999,false
+mt_battle_10f,Mt. Battle 10F,9999,false
+mt_battle_lobby,Mt. Battle Lobby,9999,false
+national_park_area,National Park,9999,false
+nature_sanctuary_area,Nature Sanctuary,9999,false
+navel_rock_area,Navel Rock,9999,false
+new_bark_town_area,New Bark Town,9999,false
+new_mauville_area,New Mauville,9999,false
+new_mauville_entrance,New Mauville (entrance),9999,false
+onbs_2f,ONBS 2F,9999,false
+onbs_3f,ONBS 3F,9999,false
+onbs_4f,ONBS 4F,9999,false
+onbs_roof,ONBS Roof,9999,false
+pokespot_oasis,Oasis Pokespot ,9999,false
+old_chateau_2f_left_room,Old Chateau (2F left room),9999,false
+old_chateau_2f_leftmost_room,Old Chateau (2F leftmost room),9999,false
+old_chateau_2f_middle_room,Old Chateau (2F middle room),9999,false
+old_chateau_2f_private_room,Old Chateau (2F private room),9999,false
+old_chateau_2f_right_room,Old Chateau (2F right room),9999,false
+old_chateau_2f_rightmost_room,Old Chateau (2F rightmost room),9999,false
+old_chateau_2f,Old Chateau (2F),9999,false
+old_chateau_dining_room,Old Chateau (dining room),9999,false
+old_chateau_entrance,Old Chateau (entrance),9999,false
+olivine_city_area,Olivine City,9999,false
+one_island_area,One Island,9999,false
+oreburgh_gate_1f,Oreburgh Gate (1F),9999,false
+oreburgh_gate_b1f,Oreburgh Gate (B1F),9999,false
+oreburgh_mine_1f,Oreburgh mine (1F),9999,false
+oreburgh_mine_b1f,Oreburgh mine (B1F),9999,false
+outcast_island_area,Outcast Island,9999,false
+outskirt_stand_inside,Outskirt Stand (Inside),9999,false
+outskirt_stand_outside,Outskirt Stand (Outside),9999,false
+p2_laboratory_area,P2 Laboratory,9999,false
+pacifidlog_town_area,Pacifidlog Town,9999,false
+pallet_town_area,Pallet Town,9999,false
+parfum_palace_area,Parfum Palace,9999,false
+pastoria_city_area,Pastoria City,9999,false
+pattern_bush_area,Pattern Bush,9999,false
+petalburg_city_area,Petalburg City,9999,false
+petalburg_woods_area,Petalburg Woods,9999,false
+phenac_city_card_e_room,Phenac City (Card E Room),9999,false
+phenac_city_east_exit,Phenac City (East Exit),9999,false
+phenac_city_mayors_house,Phenac City (Mayor's House),9999,false
+phenac_city_south_exit,Phenac City (South Exit),9999,false
+phenac_city_west_exit,Phenac City (West Exit),9999,false
+phenac_city_prestige_precept_center,Phenac City Prestige Precept Center,9999,false
+phenac_city_stadium,Phenac City Stadium,9999,false
+phenac_city_stadium_outside,Phenac City Stadium (Outside),9999,false
+pinwheel_forest_inside,Pinwheel Forest (inside),9999,false
+pinwheel_forest_outside,Pinwheel Forest (outside),9999,false
+cianwood_city_pokemon_center,Pokemon Center (Cianwood City),9999,false
+kanto_route_3_pokemon_center,Pokemon Center (Road 3),9999,false
+kanto_route_4_pokemon_center,Pokemon Center (Road 4),9999,false
+pokemon_hq_lab_area,Pokemon HQ Lab ,9999,false
+pokemon_hq_lab_outside,Pokemon HQ Lab (Outside),9999,false
+pokemon_mansion_1f,Pokemon Mansion (1F),9999,false
+pokemon_mansion_2f,Pokemon Mansion (2F),9999,false
+pokemon_mansion_3f,Pokemon Mansion (3F),9999,false
+pokemon_mansion_b1f,Pokemon Mansion (B1F),9999,false
+pokemon_tower_3f,Pokemon Tower (3F),9999,false
+pokemon_tower_4f,Pokemon Tower (4F),9999,false
+pokemon_tower_5f,Pokemon Tower (5F),9999,false
+pokemon_tower_6f,Pokemon Tower (6F),9999,false
+pokemon_tower_7f,Pokemon Tower (7F),9999,false
+pokemon_village_area,Pokemon Village,9999,false
+poke_pelago,Poké Pelago,9999,false
+power_plant_area,Power Plant,9999,false
+pyrite_bldg_1f,Pyrite Bldg 1F,9999,false
+pyrite_bldg_4f,Pyrite Bldg 4F,9999,false
+pyrite_cave_mirors_hideout,Pyrite Cave (Miror's Hideout),9999,false
+pyrite_cave_outside,Pyrite Cave (Outside),9999,false
+pyrite_cave_south_sewers,Pyrite Cave (South Sewers),9999,false
+pyrite_cave_bf1,Pyrite Cave B1F,9999,false
+pyrite_cave_bf1_post_sewers,Pyrite Cave B1F (Post Sewers),9999,false
+pyrite_town_duel_square,Pyrite Town (Duel Square),9999,false
+pyrite_town_dukings_house,Pyrite Town (Duking's House),9999,false
+pyrite_town_entrance,Pyrite Town (Entrance),9999,false
+pyrite_town_colosseum,Pyrite Town Colosseum,9999,false
+ravaged_path_area,Ravaged Path,9999,false
+realgam_tower_area,Realgam Tower,9999,false
+realgam_tower_colosseum,Realgam Tower Colosseum,9999,false
+reflection_cave_unknown_area_305,Reflection Cave (unknown area 305),9999,false
+reflection_cave_unknown_area_306,Reflection Cave (unknown area 306),9999,false
+reflection_cave_unknown_area_307,Reflection Cave (unknown area 307),9999,false
+reflection_cave_unknown_area_308,Reflection Cave (unknown area 308),9999,false
+relic_castle_a,Relic Castle (A),9999,false
+relic_castle_c,Relic Castle (C),9999,false
+relic_castle_d,Relic Castle (D),9999,false
+relic_passage_castelia_sewers_entrance,Relic Tunnel (Castelia Sewers entrance),9999,false
+relic_passage_pwt_entrance,Relic Tunnel (PWT entrance),9999,false
+relic_passage_relic_castle_entrance,Relic Tunnel (Relic Castle entrance),9999,false
+resort_area_area,Resort Area,9999,false
+resort_gorgeous_area,Resort Gorgeous,9999,false
+reversal_mountain_unknown_area_48,Reversal Mountain (unknown area 48),9999,false
+reversal_mountain_unknown_area_49,Reversal Mountain (unknown area 49),9999,false
+reversal_mountain_unknown_area_50,Reversal Mountain (unknown area 50),9999,false
+reversal_mountain_unknown_area_51,Reversal Mountain (unknown area 51),9999,false
+reversal_mountain_unknown_area_52,Reversal Mountain (unknown area 52),9999,false
+reversal_mountain_unknown_area_53,Reversal Mountain (unknown area 53),9999,false
+reversal_mountain_unknown_area_54,Reversal Mountain (unknown area 54),9999,false
+reversal_mountain_unknown_area_55,Reversal Mountain (unknown area 55),9999,false
+reversal_mountain_unknown_area_56,Reversal Mountain (unknown area 56),9999,false
+reversal_mountain_unknown_area_57,Reversal Mountain (unknown area 57),9999,false
+reversal_mountain_unknown_area_58,Reversal Mountain (unknown area 58),9999,false
+reversal_mountain_unknown_area_59,Reversal Mountain (unknown area 59),9999,false
+reversal_mountain_unknown_area_60,Reversal Mountain (unknown area 60),9999,false
+rixy_chamber_area,Rixy Chamber,9999,false
+kanto_route_1_area,Road 1,9999,false
+unova_route_1_area,Road 1,9999,false
+kanto_route_10_area,Road 10,9999,false
+kalos_route_10_area,Road 10,9999,false
+hoenn_route_101_area,Road 101,9999,false
+hoenn_route_102_area,Road 102,9999,false
+hoenn_route_103_area,Road 103,9999,false
+hoenn_route_104_area,Road 104,9999,false
+hoenn_route_105_area,Road 105,9999,false
+hoenn_route_106_area,Road 106,9999,false
+hoenn_route_107_area,Road 107,9999,false
+hoenn_route_108_area,Road 108,9999,false
+hoenn_route_109_area,Road 109,9999,false
+kanto_route_11_area,Road 11,9999,false
+kalos_route_11_area,Road 11,9999,false
+unova_route_11_area,Road 11,9999,false
+hoenn_route_110_area,Road 110,9999,false
+hoenn_route_111_area,Road 111,9999,false
+hoenn_route_112_area,Road 112,9999,false
+hoenn_route_113_area,Road 113,9999,false
+hoenn_route_114_area,Road 114,9999,false
+hoenn_route_115_area,Road 115,9999,false
+hoenn_route_116_area,Road 116,9999,false
+hoenn_route_117_area,Road 117,9999,false
+hoenn_route_118_area,Road 118,9999,false
+hoenn_route_119_area,Road 119,9999,false
+kanto_route_12_area,Road 12,9999,false
+unova_route_12_area,Road 12,9999,false
+kalos_route_12_area,Road 12,9999,false
+hoenn_route_120_area,Road 120,9999,false
+hoenn_route_121_area,Road 121,9999,false
+hoenn_route_122_area,Road 122,9999,false
+hoenn_route_123_area,Road 123,9999,false
+hoenn_route_124_area,Road 124,9999,false
+hoenn_route_124_underwater,Road 124 (underwater),9999,false
+hoenn_route_125_area,Road 125,9999,false
+hoenn_route_126_area,Road 126,9999,false
+hoenn_route_126_underwater,Road 126 (underwater),9999,false
+hoenn_route_127_area,Road 127,9999,false
+hoenn_route_128_area,Road 128,9999,false
+hoenn_route_129_area,Road 129,9999,false
+kanto_route_13_area,Road 13,9999,false
+unova_route_13_area,Road 13,9999,false
+kalos_route_13_area,Road 13,9999,false
+hoenn_route_130_area,Road 130,9999,false
+hoenn_route_131_area,Road 131,9999,false
+hoenn_route_132_area,Road 132,9999,false
+hoenn_route_133_area,Road 133,9999,false
+hoenn_route_134_area,Road 134,9999,false
+kanto_route_14_area,Road 14,9999,false
+kalos_route_14_area,Road 14,9999,false
+unova_route_14_area,Road 14,9999,false
+kanto_route_15_area,Road 15,9999,false
+unova_route_15_area,Road 15,9999,false
+kalos_route_15_area,Road 15,9999,false
+kanto_route_16_area,Road 16,9999,false
+kalos_route_16_area,Road 16,9999,false
+kanto_route_17_area,Road 17,9999,false
+unova_route_17_area,Road 17,9999,false
+kalos_route_17_area,Road 17,9999,false
+kanto_route_18_area,Road 18,9999,false
+kalos_route_18_area,Road 18,9999,false
+unova_route_18_area,Road 18,9999,false
+kanto_sea_route_19_area,Road 19,9999,false
+kalos_route_19_area,Road 19,9999,false
+unova_route_19_area,Road 19,9999,false
+kalos_route_2_area,Road 2,9999,false
+unova_route_2_area,Road 2,9999,false
+kanto_route_2_north_towards_pewter_city,"Road 2 (north, towards Pewter City)",9999,false
+kanto_route_2_south_towards_viridian_city,"Road 2 (south, towards Viridian City)",9999,false
+kanto_sea_route_20_area,Road 20,9999,false
+kalos_route_20_area,Road 20,9999,false
+unova_route_20_area,Road 20,9999,false
+sinnoh_route_201_area,Road 201,9999,false
+sinnoh_route_202_area,Road 202,9999,false
+sinnoh_route_203_area,Road 203,9999,false
+sinnoh_route_204_north_towards_floaroma_town,"Road 204 (north, towards Floaroma Town)",9999,false
+sinnoh_route_204_south_towards_jubilife_city,"Road 204 (south, towards Jubilife City)",9999,false
+sinnoh_route_205_east_towards_eterna_city,"Road 205 (east, towards Eterna City)",9999,false
+sinnoh_route_205_south_towards_floaroma_town,"Road 205 (south, towards Floaroma Town)",9999,false
+sinnoh_route_206_area,Road 206,9999,false
+sinnoh_route_207_area,Road 207,9999,false
+sinnoh_route_208_area,Road 208,9999,false
+sinnoh_route_209_area,Road 209,9999,false
+kanto_sea_route_21_area,Road 21,9999,false
+kalos_route_21_area,Road 21,9999,false
+unova_route_21_area,Road 21,9999,false
+sinnoh_route_210_south_towards_solaceon_town,"Road 210 (south, towards Solaceon Town)",9999,false
+sinnoh_route_210_west_towards_celestic_town,"Road 210 (west, towards Celestic Town)",9999,false
+sinnoh_route_211_east_towards_celestic_town,"Road 211 (east, towards Celestic Town)",9999,false
+sinnoh_route_211_west_towards_eterna_city,"Road 211 (west, towards Eterna City)",9999,false
+sinnoh_route_212_east_towards_pastoria_city,"Road 212 (east, towards Pastoria City)",9999,false
+sinnoh_route_212_north_towards_hearthome_city,"Road 212 (north, towards Hearthome City)",9999,false
+sinnoh_route_213_area,Road 213,9999,false
+sinnoh_route_214_area,Road 214,9999,false
+sinnoh_route_215_area,Road 215,9999,false
+sinnoh_route_216_area,Road 216,9999,false
+sinnoh_route_217_area,Road 217,9999,false
+sinnoh_route_218_area,Road 218,9999,false
+sinnoh_route_219_area,Road 219,9999,false
+kanto_route_22_area,Road 22,9999,false
+kalos_route_22_area,Road 22,9999,false
+unova_route_22_area,Road 22,9999,false
+sinnoh_sea_route_220_area,Road 220,9999,false
+sinnoh_route_221_area,Road 221,9999,false
+sinnoh_route_222_area,Road 222,9999,false
+sinnoh_sea_route_223_area,Road 223,9999,false
+sinnoh_route_224_area,Road 224,9999,false
+sinnoh_route_225_area,Road 225,9999,false
+sinnoh_sea_route_226_area,Road 226,9999,false
+sinnoh_route_227_area,Road 227,9999,false
+sinnoh_route_228_area,Road 228,9999,false
+sinnoh_route_229_area,Road 229,9999,false
+kanto_route_23_area,Road 23,9999,false
+unova_route_23_area,Road 23,9999,false
+sinnoh_sea_route_230_area,Road 230,9999,false
+kanto_route_24_area,Road 24,9999,false
+kanto_route_25_area,Road 25,9999,false
+kanto_route_26_area,Road 26,9999,false
+kanto_route_27_area,Road 27,9999,false
+kanto_route_28_area,Road 28,9999,false
+johto_route_29_area,Road 29,9999,false
+kanto_route_3_area,Road 3,9999,false
+kalos_route_3_area,Road 3,9999,false
+unova_route_3_area,Road 3,9999,false
+johto_route_30_area,Road 30,9999,false
+johto_route_31_area,Road 31,9999,false
+johto_route_32_area,Road 32,9999,false
+johto_route_33_area,Road 33,9999,false
+johto_route_34_area,Road 34,9999,false
+johto_route_35_area,Road 35,9999,false
+johto_route_36_area,Road 36,9999,false
+johto_route_37_area,Road 37,9999,false
+johto_route_38_area,Road 38,9999,false
+johto_route_39_area,Road 39,9999,false
+kanto_route_4_area,Road 4,9999,false
+unova_route_4_area,Road 4,9999,false
+kalos_route_4_area,Road 4,9999,false
+johto_sea_route_40_area,Road 40,9999,false
+johto_sea_route_41_area,Road 41,9999,false
+johto_route_42_area,Road 42,9999,false
+johto_route_43_area,Road 43,9999,false
+johto_route_44_area,Road 44,9999,false
+johto_route_45_area,Road 45,9999,false
+johto_route_46_area,Road 46,9999,false
+johto_route_47_area,Road 47,9999,false
+johto_route_47_cave_gate,Road 47 (cave gate),9999,false
+johto_route_47_inside_cave,Road 47 (inside cave),9999,false
+johto_route_48_area,Road 48,9999,false
+kanto_route_5_area,Road 5,9999,false
+kalos_route_5_area,Road 5,9999,false
+kanto_route_6_area,Road 6,9999,false
+kalos_route_6_area,Road 6,9999,false
+unova_route_6_area,Road 6,9999,false
+kanto_route_7_area,Road 7,9999,false
+kalos_route_7_area,Road 7,9999,false
+unova_route_7_area,Road 7,9999,false
+kanto_route_8_area,Road 8,9999,false
+kalos_route_8_area,Road 8,9999,false
+unova_route_8_area,Road 8,9999,false
+kanto_route_9_area,Road 9,9999,false
+unova_route_9_area,Road 9,9999,false
+roaming_hoenn_area,Roaming Hoenn,9999,false
+roaming_kalos_area,Roaming Kalos,9999,false
+roaming_kanto_area,Roaming Kanto,9999,false
+roaming_sinnoh_area,Roaming Sinnoh,9999,false
+pokespot_rock,Rock Pokespot ,9999,false
+rock_tunnel_1f,Rock Tunnel (1F),9999,false
+rock_tunnel_b1f,Rock Tunnel (B1F),9999,false
+rock_tunnel_b2f,Rock Tunnel (B2F),9999,false
+rocky_mountain_room_area,Rocky Mountain Room,9999,false
+thrifty_megamart,Royal Avenue,9999,false
+ruin_maniac_cave_0_9_different_unown_caught,Ruin Maniac Cave (0–9 different Unown caught),9999,false
+ruin_maniac_cave_10_25_different_unown_caught,Ruin Maniac Cave (10–25 different Unown caught),9999,false
+ruin_valley_area,Ruin Valley,9999,false
+ruins_of_alph_interior_a,Ruins of Alph (interior A),9999,false
+ruins_of_alph_interior_b,Ruins of Alph (interior B),9999,false
+ruins_of_alph_interior_c,Ruins of Alph (interior C),9999,false
+ruins_of_alph_interior_d,Ruins of Alph (interior D),9999,false
+ruins_of_alph_outside,Ruins of Alph (outside),9999,false
+rustboro_city_area,Rustboro City,9999,false
+rusturf_tunnel_area,Rusturf Tunnel,9999,false
+ss_anne_area,S.S. Anne,9999,false
+vermilion_city_ss_anne_dock,S.S. Anne dock,9999,false
+kanto_safari_zone_area_1_east,"Safari Zone (Area 1, east)",9999,false
+kanto_safari_zone_area_2_north,"Safari Zone (Area 2, north)",9999,false
+kanto_safari_zone_area_3_west,"Safari Zone (Area 3, west)",9999,false
+hoenn_safari_zone_neacro_bike_area,Safari Zone (NE/acro bike area),9999,false
+hoenn_safari_zone_nwmach_bike_area,Safari Zone (NW/mach bike area),9999,false
+hoenn_safari_zone_se,Safari Zone (SE),9999,false
+hoenn_safari_zone_sw,Safari Zone (SW),9999,false
+hoenn_safari_zone_expansion_north,Safari Zone (expansion north),9999,false
+hoenn_safari_zone_expansion_south,Safari Zone (expansion south),9999,false
+kanto_safari_zone_middle,Safari Zone (middle),9999,false
+johto_safari_zone_zone_desert,Safari Zone Desert,9999,false
+johto_safari_zone_zone_forest,Safari Zone Forest,9999,false
+johto_safari_zone_zone_marshland,Safari Zone Marshland,9999,false
+johto_safari_zone_zone_meadow,Safari Zone Meadow,9999,false
+johto_safari_zone_zone_mountain,Safari Zone Mountain,9999,false
+johto_safari_zone_zone_peak,Safari Zone Peak,9999,false
+johto_safari_zone_zone_plains,Safari Zone Plains,9999,false
+johto_safari_zone_zone_rocky_beach,Safari Zone Rocky Beach,9999,false
+johto_safari_zone_zone_savannah,Safari Zone Savannah,9999,false
+johto_safari_zone_zone_swamp,Safari Zone Swamp,9999,false
+johto_safari_zone_zone_wasteland,Safari Zone Wasteland,9999,false
+johto_safari_zone_zone_wetland,Safari Zone Wetland,9999,false
+sandy_cave,Sandy Cave,9999,false
+santalune_forest_area,Santalune Forest,9999,false
+scorched_slab_b1f,Scorched Slab (B1F),9999,false
+scorched_slab_b2f,Scorched Slab (B2F),9999,false
+scorched_slab_b3f,Scorched Slab (B3F),9999,false
+scufib_chamber_area,Scufib Chamber,9999,false
+sea_mauville_inside,Sea Mauville (Inside),9999,false
+seafloor_cavern_area,Seafloor Cavern,9999,false
+seafoam_islands_1f,Seafoam Islands (1F),9999,false
+seafoam_islands_b1f,Seafoam Islands (B1F),9999,false
+seafoam_islands_b2f,Seafoam Islands (B2F),9999,false
+seafoam_islands_b3f,Seafoam Islands (B3F),9999,false
+seafoam_islands_b4f,Seafoam Islands (B4F),9999,false
+seaside_cave_1f,Seaside Cave (1F),9999,false
+seaside_cave_b1f,Seaside Cave (B1F),9999,false
+sendoff_spring_area,Sendoff Spring,9999,false
+sevault_canyon_area,Sevault Canyon,9999,false
+shadow_pokemon_lab_bf1,Shadow Pokémon Lab B1F,9999,false
+shadow_pokemon_lab_bf2,Shadow Pokémon Lab B2F,9999,false
+shalour_city_area,Shalour City,9999,false
+shoal_cave_high_tide,Shoal Cave,9999,false
+shoal_cave_b1f,Shoal Cave (B1F),9999,false
+saffron_city_silph_co,Silph Co.,9999,false
+saffron_city_silph_co_7f,Silph Co. 7F,9999,false
+sinnoh_pokemon_league_area,Sinnoh League,9999,false
+sky_pillar_1f,Sky Pillar (1F),9999,false
+sky_pillar_3f,Sky Pillar (3F),9999,false
+sky_pillar_5f,Sky Pillar (5F),9999,false
+sky_pillar_apex,Sky Pillar Apex,9999,false
+slateport_city_area,Slateport City,9999,false
+slowpoke_well_1f,Slowpoke Well (1F),9999,false
+slowpoke_well_b1f,Slowpoke Well (B1F),9999,false
+snagem_hideout_1f,Snagem Hideout 1F,9999,false
+snagem_hideout_2f,Snagem Hideout 2F,9999,false
+snowpoint_temple_1f,Snowpoint Temple (1F),9999,false
+snowpoint_temple_b1f,Snowpoint Temple (B1F),9999,false
+snowpoint_temple_b2f,Snowpoint Temple (B2F),9999,false
+snowpoint_temple_b3f,Snowpoint Temple (B3F),9999,false
+snowpoint_temple_b4f,Snowpoint Temple (B4F),9999,false
+snowpoint_temple_b5f,Snowpoint Temple (B5F),9999,false
+solaceon_ruins_1f,Solaceon Ruins (1F),9999,false
+solaceon_ruins_2f,Solaceon Ruins (2F),9999,false
+solaceon_ruins_b1f_a,Solaceon Ruins (B1F A),9999,false
+solaceon_ruins_b1f_b,Solaceon Ruins (B1F B),9999,false
+solaceon_ruins_b1f_c,Solaceon Ruins (B1F C),9999,false
+solaceon_ruins_b2f_a,Solaceon Ruins (B2F A),9999,false
+solaceon_ruins_b2f_b,Solaceon Ruins (B2F B),9999,false
+solaceon_ruins_b2f_c,Solaceon Ruins (B2F C),9999,false
+solaceon_ruins_b3f_a,Solaceon Ruins (B3F A),9999,false
+solaceon_ruins_b3f_b,Solaceon Ruins (B3F B),9999,false
+solaceon_ruins_b3f_c,Solaceon Ruins (B3F C),9999,false
+solaceon_ruins_b3f_d,Solaceon Ruins (B3F D),9999,false
+solaceon_ruins_b3f_e,Solaceon Ruins (B3F E),9999,false
+solaceon_ruins_b4f_a,Solaceon Ruins (B4F A),9999,false
+solaceon_ruins_b4f_b,Solaceon Ruins (B4F B),9999,false
+solaceon_ruins_b4f_c,Solaceon Ruins (B4F C),9999,false
+solaceon_ruins_b4f_d,Solaceon Ruins (B4F D),9999,false
+solaceon_ruins_b5f,Solaceon Ruins (B5F),9999,false
+sootopolis_city_area,Sootopolis City,9999,false
+southern_island_area,Southern Island,9999,false
+sprout_tower_2f,Sprout Tower (2F),9999,false
+sprout_tower_3f,Sprout Tower (3F),9999,false
+stark_mountain_entrance,Stark Mountain entrance,9999,false
+stark_mountain_area,Stark Mountain exterior,9999,false
+stark_mountain_inside,Stark Mountain main cavern,9999,false
+strange_house_1f,Strange House (1F),9999,false
+strange_house_b1f,Strange House (B1F),9999,false
+striaton_city_area,Striaton City,9999,false
+sunyshore_city_area,Sunyshore City,9999,false
+tanoby_ruins_area,Tanoby Ruins,9999,false
+team_rocket_hq_area,Team Rocket HQ,9999,false
+team_rockets_castle,Team Rocket's Castle,9999,false
+terminus_cave_1f,Terminus Cave (unknown area 343),9999,false
+terminus_cave_b1f_left,Terminus Cave (unknown area 344),9999,false
+terminus_cave_b1f_right,Terminus Cave (unknown area 345),9999,false
+terminus_cave_b2f,Terminus Cave (unknown area 347),9999,false
+terminus_cave_zygardes_chamber,Terminus Cave (unknown area 348),9999,false
+terra_cave_area,Terra Cave,9999,false
+the_under_area,The Under,9999,false
+the_under_deep_colosseum,The Under (Deep Colosseum),9999,false
+the_under_subway,The Under (Subway),9999,false
+the_under_tv_studio,The Under (TV Studio),9999,false
+three_isle_port_area,Three Isle Port,9999,false
+tohjo_falls_area,Tohjo Falls,9999,false
+trainer_tower_area,Trainer Tower,9999,false
+trainers_school_area,Trainers' School,9999,false
+treasure_beach_area,Treasure Beach,9999,false
+trophy_garden_area,Trophy Garden,9999,false
+turnback_cave_after_pillar_3,Turnback Cave (after pillar 3),9999,false
+turnback_cave_before_pillar_1,Turnback Cave (before pillar 1),9999,false
+turnback_cave_between_pillars_1_and_2,Turnback Cave (between pillars 1 and 2),9999,false
+turnback_cave_between_pillars_2_and_3,Turnback Cave (between pillars 2 and 3),9999,false
+turnback_cave_pillar_1,Turnback Cave (pillar 1),9999,false
+turnback_cave_pillar_2,Turnback Cave (pillar 2),9999,false
+turnback_cave_pillar_3,Turnback Cave (pillar 3),9999,false
+twinleaf_town_area,Twinleaf Town,9999,false
+twist_mountain_b1f_3f,Twist Mountain,9999,false
+ultra_space_wilds,Ultra Space Wilds,9999,false
+ultra_space_ultra_space_wilds_cave,Ultra Space Wilds Cave World,9999,false
+ultra_space_ultra_space_wilds_cliff,Ultra Space Wilds Cliff World,9999,false
+ultra_space_ultra_space_wilds_rocky,Ultra Space Wilds Rocky World,9999,false
+ultra_space_ultra_space_wilds_water,Ultra Space Wilds Water World,9999,false
+undella_bay_area,Undella Bay,9999,false
+undella_town_area,Undella Town,9999,false
+underground_ruins_area,Underground Ruins,9999,false
+union_cave_1f,Union Cave (1F),9999,false
+union_cave_b1f,Union Cave (B1F),9999,false
+union_cave_b2f,Union Cave (B2F),9999,false
+unknown_all_poliwag_area,Unknown Area; all Poliwag,9999,false
+unknown_all_rattata_area,Unknown Area; all Rattata,9999,false
+unknown_all_bugs_area,Unknown Area; all bugs,9999,false
+valley_windworks_area,Valley Windworks,9999,false
+valor_lakefront_area,Valor Lakefront,9999,false
+veilstone_city_area,Veilstone City,9999,false
+verdant_cavern,Verdant Cavern,9999,false
+vermilion_city_area,Vermilion City,9999,false
+viapos_chamber_area,Viapos Chamber,9999,false
+hoenn_victory_road_1f,Victory Road (1F),9999,false
+sinnoh_victory_road_1f,Victory Road (1F),9999,false
+sinnoh_victory_road_2f,Victory Road (2F),9999,false
+hoenn_victory_road_b1f,Victory Road (B1F),9999,false
+sinnoh_victory_road_b1f,Victory Road (B1F),9999,false
+hoenn_victory_road_b2f,Victory Road (B2F),9999,false
+sinnoh_victory_road_inside_b1f,Victory Road (inside B1F),9999,false
+sinnoh_victory_road_inside_exit,Victory Road (inside exit),9999,false
+sinnoh_victory_road_inside,Victory Road (inside),9999,false
+kalos_victory_road_unknown_area_322,Victory Road (unknown area 322),9999,false
+kalos_victory_road_unknown_area_324,Victory Road (unknown area 324),9999,false
+kalos_victory_road_unknown_area_326,Victory Road (unknown area 326),9999,false
+kalos_victory_road_outside,Victory Road (unknown area 327),9999,false
+kalos_victory_road_unknown_area_328,Victory Road (unknown area 328),9999,false
+unova_victory_road_unknown_area_53,Victory Road (unknown area 53),9999,false
+unova_victory_road_1f_unknown_room,Victory Road (unknown area 58),9999,false
+kanto_victory_road_1_1f,Victory Road 1 (1F),9999,false
+kanto_victory_road_1_2f,Victory Road 1 (2F),9999,false
+kanto_victory_road_1_3f,Victory Road 1 (3F),9999,false
+kanto_victory_road_2_1f,Victory Road 2 (1F),9999,false
+kanto_victory_road_2_2f,Victory Road 2 (2F),9999,false
+kanto_victory_road_2_3f,Victory Road 2 (3F),9999,false
+unova_victory_road_2_unknown_area_71,Victory Road 2 (unknown area 71),9999,false
+unova_victory_road_2_unknown_area_72,Victory Road 2 (unknown area 72),9999,false
+unova_victory_road_2_unknown_area_73,Victory Road 2 (unknown area 73),9999,false
+unova_victory_road_2_unknown_area_74,Victory Road 2 (unknown area 74),9999,false
+unova_victory_road_2_unknown_area_75,Victory Road 2 (unknown area 75),9999,false
+unova_victory_road_2_unknown_area_77,Victory Road 2 (unknown area 77),9999,false
+unova_victory_road_2_unknown_area_78,Victory Road 2 (unknown area 78),9999,false
+unova_victory_road_2_unknown_area_79,Victory Road 2 (unknown area 79),9999,false
+unova_victory_road_2_unknown_area_80,Victory Road 2 (unknown area 80),9999,false
+village_bridge_area,Village Bridge,9999,false
+violet_city_area,Violet City,9999,false
+violet_city_poke_mart,Violet City (Poke Mart),9999,false
+violet_city_pokemon_center,Violet City (Pokemon Center),9999,false
+virbank_city_area,Virbank City,9999,false
+virbank_complex_inner,Virbank Complex (inner),9999,false
+virbank_complex_outer,Virbank Complex (outer),9999,false
+viridian_city_area,Viridian City,9999,false
+viridian_forest_area,Viridian Forest,9999,false
+roaming_johto_area,Wandert durch Johto,9999,false
+water_labyrinth_area,Water Labyrinth,9999,false
+water_path_area,Water Path,9999,false
+wayward_cave_1f,Wayward Cave (1F),9999,false
+wayward_cave_b1f,Wayward Cave (B1F),9999,false
+hoenn_route_119_weather_institute,Weather Institute (Road 119),9999,false
+weepth_chamber_area,Weepth Chamber,9999,false
+wellspring_cave_area,Wellspring Cave,9999,false
+whirl_islands_1f,Whirl Islands (1F),9999,false
+whirl_islands_b1f,Whirl Islands (B1F),9999,false
+whirl_islands_b2f,Whirl Islands (B2F),9999,false
+whirl_islands_b3f,Whirl Islands (B3F),9999,false
+hoenn_pokecenter_area,hoenn pokecenter,9999,false
+kanto_pokecenter_area,pokecenter,9999,false
+brooklet_hill,せせらぎの丘,9999,false
+unknown_dungeon,ななしの洞窟,9999,false
+team_aqua_hideout,アクア団アジト,9999,false
+akala_outskirts,アーカラ島はずれ,9999,false
+ulaula_meadow,ウラウラの花園,9999,false
+secluded_shore,ウラウラ裏海岸,9999,false
+resolution_cave,エンドケイブ,9999,false
+paniola_town,オハナタウン,9999,false
+paniola_ranch,オハナ牧場,9999,false
+tapu_village,カプの村,9999,false
+heahea_city,カンタイシティ,9999,false
+kalae_bay,カーラエ湾,9999,false
+konikoni_city,コニコシティ,9999,false
+lush_jungle,シェードジャングル,9999,false
+ten_carat_hill,テンカラットヒル,9999,false
+digletts_tunnel,ディグダトンネル,9999,false
+exeggutor_island,ナッシー・アイランド,9999,false
+haina_desert,ハイナ砂漠,9999,false
+hauoli_cemetery,ハウオリ霊園,9999,false
+hano_beach,ハノハノビーチ,9999,false
+mount_hokulani,ホクラニ岳,9999,false
+blush_mountain,ホテリ山,9999,false
+poni_wilds,ポニの原野,9999,false
+ancient_poni_path,ポニの古道,9999,false
+vast_poni_canyon,ポニの大峡谷,9999,false
+poni_plains,ポニの広野,9999,false
+poni_grove,ポニの樹林,9999,false
+poni_meadow,ポニの花園,9999,false
+poni_breaker_coast,ポニの荒磯,9999,false
+poni_gauntlet,ポニの険路,9999,false
+team_magma_hideout,マグマ団アジト,9999,false
+malie_garden,マリエ庭園,9999,false
+memorial_hill,メモリアルヒル,9999,false
+melemele_meadow,メレメレの花園,9999,false
+melemele_sea,メレメレ海,9999,false
+mount_lanakila,ラナキラマウンテン,9999,false
+royal_avenue,ロイヤルアベニュー,9999,false
+wela_volcano_park,ヴェラ火山公園,9999,false
+trackless_forest,未開の森,9999,false
+shoal_cave,浅瀬の洞穴,9999,false
+seafolk_village,海の民の村,9999,false
+sea_spirits_den,海神の穴,9999,false
+seaward_cave,海繋ぎの洞穴,9999,false
+alola_route_1,１番道路,9999,false
+alola_route_10,１０番道路,9999,false
+hoenn_route_104,１０４番道路,9999,false
+alola_route_11,１１番道路,9999,false
+alola_route_12,１２番道路,9999,false
+alola_route_13,１３番道路,9999,false
+alola_route_14,１４番道路,9999,false
+alola_route_15,１５番水道,9999,false
+alola_route_16,１６番道路,9999,false
+alola_route_17,１７番道路,9999,false
+alola_route_2,２番道路,9999,false
+alola_route_3,３番道路,9999,false
+alola_route_4,４番道路,9999,false
+alola_route_5,５番道路,9999,false
+alola_route_6,６番道路,9999,false
+alola_route_7,７番道路,9999,false
+alola_route_8,８番道路,9999,false
+alola_route_9,９番道路,9999,false

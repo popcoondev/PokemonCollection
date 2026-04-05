@@ -1,0 +1,126 @@
+{
+  "id": 47,
+  "locations": [
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 49,
+      "max_level": 49,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 58,
+      "max_level": 58,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 52,
+      "max_level": 52,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 61,
+      "max_level": 61,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 55,
+      "max_level": 55,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 64,
+      "max_level": 64,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "ひっかく"
+    },
+    {
+      "level": 43,
+      "name": "せいちょう"
+    },
+    {
+      "level": 1,
+      "name": "どくのこな"
+    },
+    {
+      "level": 13,
+      "name": "どくのこな"
+    },
+    {
+      "level": 1,
+      "name": "しびれごな"
+    },
+    {
+      "level": 7,
+      "name": "しびれごな"
+    },
+    {
+      "level": 19,
+      "name": "きゅうけつ"
+    },
+    {
+      "level": 27,
+      "name": "キノコのほうし"
+    },
+    {
+      "level": 35,
+      "name": "きりさく"
+    },
+    {
+      "level": 51,
+      "name": "ギガドレイン"
+    },
+    {
+      "level": 59,
+      "name": "アロマセラピー"
+    }
+  ],
+  "machines": [
+    "はかいこうせん",
+    "ソーラービーム",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "ヘドロばくだん",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "ひみつのちから",
+    "タネマシンガン",
+    "つばめがえし"
+  ],
+  "hms": [
+    "いあいぎり",
+    "フラッシュ",
+    "いわくだき"
+  ]
+}

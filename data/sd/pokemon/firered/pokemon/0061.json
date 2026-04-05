@@ -1,0 +1,145 @@
+{
+  "id": 61,
+  "locations": [
+    {
+      "area": "ハナダのどうくつ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": true
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "いせきのたに",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": true
+    },
+    {
+      "area": "トキワシティ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 20,
+      "max_level": 30,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "みずのいし",
+    "おうじゃのしるし"
+  ],
+  "level_up_moves": [
+    {
+      "level": 19,
+      "name": "おうふくビンタ"
+    },
+    {
+      "level": 35,
+      "name": "のしかかり"
+    },
+    {
+      "level": 1,
+      "name": "みずでっぽう"
+    },
+    {
+      "level": 13,
+      "name": "みずでっぽう"
+    },
+    {
+      "level": 51,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 1,
+      "name": "さいみんじゅつ"
+    },
+    {
+      "level": 7,
+      "name": "さいみんじゅつ"
+    },
+    {
+      "level": 1,
+      "name": "あわ"
+    },
+    {
+      "level": 43,
+      "name": "はらだいこ"
+    },
+    {
+      "level": 27,
+      "name": "あまごい"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "サイコキネシス",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "からげんき",
+    "きあいパンチ",
+    "かわらわり",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "かいりき",
+    "たきのぼり",
+    "いわくだき",
+    "ダイビング"
+  ]
+}

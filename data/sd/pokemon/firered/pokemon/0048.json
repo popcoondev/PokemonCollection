@@ -1,0 +1,156 @@
+{
+  "id": 48,
+  "locations": [
+    {
+      "area": "3のしま きのみのもり",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 34,
+      "max_level": 34,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    },
+    {
+      "area": "14ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "14ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    },
+    {
+      "area": "15ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "15ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv31"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 9,
+      "name": "ちょうおんぱ"
+    },
+    {
+      "level": 1,
+      "name": "かなしばり"
+    },
+    {
+      "level": 33,
+      "name": "サイケこうせん"
+    },
+    {
+      "level": 20,
+      "name": "どくのこな"
+    },
+    {
+      "level": 28,
+      "name": "しびれごな"
+    },
+    {
+      "level": 36,
+      "name": "ねむりごな"
+    },
+    {
+      "level": 17,
+      "name": "ねんりき"
+    },
+    {
+      "level": 41,
+      "name": "サイコキネシス"
+    },
+    {
+      "level": 25,
+      "name": "きゅうけつ"
+    },
+    {
+      "level": 1,
+      "name": "みやぶる"
+    }
+  ],
+  "machines": [
+    "ソーラービーム",
+    "どくどく",
+    "サイコキネシス",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "ヘドロばくだん",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "スキルスワップ",
+    "ひみつのちから"
+  ],
+  "hms": [
+    "フラッシュ"
+  ]
+}

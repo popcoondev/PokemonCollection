@@ -1,0 +1,222 @@
+{
+  "id": 187,
+  "locations": [
+    {
+      "area": "5のしま",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 6,
+      "max_level": 6,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 12,
+      "max_level": 12,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 12,
+      "max_level": 12,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv18"
+  ],
+  "level_up_moves": [
+    {
+      "level": 10,
+      "name": "たいあたり"
+    },
+    {
+      "level": 5,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 30,
+      "name": "メガドレイン"
+    },
+    {
+      "level": 20,
+      "name": "やどりぎのタネ"
+    },
+    {
+      "level": 13,
+      "name": "どくのこな"
+    },
+    {
+      "level": 15,
+      "name": "しびれごな"
+    },
+    {
+      "level": 17,
+      "name": "ねむりごな"
+    },
+    {
+      "level": 1,
+      "name": "はねる"
+    },
+    {
+      "level": 25,
+      "name": "わたほうし"
+    },
+    {
+      "level": 5,
+      "name": "こうごうせい"
+    }
+  ],
+  "machines": [
+    "ソーラービーム",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "ギガドレイン",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "ひみつのちから",
+    "タネマシンガン",
+    "つばめがえし"
+  ],
+  "hms": [
+    "フラッシュ"
+  ]
+}

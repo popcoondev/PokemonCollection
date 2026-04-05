@@ -1,0 +1,222 @@
+pokemon_id,sort_order,condition
+1,10,Lv16
+2,10,Lv32
+4,10,Lv16
+5,10,Lv36
+7,10,Lv16
+8,10,Lv36
+10,10,Lv7
+11,10,Lv10
+13,10,Lv7
+14,10,Lv10
+16,10,Lv18
+17,10,Lv36
+19,10,Lv20
+21,10,Lv20
+23,10,Lv22
+25,10,thunder stone
+27,10,Lv22
+29,10,Lv16
+30,10,moon stone
+32,10,Lv16
+33,10,moon stone
+35,10,moon stone
+37,10,fire stone
+39,10,moon stone
+41,10,Lv22
+42,10,なつき
+43,10,Lv21
+44,10,leaf stone
+44,20,sun stone
+46,10,Lv24
+48,10,Lv31
+50,10,Lv26
+52,10,Lv28
+52,20,Lv28
+54,10,Lv33
+56,10,Lv28
+57,10,use move
+58,10,fire stone
+60,10,Lv25
+61,10,water stone
+61,20,kings rock
+63,10,Lv16
+64,10,trade
+66,10,Lv28
+67,10,trade
+69,10,Lv21
+70,10,leaf stone
+72,10,Lv30
+74,10,Lv25
+75,10,trade
+77,10,Lv40
+79,10,Lv37
+79,20,kings rock
+81,10,Lv30
+82,10,level up
+83,10,three critical hits
+84,10,Lv31
+86,10,Lv34
+88,10,Lv38
+90,10,water stone
+92,10,Lv25
+93,10,trade
+95,10,metal coat
+96,10,Lv26
+98,10,Lv28
+100,10,Lv30
+102,10,leaf stone
+104,10,Lv28
+108,10,level up
+109,10,Lv35
+111,10,Lv42
+112,10,protector
+113,10,なつき
+114,10,level up
+116,10,Lv32
+117,10,dragon scale
+118,10,Lv33
+120,10,water stone
+122,10,Lv42
+123,10,metal coat
+123,20,black augurite
+125,10,electirizer
+126,10,magmarizer
+129,10,Lv20
+133,10,water stone
+133,20,thunder stone
+133,30,fire stone
+133,40,なつき
+133,50,なつき
+133,60,level up
+133,70,level up
+133,80,level up
+137,10,up grade
+138,10,Lv40
+140,10,Lv40
+147,10,Lv30
+148,10,Lv55
+152,10,Lv16
+153,10,Lv32
+155,10,Lv14
+156,10,Lv36
+158,10,Lv18
+159,10,Lv30
+161,10,Lv15
+163,10,Lv20
+165,10,Lv18
+167,10,Lv22
+170,10,Lv27
+172,10,なつき
+173,10,なつき
+174,10,なつき
+175,10,なつき
+176,10,shiny stone
+177,10,Lv25
+179,10,Lv15
+180,10,Lv30
+183,10,Lv18
+187,10,Lv18
+188,10,Lv27
+190,10,level up
+191,10,sun stone
+193,10,level up
+194,10,Lv20
+194,20,Lv20
+198,10,dusk stone
+200,10,dusk stone
+203,10,level up
+204,10,Lv31
+206,10,level up
+207,10,razor fang
+209,10,Lv23
+211,10,strong style move
+215,10,razor claw
+215,20,razor claw
+216,10,Lv30
+217,10,peat block
+218,10,Lv38
+220,10,Lv33
+221,10,level up
+222,10,Lv38
+223,10,Lv25
+228,10,Lv24
+231,10,Lv25
+233,10,dubious disc
+234,10,agile style move
+236,10,Lv20
+236,20,Lv20
+236,30,Lv20
+238,10,Lv30
+239,10,Lv30
+240,10,Lv30
+246,10,Lv30
+247,10,Lv55
+252,10,Lv16
+253,10,Lv36
+255,10,Lv16
+256,10,Lv36
+258,10,Lv16
+259,10,Lv36
+261,10,Lv18
+263,10,Lv20
+264,10,Lv35
+265,10,Lv7
+265,20,Lv7
+266,10,Lv10
+268,10,Lv10
+270,10,Lv14
+271,10,water stone
+273,10,Lv14
+274,10,leaf stone
+276,10,Lv22
+278,10,Lv25
+280,10,Lv20
+281,10,Lv30
+281,20,dawn stone
+283,10,Lv22
+285,10,Lv23
+287,10,Lv18
+288,10,Lv36
+290,10,Lv20
+290,20,shed
+293,10,Lv20
+294,10,Lv40
+296,10,Lv24
+298,10,なつき
+299,10,level up
+300,10,moon stone
+304,10,Lv32
+305,10,Lv42
+307,10,Lv37
+309,10,Lv26
+315,10,shiny stone
+316,10,Lv26
+318,10,Lv30
+320,10,Lv40
+322,10,Lv33
+325,10,Lv32
+328,10,Lv35
+329,10,Lv45
+331,10,Lv32
+333,10,Lv35
+339,10,Lv30
+341,10,Lv30
+343,10,Lv36
+345,10,Lv40
+347,10,Lv40
+349,10,level up
+353,10,Lv37
+355,10,Lv37
+356,10,reaper cloth
+360,10,Lv15
+361,10,Lv42
+361,20,dawn stone
+363,10,Lv32
+364,10,Lv44
+366,10,deep sea tooth
+366,20,deep sea scale
+371,10,Lv30
+372,10,Lv50
+374,10,Lv20
+375,10,Lv45

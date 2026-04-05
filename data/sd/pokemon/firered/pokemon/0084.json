@@ -1,0 +1,137 @@
+{
+  "id": 84,
+  "locations": [
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 18,
+      "max_level": 18,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "17ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "17ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    },
+    {
+      "area": "17ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 28,
+      "max_level": 28,
+      "postgame_only": false
+    },
+    {
+      "area": "18ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 24,
+      "max_level": 24,
+      "postgame_only": false
+    },
+    {
+      "area": "18ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 26,
+      "max_level": 26,
+      "postgame_only": false
+    },
+    {
+      "area": "18ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 28,
+      "max_level": 28,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv31"
+  ],
+  "level_up_moves": [
+    {
+      "level": 13,
+      "name": "みだれづき"
+    },
+    {
+      "level": 1,
+      "name": "なきごえ"
+    },
+    {
+      "level": 1,
+      "name": "つつく"
+    },
+    {
+      "level": 37,
+      "name": "ドリルくちばし"
+    },
+    {
+      "level": 45,
+      "name": "こうそくいどう"
+    },
+    {
+      "level": 25,
+      "name": "いかり"
+    },
+    {
+      "level": 21,
+      "name": "トライアタック"
+    },
+    {
+      "level": 9,
+      "name": "おいうち"
+    },
+    {
+      "level": 33,
+      "name": "さわぐ"
+    }
+  ],
+  "machines": [
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "はがねのつばさ",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "ひみつのちから",
+    "つばめがえし"
+  ],
+  "hms": [
+    "そらをとぶ"
+  ]
+}

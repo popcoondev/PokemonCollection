@@ -1,17 +1,302 @@
 {
   "id": 19,
   "locations": [
-    { "area": "1ばんどうろ", "method": "くさむら", "rate": "50%" },
-    { "area": "2ばんどうろ", "method": "くさむら", "rate": "35%" }
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 18,
+      "max_level": 18,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 18,
+      "max_level": 18,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 18,
+      "max_level": 18,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "16ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "17ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "17ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "18ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "18ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 22,
+      "max_level": 22,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 2,
+      "max_level": 2,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 3,
+      "max_level": 3,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 3,
+      "max_level": 3,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 3,
+      "max_level": 3,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 4,
+      "max_level": 4,
+      "postgame_only": false
+    },
+    {
+      "area": "1ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 4,
+      "max_level": 4,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 2,
+      "max_level": 2,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 3,
+      "max_level": 3,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 4,
+      "max_level": 4,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "2ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 2,
+      "max_level": 2,
+      "postgame_only": false
+    },
+    {
+      "area": "2ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 3,
+      "max_level": 3,
+      "postgame_only": false
+    },
+    {
+      "area": "2ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 4,
+      "max_level": 4,
+      "postgame_only": false
+    },
+    {
+      "area": "2ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 5,
+      "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "9ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "9ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "9ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "9ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "9ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    }
   ],
   "evolution": [
     "Lv20"
   ],
   "level_up_moves": [
-    { "level": 1, "name": "たいあたり" },
-    { "level": 1, "name": "しっぽをふる" },
-    { "level": 7, "name": "でんこうせっか" }
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 1,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 7,
+      "name": "でんこうせっか"
+    },
+    {
+      "level": 20,
+      "name": "きあいだめ"
+    },
+    {
+      "level": 13,
+      "name": "ひっさつまえば"
+    },
+    {
+      "level": 34,
+      "name": "いかりのまえば"
+    },
+    {
+      "level": 27,
+      "name": "おいうち"
+    },
+    {
+      "level": 41,
+      "name": "がむしゃら"
+    }
   ],
-  "machines": [],
-  "hms": []
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "１０まんボルト",
+    "かみなり",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "あまごい",
+    "にほんばれ",
+    "シャドーボール",
+    "からげんき",
+    "ちょうはつ",
+    "ひみつのちから",
+    "でんげきは"
+  ],
+  "hms": [
+    "いあいぎり",
+    "いわくだき"
+  ]
 }

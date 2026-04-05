@@ -1,0 +1,209 @@
+{
+  "id": 52,
+  "locations": [
+    {
+      "area": "3のしま きずなばし",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 31,
+      "max_level": 31,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 41,
+      "max_level": 41,
+      "postgame_only": true
+    },
+    {
+      "area": "5ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "5ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 12,
+      "max_level": 12,
+      "postgame_only": false
+    },
+    {
+      "area": "5ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "5ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 12,
+      "max_level": 12,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 14,
+      "max_level": 14,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 16,
+      "max_level": 16,
+      "postgame_only": false
+    },
+    {
+      "area": "8ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 18,
+      "max_level": 18,
+      "postgame_only": false
+    },
+    {
+      "area": "8ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": false
+    },
+    {
+      "area": "いせきのたに",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 43,
+      "max_level": 43,
+      "postgame_only": true
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 43,
+      "max_level": 43,
+      "postgame_only": true
+    },
+    {
+      "area": "たからのはま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 31,
+      "max_level": 31,
+      "postgame_only": false
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 41,
+      "max_level": 41,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "Lv28",
+    "Lv28"
+  ],
+  "level_up_moves": [
+    {
+      "level": 18,
+      "name": "ネコにこばん"
+    },
+    {
+      "level": 1,
+      "name": "ひっかく"
+    },
+    {
+      "level": 10,
+      "name": "かみつく"
+    },
+    {
+      "level": 1,
+      "name": "なきごえ"
+    },
+    {
+      "level": 31,
+      "name": "いやなおと"
+    },
+    {
+      "level": 36,
+      "name": "みだれひっかき"
+    },
+    {
+      "level": 40,
+      "name": "きりさく"
+    },
+    {
+      "level": 25,
+      "name": "だましうち"
+    },
+    {
+      "level": 45,
+      "name": "いばる"
+    },
+    {
+      "level": 43,
+      "name": "ねこだまし"
+    }
+  ],
+  "machines": [
+    "１０まんボルト",
+    "かみなり",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "あまごい",
+    "にほんばれ",
+    "シャドーボール",
+    "いちゃもん",
+    "からげんき",
+    "ちょうはつ",
+    "よこどり",
+    "ひみつのちから",
+    "つばめがえし",
+    "でんげきは",
+    "みずのはどう"
+  ],
+  "hms": [
+    "いあいぎり",
+    "フラッシュ"
+  ]
+}

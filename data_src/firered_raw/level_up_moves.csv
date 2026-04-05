@@ -1,0 +1,4000 @@
+pokemon_id,sort_order,level,move
+1,20,1,tackle
+1,30,4,growl
+1,40,7,leech seed
+1,10,10,vine whip
+1,80,15,poison powder
+1,90,15,sleep powder
+1,60,20,razor leaf
+1,100,25,sweet scent
+1,50,32,growth
+1,110,39,synthesis
+1,70,46,solar beam
+2,20,1,tackle
+2,30,1,growl
+2,50,1,leech seed
+2,40,4,growl
+2,60,7,leech seed
+2,10,10,vine whip
+2,100,15,poison powder
+2,110,15,sleep powder
+2,80,22,razor leaf
+2,120,29,sweet scent
+2,70,38,growth
+2,130,47,synthesis
+2,90,56,solar beam
+3,10,1,vine whip
+3,30,1,tackle
+3,40,1,growl
+3,60,1,leech seed
+3,50,4,growl
+3,70,7,leech seed
+3,20,10,vine whip
+3,110,15,poison powder
+3,120,15,sleep powder
+3,90,22,razor leaf
+3,130,29,sweet scent
+3,80,41,growth
+3,140,53,synthesis
+3,100,65,solar beam
+4,10,1,scratch
+4,20,1,growl
+4,30,7,ember
+4,100,13,metal claw
+4,70,19,smokescreen
+4,90,25,scary face
+4,40,31,flamethrower
+4,80,37,slash
+4,50,43,dragon rage
+4,60,49,fire spin
+5,10,1,scratch
+5,20,1,growl
+5,30,1,ember
+5,40,7,ember
+5,110,13,metal claw
+5,80,20,smokescreen
+5,100,27,scary face
+5,50,34,flamethrower
+5,90,41,slash
+5,60,48,dragon rage
+5,70,55,fire spin
+6,10,1,scratch
+6,30,1,growl
+6,40,1,ember
+6,120,1,metal claw
+6,140,1,heat wave
+6,50,7,ember
+6,130,13,metal claw
+6,90,20,smokescreen
+6,110,27,scary face
+6,60,34,flamethrower
+6,20,36,wing attack
+6,100,44,slash
+6,70,54,dragon rage
+6,80,64,fire spin
+7,10,1,tackle
+7,20,4,tail whip
+7,80,7,bubble
+7,60,10,withdraw
+7,40,13,water gun
+7,30,18,bite
+7,100,23,rapid spin
+7,90,28,protect
+7,110,33,rain dance
+7,70,40,skull bash
+7,50,47,hydro pump
+8,10,1,tackle
+8,20,1,tail whip
+8,90,1,bubble
+8,30,4,tail whip
+8,100,7,bubble
+8,70,10,withdraw
+8,50,13,water gun
+8,40,19,bite
+8,120,25,rapid spin
+8,110,31,protect
+8,130,37,rain dance
+8,80,45,skull bash
+8,60,53,hydro pump
+9,10,1,tackle
+9,20,1,tail whip
+9,70,1,withdraw
+9,100,1,bubble
+9,30,4,tail whip
+9,110,7,bubble
+9,80,10,withdraw
+9,50,13,water gun
+9,40,19,bite
+9,130,25,rapid spin
+9,120,31,protect
+9,140,42,rain dance
+9,90,55,skull bash
+9,60,68,hydro pump
+10,10,1,tackle
+10,20,1,string shot
+11,10,1,harden
+11,20,7,harden
+12,80,1,confusion
+12,90,10,confusion
+12,50,13,poison powder
+12,60,14,stun spore
+12,70,15,sleep powder
+12,30,18,supersonic
+12,20,23,whirlwind
+12,10,28,gust
+12,40,34,psybeam
+12,100,40,safeguard
+12,110,47,silver wind
+13,10,1,poison sting
+13,20,1,string shot
+14,10,1,harden
+14,20,7,harden
+15,10,1,fury attack
+15,20,10,fury attack
+15,70,15,focus energy
+15,30,20,twineedle
+15,60,25,rage
+15,80,30,pursuit
+15,40,35,pin missile
+15,50,40,agility
+15,90,45,endeavor
+16,50,1,tackle
+16,40,5,sand attack
+16,10,9,gust
+16,70,13,quick attack
+16,30,19,whirlwind
+16,20,25,wing attack
+16,90,31,feather dance
+16,60,39,agility
+16,80,47,mirror move
+17,10,1,gust
+17,50,1,sand attack
+17,70,1,tackle
+17,60,5,sand attack
+17,20,9,gust
+17,90,13,quick attack
+17,40,20,whirlwind
+17,30,27,wing attack
+17,110,34,feather dance
+17,80,43,agility
+17,100,52,mirror move
+18,10,1,gust
+18,50,1,sand attack
+18,70,1,tackle
+18,90,1,quick attack
+18,60,5,sand attack
+18,20,9,gust
+18,100,13,quick attack
+18,40,20,whirlwind
+18,30,27,wing attack
+18,120,34,feather dance
+18,80,48,agility
+18,110,62,mirror move
+19,10,1,tackle
+19,20,1,tail whip
+19,30,7,quick attack
+19,50,13,hyper fang
+19,40,20,focus energy
+19,70,27,pursuit
+19,60,34,super fang
+19,80,41,endeavor
+20,10,1,tackle
+20,20,1,tail whip
+20,30,1,quick attack
+20,40,7,quick attack
+20,50,13,hyper fang
+20,70,20,scary face
+20,80,30,pursuit
+20,60,40,super fang
+20,90,50,endeavor
+21,30,1,growl
+21,40,1,peck
+21,20,7,leer
+21,10,13,fury attack
+21,80,19,pursuit
+21,90,25,aerial ace
+21,70,31,mirror move
+21,50,37,drill peck
+21,60,43,agility
+22,10,1,fury attack
+22,30,1,leer
+22,50,1,growl
+22,60,1,peck
+22,40,7,leer
+22,20,13,fury attack
+22,100,26,pursuit
+22,90,32,mirror move
+22,70,40,drill peck
+22,80,47,agility
+23,10,1,wrap
+23,30,1,leer
+23,20,8,poison sting
+23,40,13,bite
+23,80,20,glare
+23,60,25,screech
+23,50,32,acid
+23,90,37,stockpile
+23,100,37,spit up
+23,110,37,swallow
+23,70,44,haze
+24,10,1,wrap
+24,20,1,poison sting
+24,40,1,leer
+24,50,1,bite
+24,30,8,poison sting
+24,60,13,bite
+24,100,20,glare
+24,80,28,screech
+24,70,38,acid
+24,110,46,stockpile
+24,120,46,spit up
+24,130,46,swallow
+24,90,56,haze
+25,30,1,growl
+25,40,1,thunder shock
+25,20,6,tail whip
+25,60,8,thunder wave
+25,90,11,quick attack
+25,100,15,double team
+25,10,20,slam
+25,50,26,thunderbolt
+25,80,33,agility
+25,70,41,thunder
+25,110,50,light screen
+26,10,1,tail whip
+26,20,1,thunder shock
+26,30,1,thunderbolt
+26,40,1,quick attack
+27,10,1,scratch
+27,40,6,defense curl
+27,20,11,sand attack
+27,30,17,poison sting
+27,70,23,slash
+27,50,30,swift
+27,60,37,fury swipes
+27,90,45,sand tomb
+27,80,53,sandstorm
+28,10,1,scratch
+28,20,1,sand attack
+28,50,1,defense curl
+28,60,6,defense curl
+28,30,11,sand attack
+28,40,17,poison sting
+28,90,24,slash
+28,70,33,swift
+28,80,42,fury swipes
+28,110,52,sand tomb
+28,100,62,sandstorm
+29,10,1,scratch
+29,60,1,growl
+29,30,8,tail whip
+29,20,12,double kick
+29,40,17,poison sting
+29,50,20,bite
+29,100,23,helping hand
+29,70,30,fury swipes
+29,90,38,flatter
+29,80,47,crunch
+30,10,1,scratch
+30,60,1,growl
+30,30,8,tail whip
+30,20,12,double kick
+30,40,18,poison sting
+30,50,22,bite
+30,100,26,helping hand
+30,70,34,fury swipes
+30,90,43,flatter
+30,80,53,crunch
+31,10,1,scratch
+31,20,1,double kick
+31,40,1,tail whip
+31,50,1,poison sting
+31,30,22,body slam
+31,60,43,superpower
+32,60,1,leer
+32,70,1,peck
+32,80,8,focus energy
+32,10,12,double kick
+32,50,17,poison sting
+32,20,20,horn attack
+32,100,23,helping hand
+32,30,30,fury attack
+32,90,38,flatter
+32,40,47,horn drill
+33,60,1,leer
+33,70,1,peck
+33,80,8,focus energy
+33,10,12,double kick
+33,50,18,poison sting
+33,20,22,horn attack
+33,100,26,helping hand
+33,30,34,fury attack
+33,90,43,flatter
+33,40,53,horn drill
+34,10,1,double kick
+34,30,1,poison sting
+34,40,1,peck
+34,50,1,focus energy
+34,20,22,thrash
+34,60,43,megahorn
+35,10,1,pound
+35,30,1,growl
+35,90,5,encore
+35,40,9,sing
+35,20,13,double slap
+35,110,17,follow me
+35,50,21,minimize
+35,60,25,defense curl
+35,80,29,metronome
+35,130,33,cosmic power
+35,100,37,moonlight
+35,70,41,light screen
+35,120,45,meteor mash
+36,10,1,double slap
+36,20,1,sing
+36,30,1,minimize
+36,40,1,metronome
+37,30,1,ember
+37,10,5,tail whip
+37,20,9,roar
+37,60,13,quick attack
+37,90,17,will o wisp
+37,70,21,confuse ray
+37,100,25,imprison
+37,40,29,flamethrower
+37,80,33,safeguard
+37,110,37,grudge
+37,50,41,fire spin
+38,10,1,ember
+38,30,1,quick attack
+38,40,1,confuse ray
+38,50,1,safeguard
+38,20,45,fire spin
+39,50,1,sing
+39,80,4,defense curl
+39,10,9,pound
+39,60,14,disable
+39,100,19,rollout
+39,20,24,double slap
+39,90,29,rest
+39,30,34,body slam
+39,70,39,mimic
+39,110,44,hyper voice
+39,40,49,double edge
+40,10,1,double slap
+40,20,1,sing
+40,30,1,disable
+40,40,1,defense curl
+41,60,1,leech life
+41,90,6,astonish
+41,30,11,supersonic
+41,20,16,bite
+41,10,21,wing attack
+41,40,26,confuse ray
+41,100,31,air cutter
+41,70,36,mean look
+41,80,41,poison fang
+41,50,46,haze
+42,30,1,supersonic
+42,50,1,screech
+42,80,1,leech life
+42,110,1,astonish
+42,120,6,astonish
+42,40,11,supersonic
+42,20,16,bite
+42,10,21,wing attack
+42,60,28,confuse ray
+42,130,35,air cutter
+42,90,42,mean look
+42,100,49,poison fang
+42,70,56,haze
+43,20,1,absorb
+43,70,7,sweet scent
+43,30,14,poison powder
+43,40,16,stun spore
+43,50,18,sleep powder
+43,10,23,acid
+43,80,32,moonlight
+43,60,39,petal dance
+44,20,1,absorb
+44,30,1,poison powder
+44,80,1,sweet scent
+44,90,7,sweet scent
+44,40,14,poison powder
+44,50,16,stun spore
+44,60,18,sleep powder
+44,10,24,acid
+44,100,35,moonlight
+44,70,44,petal dance
+45,10,1,absorb
+45,20,1,mega drain
+45,30,1,stun spore
+45,50,1,aromatherapy
+45,40,44,petal dance
+46,10,1,scratch
+46,40,7,stun spore
+46,30,13,poison powder
+46,50,19,leech life
+46,60,25,spore
+46,70,31,slash
+46,20,37,growth
+46,80,43,giga drain
+46,90,49,aromatherapy
+47,10,1,scratch
+47,30,1,poison powder
+47,50,1,stun spore
+47,60,7,stun spore
+47,40,13,poison powder
+47,70,19,leech life
+47,80,27,spore
+47,90,35,slash
+47,20,43,growth
+47,100,51,giga drain
+47,110,59,aromatherapy
+48,10,1,tackle
+48,30,1,disable
+48,110,1,foresight
+48,20,9,supersonic
+48,80,17,confusion
+48,50,20,poison powder
+48,100,25,leech life
+48,60,28,stun spore
+48,40,33,psybeam
+48,70,36,sleep powder
+48,90,41,psychic
+49,20,1,tackle
+49,30,1,supersonic
+49,50,1,disable
+49,130,1,foresight
+49,140,1,silver wind
+49,40,9,supersonic
+49,100,17,confusion
+49,70,20,poison powder
+49,120,25,leech life
+49,80,28,stun spore
+49,10,31,gust
+49,60,36,psybeam
+49,90,42,sleep powder
+49,110,52,psychic
+50,10,1,scratch
+50,20,1,sand attack
+50,30,5,growl
+50,100,9,magnitude
+50,60,17,dig
+50,70,21,fury swipes
+50,90,25,mud slap
+50,80,33,slash
+50,40,41,earthquake
+50,50,49,fissure
+51,10,1,scratch
+51,20,1,sand attack
+51,30,1,growl
+51,90,1,tri attack
+51,40,5,growl
+51,120,9,magnitude
+51,70,17,dig
+51,80,21,fury swipes
+51,110,25,mud slap
+51,130,26,sand tomb
+51,100,38,slash
+51,50,51,earthquake
+51,60,64,fissure
+52,20,1,scratch
+52,40,1,growl
+52,30,10,bite
+52,10,18,pay day
+52,80,25,feint attack
+52,50,31,screech
+52,60,36,fury swipes
+52,70,40,slash
+52,100,43,fake out
+52,90,45,swagger
+53,20,1,scratch
+53,30,1,bite
+53,50,1,growl
+53,40,10,bite
+53,10,18,pay day
+53,90,25,feint attack
+53,60,34,screech
+53,70,42,fury swipes
+53,80,49,slash
+53,110,55,fake out
+53,100,61,swagger
+54,10,1,scratch
+54,90,1,water sport
+54,20,5,tail whip
+54,30,10,disable
+54,50,16,confusion
+54,60,23,screech
+54,80,31,psych up
+54,70,40,fury swipes
+54,40,50,hydro pump
+55,10,1,scratch
+55,20,1,tail whip
+55,40,1,disable
+55,110,1,water sport
+55,30,5,tail whip
+55,50,10,disable
+55,70,16,confusion
+55,80,23,screech
+55,100,31,psych up
+55,90,44,fury swipes
+55,60,58,hydro pump
+56,20,1,scratch
+56,40,1,leer
+56,50,6,low kick
+56,10,11,karate chop
+56,90,16,fury swipes
+56,80,21,focus energy
+56,60,26,seismic toss
+56,110,31,cross chop
+56,100,36,swagger
+56,70,41,screech
+56,30,46,thrash
+57,20,1,scratch
+57,40,1,leer
+57,50,1,low kick
+57,80,1,rage
+57,60,6,low kick
+57,10,11,karate chop
+57,120,16,fury swipes
+57,110,21,focus energy
+57,70,26,seismic toss
+57,90,28,rage
+57,140,35,cross chop
+57,130,44,swagger
+57,100,53,screech
+57,30,62,thrash
+58,30,1,bite
+58,40,1,roar
+58,50,7,ember
+58,20,13,leer
+58,100,19,odor sleuth
+58,10,25,take down
+58,80,31,flame wheel
+58,90,37,helping hand
+58,70,43,agility
+58,60,49,flamethrower
+59,10,1,bite
+59,20,1,roar
+59,30,1,ember
+59,50,1,odor sleuth
+59,40,49,extreme speed
+60,60,1,bubble
+60,50,7,hypnosis
+60,30,13,water gun
+60,10,19,double slap
+60,80,25,rain dance
+60,20,31,body slam
+60,70,37,belly drum
+60,40,43,hydro pump
+61,30,1,water gun
+61,60,1,hypnosis
+61,80,1,bubble
+61,70,7,hypnosis
+61,40,13,water gun
+61,10,19,double slap
+61,100,27,rain dance
+61,20,35,body slam
+61,90,43,belly drum
+61,50,51,hydro pump
+62,10,1,double slap
+62,20,1,water gun
+62,30,1,submission
+62,50,1,hypnosis
+62,40,35,submission
+62,60,51,mind reader
+63,10,1,teleport
+64,30,1,confusion
+64,60,1,teleport
+64,90,1,kinesis
+64,40,16,confusion
+64,10,18,disable
+64,20,21,psybeam
+64,80,23,reflect
+64,70,25,recover
+64,100,30,future sight
+64,120,33,role play
+64,50,36,psychic
+64,110,43,trick
+65,30,1,confusion
+65,60,1,teleport
+65,90,1,kinesis
+65,40,16,confusion
+65,10,18,disable
+65,20,21,psybeam
+65,80,23,reflect
+65,70,25,recover
+65,100,30,future sight
+65,120,33,calm mind
+65,50,36,psychic
+65,110,43,trick
+66,20,1,leer
+66,40,1,low kick
+66,60,7,focus energy
+66,10,13,karate chop
+66,50,19,seismic toss
+66,80,22,foresight
+66,120,25,revenge
+66,100,31,vital throw
+66,30,37,submission
+66,110,40,cross chop
+66,70,43,scary face
+66,90,49,dynamic punch
+67,20,1,leer
+67,40,1,low kick
+67,60,1,focus energy
+67,70,7,focus energy
+67,10,13,karate chop
+67,50,19,seismic toss
+67,90,22,foresight
+67,130,25,revenge
+67,110,33,vital throw
+67,30,41,submission
+67,120,46,cross chop
+67,80,51,scary face
+67,100,59,dynamic punch
+68,20,1,leer
+68,40,1,low kick
+68,60,1,focus energy
+68,70,7,focus energy
+68,10,13,karate chop
+68,50,19,seismic toss
+68,90,22,foresight
+68,130,25,revenge
+68,110,33,vital throw
+68,30,41,submission
+68,120,46,cross chop
+68,80,51,scary face
+68,100,59,dynamic punch
+69,20,1,vine whip
+69,50,6,growth
+69,30,11,wrap
+69,90,15,sleep powder
+69,70,17,poison powder
+69,80,19,stun spore
+69,40,23,acid
+69,100,30,sweet scent
+69,60,37,razor leaf
+69,10,45,slam
+70,20,1,vine whip
+70,30,1,wrap
+70,60,1,growth
+70,70,6,growth
+70,40,11,wrap
+70,110,15,sleep powder
+70,90,17,poison powder
+70,100,19,stun spore
+70,50,24,acid
+70,120,33,sweet scent
+70,80,42,razor leaf
+70,10,54,slam
+71,10,1,vine whip
+71,20,1,razor leaf
+71,30,1,sleep powder
+71,40,1,sweet scent
+71,50,1,stockpile
+71,60,1,spit up
+71,70,1,swallow
+72,20,1,poison sting
+72,30,6,supersonic
+72,90,12,constrict
+72,40,19,acid
+72,60,25,bubble beam
+72,10,30,wrap
+72,80,36,barrier
+72,70,43,screech
+72,50,49,hydro pump
+73,20,1,poison sting
+73,30,1,supersonic
+73,100,1,constrict
+73,40,6,supersonic
+73,110,12,constrict
+73,50,19,acid
+73,70,25,bubble beam
+73,10,30,wrap
+73,90,38,barrier
+73,80,47,screech
+73,60,55,hydro pump
+74,10,1,tackle
+74,50,1,defense curl
+74,100,6,mud sport
+74,30,11,rock throw
+74,90,16,magnitude
+74,60,21,self destruct
+74,80,26,rollout
+74,110,31,rock blast
+74,40,36,earthquake
+74,70,41,explosion
+74,20,46,double edge
+75,10,1,tackle
+75,30,1,rock throw
+75,60,1,defense curl
+75,110,1,mud sport
+75,120,6,mud sport
+75,40,11,rock throw
+75,100,16,magnitude
+75,70,21,self destruct
+75,90,29,rollout
+75,130,37,rock blast
+75,50,45,earthquake
+75,80,53,explosion
+75,20,62,double edge
+76,10,1,tackle
+76,30,1,rock throw
+76,60,1,defense curl
+76,110,1,mud sport
+76,120,6,mud sport
+76,40,11,rock throw
+76,100,16,magnitude
+76,70,21,self destruct
+76,90,29,rollout
+76,130,37,rock blast
+76,50,45,earthquake
+76,80,53,explosion
+76,20,62,double edge
+77,80,1,quick attack
+77,40,5,growl
+77,30,9,tail whip
+77,50,14,ember
+77,10,19,stomp
+77,60,25,fire spin
+77,20,31,take down
+77,70,38,agility
+77,100,45,bounce
+77,90,53,fire blast
+78,40,1,tail whip
+78,60,1,growl
+78,80,1,ember
+78,120,1,quick attack
+78,70,5,growl
+78,50,9,tail whip
+78,90,14,ember
+78,10,19,stomp
+78,100,25,fire spin
+78,30,31,take down
+78,110,38,agility
+78,20,40,fury attack
+78,140,50,bounce
+78,130,63,fire blast
+79,20,1,tackle
+79,90,1,curse
+79,110,1,yawn
+79,30,6,growl
+79,50,13,water gun
+79,60,17,confusion
+79,40,24,disable
+79,10,29,headbutt
+79,80,36,amnesia
+79,70,40,psychic
+79,100,47,psych up
+80,20,1,tackle
+80,30,1,growl
+80,110,1,curse
+80,130,1,yawn
+80,40,6,growl
+80,60,13,water gun
+80,70,17,confusion
+80,50,24,disable
+80,10,29,headbutt
+80,100,36,amnesia
+80,90,37,withdraw
+80,80,44,psychic
+80,120,55,psych up
+81,10,1,tackle
+81,110,1,metal sound
+81,40,6,thunder shock
+81,20,11,supersonic
+81,30,16,sonic boom
+81,50,21,thunder wave
+81,100,26,spark
+81,90,32,lock on
+81,70,38,swift
+81,60,44,screech
+81,80,50,zap cannon
+82,10,1,tackle
+82,20,1,supersonic
+82,50,1,thunder shock
+82,130,1,metal sound
+82,60,6,thunder shock
+82,30,11,supersonic
+82,40,16,sonic boom
+82,70,21,thunder wave
+82,120,26,spark
+82,110,35,lock on
+82,90,44,tri attack
+82,80,53,screech
+82,100,62,zap cannon
+83,50,1,peck
+83,20,6,sand attack
+83,40,11,leer
+83,30,16,fury attack
+83,100,21,knock off
+83,90,26,fury cutter
+83,10,31,swords dance
+83,60,36,agility
+83,70,41,slash
+83,80,46,false swipe
+84,20,1,growl
+84,30,1,peck
+84,80,9,pursuit
+84,10,13,fury attack
+84,70,21,tri attack
+84,60,25,rage
+84,90,33,uproar
+84,40,37,drill peck
+84,50,45,agility
+85,10,1,fury attack
+85,30,1,growl
+85,40,1,peck
+85,90,1,pursuit
+85,100,9,pursuit
+85,20,13,fury attack
+85,80,21,tri attack
+85,70,25,rage
+85,110,38,uproar
+85,50,47,drill peck
+85,60,60,agility
+86,10,1,headbutt
+86,30,9,growl
+86,70,17,icy wind
+86,50,21,aurora beam
+86,60,29,rest
+86,20,37,take down
+86,40,41,ice beam
+86,80,49,safeguard
+87,10,1,headbutt
+87,30,1,growl
+87,60,1,aurora beam
+87,90,1,icy wind
+87,120,1,signal beam
+87,40,9,growl
+87,100,17,icy wind
+87,70,21,aurora beam
+87,80,29,rest
+87,130,34,sheer cold
+87,20,42,take down
+87,50,51,ice beam
+87,110,64,safeguard
+88,10,1,pound
+88,70,1,poison gas
+88,40,4,harden
+88,20,8,disable
+88,60,13,sludge
+88,50,19,minimize
+88,30,26,screech
+88,80,34,acid armor
+88,90,43,sludge bomb
+88,100,53,memento
+89,10,1,pound
+89,40,1,harden
+89,80,1,poison gas
+89,50,4,harden
+89,20,8,disable
+89,70,13,sludge
+89,60,19,minimize
+89,30,26,screech
+89,90,34,acid armor
+89,100,47,sludge bomb
+89,110,61,memento
+90,10,1,tackle
+90,60,1,withdraw
+90,90,8,icicle spear
+90,30,15,supersonic
+90,50,22,aurora beam
+90,80,29,protect
+90,20,36,leer
+90,70,43,clamp
+90,40,50,ice beam
+91,10,1,supersonic
+91,20,1,aurora beam
+91,30,1,withdraw
+91,50,1,protect
+91,60,36,spikes
+91,40,43,spike cannon
+92,10,1,hypnosis
+92,40,1,lick
+92,80,8,spite
+92,70,13,curse
+92,20,16,night shade
+92,30,21,confuse ray
+92,50,28,dream eater
+92,90,33,destiny bond
+92,110,36,shadow ball
+92,60,41,nightmare
+92,100,48,mean look
+93,10,1,hypnosis
+93,40,1,lick
+93,80,1,spite
+93,90,8,spite
+93,70,13,curse
+93,20,16,night shade
+93,30,21,confuse ray
+93,130,25,shadow punch
+93,50,31,dream eater
+93,100,39,destiny bond
+93,120,45,shadow ball
+93,60,53,nightmare
+93,110,64,mean look
+94,10,1,hypnosis
+94,40,1,lick
+94,80,1,spite
+94,90,8,spite
+94,70,13,curse
+94,20,16,night shade
+94,30,21,confuse ray
+94,130,25,shadow punch
+94,50,31,dream eater
+94,100,39,destiny bond
+94,120,45,shadow ball
+94,60,53,nightmare
+94,110,64,mean look
+95,30,1,tackle
+95,70,1,screech
+95,10,8,bind
+95,50,12,rock throw
+95,80,19,harden
+95,60,23,rage
+95,100,30,dragon breath
+95,90,34,sandstorm
+95,20,41,slam
+95,110,45,iron tail
+95,120,52,sand tomb
+95,40,56,double edge
+96,10,1,pound
+96,60,1,hypnosis
+96,30,7,disable
+96,40,11,confusion
+96,20,17,headbutt
+96,80,21,poison gas
+96,70,27,meditate
+96,50,31,psychic
+96,100,37,psych up
+96,90,41,swagger
+96,110,47,future sight
+97,10,1,pound
+97,30,1,disable
+97,50,1,confusion
+97,80,1,hypnosis
+97,110,1,nightmare
+97,40,7,disable
+97,60,11,confusion
+97,20,17,headbutt
+97,100,21,poison gas
+97,90,29,meditate
+97,70,35,psychic
+97,130,43,psych up
+97,120,49,swagger
+97,140,57,future sight
+98,60,1,bubble
+98,40,5,leer
+98,10,12,vice grip
+98,50,16,harden
+98,100,23,mud shot
+98,30,27,stomp
+98,20,34,guillotine
+98,90,38,protect
+98,70,45,crabhammer
+98,80,49,flail
+99,10,1,vice grip
+99,50,1,leer
+99,70,1,harden
+99,90,1,bubble
+99,130,1,metal claw
+99,60,5,leer
+99,20,12,vice grip
+99,80,16,harden
+99,140,23,mud shot
+99,40,27,stomp
+99,30,38,guillotine
+99,120,42,protect
+99,100,57,crabhammer
+99,110,65,flail
+100,10,1,tackle
+100,110,1,charge
+100,30,8,screech
+100,20,15,sonic boom
+100,90,21,spark
+100,50,27,self destruct
+100,80,32,rollout
+100,40,37,light screen
+100,60,42,swift
+100,70,46,explosion
+100,100,49,mirror coat
+101,10,1,tackle
+101,20,1,sonic boom
+101,40,1,screech
+101,130,1,charge
+101,50,8,screech
+101,30,15,sonic boom
+101,110,21,spark
+101,70,27,self destruct
+101,100,34,rollout
+101,60,41,light screen
+101,80,48,swift
+101,90,54,explosion
+101,120,59,mirror coat
+102,70,1,hypnosis
+102,90,1,barrage
+102,100,1,uproar
+102,80,7,reflect
+102,10,13,leech seed
+102,60,19,confusion
+102,40,25,stun spore
+102,30,31,poison powder
+102,50,37,sleep powder
+102,20,43,solar beam
+103,20,1,confusion
+103,30,1,hypnosis
+103,50,1,barrage
+103,10,19,stomp
+103,40,31,egg bomb
+104,60,1,growl
+104,40,5,tail whip
+104,90,9,bone club
+104,10,13,headbutt
+104,50,17,leer
+104,80,21,focus energy
+104,100,25,bonemerang
+104,70,29,rage
+104,120,33,false swipe
+104,20,37,thrash
+104,110,41,bone rush
+104,30,45,double edge
+105,10,1,headbutt
+105,50,1,tail whip
+105,80,1,growl
+105,110,1,bone club
+105,60,5,tail whip
+105,120,9,bone club
+105,20,13,headbutt
+105,70,17,leer
+105,100,21,focus energy
+105,130,25,bonemerang
+105,90,32,rage
+105,150,39,false swipe
+105,30,46,thrash
+105,140,53,bone rush
+105,40,61,double edge
+106,10,1,double kick
+106,120,1,revenge
+106,50,6,meditate
+106,40,11,rolling kick
+106,30,16,jump kick
+106,130,20,brick break
+106,60,21,focus energy
+106,70,26,high jump kick
+106,80,31,mind reader
+106,100,36,foresight
+106,110,41,endure
+106,20,46,mega kick
+106,90,51,reversal
+107,10,1,comet punch
+107,110,1,revenge
+107,70,7,agility
+107,100,13,pursuit
+107,80,20,mach punch
+107,30,26,fire punch
+107,40,26,ice punch
+107,50,26,thunder punch
+107,120,32,sky uppercut
+107,20,38,mega punch
+107,90,44,detect
+107,60,50,counter
+108,80,1,lick
+108,40,7,supersonic
+108,70,12,defense curl
+108,90,18,knock off
+108,20,23,stomp
+108,30,29,wrap
+108,50,34,disable
+108,10,40,slam
+108,60,45,screech
+108,100,51,refresh
+109,10,1,tackle
+109,70,1,poison gas
+109,50,9,smog
+109,40,17,self destruct
+109,60,21,sludge
+109,20,25,smokescreen
+109,30,33,haze
+109,80,41,explosion
+109,90,45,destiny bond
+109,100,49,memento
+110,10,1,tackle
+110,40,1,self destruct
+110,60,1,smog
+110,90,1,poison gas
+110,70,9,smog
+110,50,17,self destruct
+110,80,21,sludge
+110,20,25,smokescreen
+110,30,33,haze
+110,100,44,explosion
+110,110,51,destiny bond
+110,120,58,memento
+111,20,1,horn attack
+111,60,1,tail whip
+111,10,10,stomp
+111,30,15,fury attack
+111,80,24,scary face
+111,100,29,rock blast
+111,40,38,horn drill
+111,50,43,take down
+111,70,52,earthquake
+111,90,57,megahorn
+112,10,1,stomp
+112,30,1,horn attack
+112,40,1,fury attack
+112,80,1,tail whip
+112,20,10,stomp
+112,50,15,fury attack
+112,100,24,scary face
+112,120,29,rock blast
+112,60,38,horn drill
+112,70,46,take down
+112,90,58,earthquake
+112,110,66,megahorn
+113,10,1,pound
+113,50,1,growl
+113,40,5,tail whip
+113,120,9,refresh
+113,110,13,soft boiled
+113,20,17,double slap
+113,70,23,minimize
+113,60,29,sing
+113,100,35,egg bomb
+113,80,41,defense curl
+113,90,49,light screen
+113,30,57,double edge
+114,100,1,constrict
+114,110,1,ingrain
+114,90,4,sleep powder
+114,40,10,absorb
+114,60,13,growth
+114,70,19,poison powder
+114,30,22,vine whip
+114,10,28,bind
+114,50,31,mega drain
+114,80,37,stun spore
+114,20,40,slam
+114,120,46,tickle
+115,10,1,comet punch
+115,40,1,leer
+115,50,7,bite
+115,30,13,tail whip
+115,100,19,fake out
+115,20,25,mega punch
+115,60,31,rage
+115,90,37,endure
+115,70,43,dizzy punch
+115,80,49,reversal
+116,60,1,bubble
+116,50,8,smokescreen
+116,10,15,leer
+116,20,22,water gun
+116,70,29,twister
+116,40,36,agility
+116,30,43,hydro pump
+116,80,50,dragon dance
+117,10,1,leer
+117,30,1,water gun
+117,70,1,smokescreen
+117,90,1,bubble
+117,80,8,smokescreen
+117,20,15,leer
+117,40,22,water gun
+117,100,29,twister
+117,60,40,agility
+117,50,51,hydro pump
+117,110,62,dragon dance
+118,40,1,tail whip
+118,60,1,peck
+118,110,1,water sport
+118,50,10,supersonic
+118,10,15,horn attack
+118,90,24,flail
+118,20,29,fury attack
+118,80,38,waterfall
+118,30,43,horn drill
+118,70,52,agility
+118,100,57,megahorn
+119,40,1,tail whip
+119,50,1,supersonic
+119,70,1,peck
+119,120,1,water sport
+119,60,10,supersonic
+119,10,15,horn attack
+119,100,24,flail
+119,20,29,fury attack
+119,90,41,waterfall
+119,30,49,horn drill
+119,80,61,agility
+119,110,69,megahorn
+120,10,1,tackle
+120,60,1,harden
+120,20,6,water gun
+120,100,10,rapid spin
+120,50,15,recover
+120,110,19,camouflage
+120,90,24,swift
+120,40,28,bubble beam
+120,70,33,minimize
+120,80,37,light screen
+120,120,42,cosmic power
+120,30,46,hydro pump
+121,10,1,water gun
+121,20,1,recover
+121,40,1,swift
+121,50,1,rapid spin
+121,30,33,confuse ray
+122,60,1,barrier
+122,30,5,confusion
+122,90,8,substitute
+122,50,12,meditate
+122,10,15,double slap
+122,70,19,light screen
+122,80,19,reflect
+122,160,22,magical leaf
+122,120,26,encore
+122,20,29,psybeam
+122,150,33,recycle
+122,130,36,trick
+122,140,40,role play
+122,40,43,psychic
+122,110,47,baton pass
+122,100,50,safeguard
+123,30,1,leer
+123,50,1,quick attack
+123,70,6,focus energy
+123,110,11,pursuit
+123,90,16,false swipe
+123,40,21,agility
+123,20,26,wing attack
+123,80,31,slash
+123,10,36,swords dance
+123,60,41,double team
+123,100,46,fury cutter
+124,10,1,pound
+124,60,1,lick
+124,70,1,lovely kiss
+124,90,1,powder snow
+124,80,9,lovely kiss
+124,100,13,powder snow
+124,20,21,double slap
+124,30,25,ice punch
+124,120,35,mean look
+124,130,41,fake tears
+124,40,51,body slam
+124,110,57,perish song
+124,50,67,blizzard
+125,10,1,thunder punch
+125,30,1,leer
+125,60,1,quick attack
+125,20,9,thunder punch
+125,80,17,light screen
+125,90,25,swift
+125,70,36,screech
+125,40,47,thunderbolt
+125,50,58,thunder
+126,10,1,fire punch
+126,30,1,leer
+126,50,1,ember
+126,90,1,smog
+126,40,7,leer
+126,100,13,smog
+126,20,19,fire punch
+126,70,25,smokescreen
+126,120,33,sunny day
+126,60,41,flamethrower
+126,80,49,confuse ray
+126,110,57,fire blast
+127,10,1,vice grip
+127,80,1,focus energy
+127,40,7,bind
+127,60,13,seismic toss
+127,70,19,harden
+127,90,25,revenge
+127,100,31,brick break
+127,20,37,guillotine
+127,50,43,submission
+127,30,49,swords dance
+128,20,1,tackle
+128,50,1,tail whip
+128,60,4,rage
+128,10,8,horn attack
+128,80,13,scary face
+128,100,19,pursuit
+128,90,26,swagger
+128,70,34,rest
+128,40,43,thrash
+128,30,53,take down
+129,20,1,splash
+129,10,15,tackle
+129,30,30,flail
+130,10,1,thrash
+130,30,20,bite
+130,60,25,dragon rage
+130,20,30,leer
+130,70,35,twister
+130,40,40,hydro pump
+130,80,45,rain dance
+130,90,50,dragon dance
+130,50,55,hyper beam
+131,20,1,growl
+131,30,1,sing
+131,50,1,water gun
+131,40,7,mist
+131,10,13,body slam
+131,80,19,confuse ray
+131,90,25,perish song
+131,70,31,ice beam
+131,110,37,rain dance
+131,100,43,safeguard
+131,60,49,hydro pump
+131,120,55,sheer cold
+132,10,1,transform
+133,20,1,tackle
+133,40,1,tail whip
+133,90,1,helping hand
+133,10,8,sand attack
+133,60,16,growl
+133,70,23,quick attack
+133,50,30,bite
+133,80,36,baton pass
+133,30,42,take down
+134,20,1,tackle
+134,30,1,tail whip
+134,110,1,helping hand
+134,10,8,sand attack
+134,50,16,water gun
+134,80,23,quick attack
+134,40,30,bite
+134,70,36,aurora beam
+134,90,42,haze
+134,100,47,acid armor
+134,60,52,hydro pump
+135,30,1,tackle
+135,40,1,tail whip
+135,110,1,helping hand
+135,20,8,sand attack
+135,60,16,thunder shock
+135,100,23,quick attack
+135,10,30,double kick
+135,50,36,pin missile
+135,70,42,thunder wave
+135,90,47,agility
+135,80,52,thunder
+136,20,1,tackle
+136,30,1,tail whip
+136,110,1,helping hand
+136,10,8,sand attack
+136,60,16,ember
+136,90,23,quick attack
+136,50,30,bite
+136,80,36,fire spin
+136,100,42,smog
+136,40,47,leer
+136,70,52,flamethrower
+137,10,1,tackle
+137,60,1,conversion
+137,80,1,conversion 2
+137,30,9,agility
+137,20,12,psybeam
+137,40,20,recover
+137,50,24,sharpen
+137,100,32,lock on
+137,70,36,tri attack
+137,110,44,recycle
+137,90,48,zap cannon
+138,50,1,withdraw
+138,60,1,constrict
+138,20,13,bite
+138,30,19,water gun
+138,100,25,mud shot
+138,10,31,leer
+138,70,37,protect
+138,90,43,tickle
+138,80,49,ancient power
+138,40,55,hydro pump
+139,20,1,bite
+139,40,1,water gun
+139,70,1,withdraw
+139,90,1,constrict
+139,30,13,bite
+139,50,19,water gun
+139,130,25,mud shot
+139,10,31,leer
+139,100,37,protect
+139,80,40,spike cannon
+139,120,46,tickle
+139,110,55,ancient power
+139,60,65,hydro pump
+140,10,1,scratch
+140,60,1,harden
+140,40,13,absorb
+140,30,19,leer
+140,100,25,mud shot
+140,20,31,sand attack
+140,70,37,endure
+140,90,43,metal sound
+140,50,49,mega drain
+140,80,55,ancient power
+141,10,1,scratch
+141,30,1,leer
+141,50,1,absorb
+141,80,1,harden
+141,110,1,fury cutter
+141,60,13,absorb
+141,40,19,leer
+141,140,25,mud shot
+141,20,31,sand attack
+141,100,37,endure
+141,90,40,slash
+141,130,46,metal sound
+141,70,55,mega drain
+141,120,65,ancient power
+142,10,1,wing attack
+142,60,8,agility
+142,30,15,bite
+142,40,22,supersonic
+142,80,29,ancient power
+142,70,36,scary face
+142,20,43,take down
+142,50,50,hyper beam
+143,20,1,tackle
+143,60,5,amnesia
+143,50,9,defense curl
+143,90,13,belly drum
+143,10,17,headbutt
+143,120,21,yawn
+143,70,25,rest
+143,80,29,snore
+143,30,33,body slam
+143,110,37,sleep talk
+143,130,41,block
+143,140,45,covet
+143,100,49,rollout
+143,40,53,hyper beam
+144,10,1,gust
+144,80,1,powder snow
+144,20,13,mist
+144,50,25,agility
+144,70,37,mind reader
+144,30,49,ice beam
+144,60,61,reflect
+144,40,73,blizzard
+144,90,85,sheer cold
+145,10,1,peck
+145,30,1,thunder shock
+145,40,13,thunder wave
+145,60,25,agility
+145,80,37,detect
+145,20,49,drill peck
+145,90,61,charge
+145,70,73,light screen
+145,50,85,thunder
+146,10,1,wing attack
+146,20,1,ember
+146,40,13,fire spin
+146,50,25,agility
+146,70,37,endure
+146,30,49,flamethrower
+146,80,61,safeguard
+146,90,73,heat wave
+146,60,85,sky attack
+147,20,1,wrap
+147,30,1,leer
+147,60,8,thunder wave
+147,100,15,twister
+147,50,22,dragon rage
+147,10,29,slam
+147,70,36,agility
+147,90,43,safeguard
+147,80,50,outrage
+147,40,57,hyper beam
+148,20,1,wrap
+148,30,1,leer
+148,60,1,thunder wave
+148,110,1,twister
+148,70,8,thunder wave
+148,120,15,twister
+148,50,22,dragon rage
+148,10,29,slam
+148,80,38,agility
+148,100,47,safeguard
+148,90,56,outrage
+148,40,65,hyper beam
+149,30,1,wrap
+149,40,1,leer
+149,70,1,thunder wave
+149,120,1,twister
+149,80,8,thunder wave
+149,130,15,twister
+149,60,22,dragon rage
+149,20,29,slam
+149,90,38,agility
+149,110,47,safeguard
+149,10,55,wing attack
+149,100,61,outrage
+149,50,75,hyper beam
+150,10,1,disable
+150,30,1,confusion
+150,60,11,barrier
+150,20,22,mist
+150,70,33,swift
+150,50,44,recover
+150,90,55,safeguard
+150,40,66,psychic
+150,100,77,psych up
+150,110,88,future sight
+150,80,99,amnesia
+151,10,1,pound
+151,50,10,transform
+151,20,20,mega punch
+151,40,30,metronome
+151,30,40,psychic
+151,60,50,ancient power
+152,10,1,tackle
+152,30,1,growl
+152,40,8,razor leaf
+152,80,12,reflect
+152,60,15,poison powder
+152,100,22,synthesis
+152,20,29,body slam
+152,70,36,light screen
+152,90,43,safeguard
+152,50,50,solar beam
+153,10,1,tackle
+153,30,1,growl
+153,40,1,razor leaf
+153,90,1,reflect
+153,50,8,razor leaf
+153,100,12,reflect
+153,70,15,poison powder
+153,120,23,synthesis
+153,20,31,body slam
+153,80,39,light screen
+153,110,47,safeguard
+153,60,55,solar beam
+154,10,1,tackle
+154,30,1,growl
+154,40,1,razor leaf
+154,90,1,reflect
+154,50,8,razor leaf
+154,100,12,reflect
+154,70,15,poison powder
+154,120,23,synthesis
+154,20,31,body slam
+154,80,41,light screen
+154,110,51,safeguard
+154,60,61,solar beam
+155,10,1,tackle
+155,20,1,leer
+155,60,6,smokescreen
+155,30,12,ember
+155,50,19,quick attack
+155,80,27,flame wheel
+155,70,36,swift
+155,40,46,flamethrower
+156,10,1,tackle
+156,20,1,leer
+156,60,1,smokescreen
+156,70,6,smokescreen
+156,30,12,ember
+156,50,21,quick attack
+156,90,31,flame wheel
+156,80,42,swift
+156,40,54,flamethrower
+157,10,1,tackle
+157,20,1,leer
+157,30,1,ember
+157,70,1,smokescreen
+157,80,6,smokescreen
+157,40,12,ember
+157,60,21,quick attack
+157,100,31,flame wheel
+157,90,45,swift
+157,50,60,flamethrower
+158,10,1,scratch
+158,20,1,leer
+158,60,7,rage
+158,40,13,water gun
+158,30,20,bite
+158,90,27,scary face
+158,80,35,slash
+158,70,43,screech
+158,50,52,hydro pump
+159,10,1,scratch
+159,20,1,leer
+159,60,1,rage
+159,70,7,rage
+159,40,13,water gun
+159,30,21,bite
+159,100,28,scary face
+159,90,37,slash
+159,80,45,screech
+159,50,55,hydro pump
+160,10,1,scratch
+160,20,1,leer
+160,40,1,water gun
+160,70,1,rage
+160,80,7,rage
+160,50,13,water gun
+160,30,21,bite
+160,110,28,scary face
+160,100,38,slash
+160,90,47,screech
+160,60,58,hydro pump
+161,10,1,scratch
+161,40,4,defense curl
+161,30,7,quick attack
+161,60,12,fury swipes
+161,90,17,helping hand
+161,20,24,slam
+161,80,31,follow me
+161,70,40,rest
+161,50,49,amnesia
+162,10,1,scratch
+162,30,1,quick attack
+162,50,1,defense curl
+162,60,4,defense curl
+162,40,7,quick attack
+162,80,12,fury swipes
+162,110,19,helping hand
+162,20,28,slam
+162,100,37,follow me
+162,90,48,rest
+162,70,59,amnesia
+163,10,1,tackle
+163,30,1,growl
+163,90,6,foresight
+163,40,11,peck
+163,60,16,hypnosis
+163,70,22,reflect
+163,20,28,take down
+163,50,34,confusion
+163,80,48,dream eater
+164,10,1,tackle
+164,30,1,growl
+164,40,1,peck
+164,100,1,foresight
+164,110,6,foresight
+164,50,11,peck
+164,70,16,hypnosis
+164,80,25,reflect
+164,20,33,take down
+164,60,41,confusion
+164,90,57,dream eater
+165,20,1,tackle
+165,40,8,supersonic
+165,10,15,comet punch
+165,60,22,light screen
+165,70,22,reflect
+165,90,22,safeguard
+165,100,29,baton pass
+165,80,36,swift
+165,50,43,agility
+165,30,50,double edge
+166,20,1,tackle
+166,40,1,supersonic
+166,50,8,supersonic
+166,10,15,comet punch
+166,70,24,light screen
+166,80,24,reflect
+166,100,24,safeguard
+166,110,33,baton pass
+166,90,42,swift
+166,60,51,agility
+166,30,60,double edge
+167,10,1,poison sting
+167,20,1,string shot
+167,100,6,scary face
+167,60,11,constrict
+167,50,17,night shade
+167,70,23,leech life
+167,80,30,fury swipes
+167,90,37,spider web
+167,40,45,agility
+167,30,53,psychic
+168,10,1,poison sting
+168,20,1,string shot
+168,60,1,constrict
+168,110,1,scary face
+168,120,6,scary face
+168,70,11,constrict
+168,50,17,night shade
+168,80,25,leech life
+168,90,34,fury swipes
+168,100,43,spider web
+168,40,53,agility
+168,30,63,psychic
+169,30,1,supersonic
+169,50,1,screech
+169,80,1,leech life
+169,110,1,astonish
+169,120,6,astonish
+169,40,11,supersonic
+169,20,16,bite
+169,10,21,wing attack
+169,60,28,confuse ray
+169,130,35,air cutter
+169,90,42,mean look
+169,100,49,poison fang
+169,70,56,haze
+170,50,1,thunder wave
+170,70,1,bubble
+170,20,5,supersonic
+170,80,13,flail
+170,30,17,water gun
+170,90,25,spark
+170,60,29,confuse ray
+170,10,37,take down
+170,40,41,hydro pump
+170,100,49,charge
+171,20,1,supersonic
+171,60,1,thunder wave
+171,80,1,bubble
+171,30,5,supersonic
+171,90,13,flail
+171,40,17,water gun
+171,100,25,spark
+171,70,32,confuse ray
+171,10,43,take down
+171,50,50,hydro pump
+171,110,61,charge
+172,20,1,thunder shock
+172,50,1,charm
+172,10,6,tail whip
+172,30,8,thunder wave
+172,40,11,sweet kiss
+173,10,1,pound
+173,40,1,charm
+173,50,4,encore
+173,20,8,sing
+173,30,13,sweet kiss
+173,60,17,magical leaf
+174,20,1,sing
+174,50,1,charm
+174,30,4,defense curl
+174,10,9,pound
+174,40,14,sweet kiss
+175,20,1,growl
+175,50,1,charm
+175,30,4,metronome
+175,40,9,sweet kiss
+175,120,13,yawn
+175,80,17,encore
+175,90,21,ancient power
+175,100,25,follow me
+175,110,29,wish
+175,60,33,safeguard
+175,10,37,double edge
+175,70,41,baton pass
+176,20,1,growl
+176,30,1,metronome
+176,50,1,sweet kiss
+176,70,1,charm
+176,150,1,magical leaf
+176,40,4,metronome
+176,60,9,sweet kiss
+176,140,13,yawn
+176,100,17,encore
+176,110,21,ancient power
+176,120,25,follow me
+176,130,29,wish
+176,80,33,safeguard
+176,10,37,double edge
+176,90,41,baton pass
+177,10,1,leer
+177,20,1,peck
+177,50,10,night shade
+177,40,20,teleport
+177,70,30,future sight
+177,80,30,wish
+177,60,40,confuse ray
+177,30,50,psychic
+178,10,1,leer
+178,20,1,peck
+178,50,10,night shade
+178,40,20,teleport
+178,70,35,future sight
+178,80,35,wish
+178,60,50,confuse ray
+178,30,65,psychic
+179,10,1,tackle
+179,20,1,growl
+179,30,9,thunder shock
+179,40,16,thunder wave
+179,70,23,cotton spore
+179,60,30,light screen
+179,50,37,thunder
+180,10,1,tackle
+180,20,1,growl
+180,30,1,thunder shock
+180,40,9,thunder shock
+180,50,18,thunder wave
+180,80,27,cotton spore
+180,70,36,light screen
+180,60,45,thunder
+181,20,1,tackle
+181,30,1,growl
+181,40,1,thunder shock
+181,60,1,thunder wave
+181,50,9,thunder shock
+181,70,18,thunder wave
+181,100,27,cotton spore
+181,10,30,thunder punch
+181,90,42,light screen
+181,80,57,thunder
+182,10,1,absorb
+182,30,1,stun spore
+182,50,1,sweet scent
+182,60,1,magical leaf
+182,40,44,petal dance
+182,20,55,solar beam
+183,10,1,tackle
+183,70,3,defense curl
+183,30,6,tail whip
+183,40,10,water gun
+183,80,15,rollout
+183,60,21,bubble beam
+183,20,28,double edge
+183,90,36,rain dance
+183,50,45,hydro pump
+184,10,1,tackle
+184,30,1,tail whip
+184,50,1,water gun
+184,90,1,defense curl
+184,100,3,defense curl
+184,40,6,tail whip
+184,60,10,water gun
+184,110,15,rollout
+184,80,24,bubble beam
+184,20,34,double edge
+184,120,45,rain dance
+184,70,57,hydro pump
+185,40,1,rock throw
+185,50,1,mimic
+185,70,9,flail
+185,30,17,low kick
+185,60,25,rock slide
+185,90,33,block
+185,80,41,feint attack
+185,10,49,slam
+185,20,57,double edge
+186,10,1,double slap
+186,20,1,water gun
+186,30,1,hypnosis
+186,40,1,perish song
+186,50,35,perish song
+186,60,51,swagger
+187,80,1,splash
+187,20,5,tail whip
+187,100,5,synthesis
+187,10,10,tackle
+187,50,13,poison powder
+187,60,15,stun spore
+187,70,17,sleep powder
+187,40,20,leech seed
+187,90,25,cotton spore
+187,30,30,mega drain
+188,10,1,tackle
+188,30,1,tail whip
+188,100,1,splash
+188,120,1,synthesis
+188,40,5,tail whip
+188,130,5,synthesis
+188,20,10,tackle
+188,70,13,poison powder
+188,80,15,stun spore
+188,90,17,sleep powder
+188,60,22,leech seed
+188,110,29,cotton spore
+188,50,36,mega drain
+189,10,1,tackle
+189,30,1,tail whip
+189,100,1,splash
+189,120,1,synthesis
+189,40,5,tail whip
+189,130,5,synthesis
+189,20,10,tackle
+189,70,13,poison powder
+189,80,15,stun spore
+189,90,17,sleep powder
+189,60,22,leech seed
+189,110,33,cotton spore
+189,50,44,mega drain
+190,10,1,scratch
+190,30,1,tail whip
+190,20,6,sand attack
+190,90,13,astonish
+190,80,18,baton pass
+190,100,25,tickle
+190,70,31,fury swipes
+190,60,38,swift
+190,50,43,screech
+190,40,50,agility
+191,10,1,absorb
+191,30,6,growth
+191,20,13,mega drain
+191,70,18,ingrain
+191,80,25,endeavor
+191,60,30,sunny day
+191,50,37,synthesis
+191,40,42,giga drain
+192,10,1,pound
+192,20,1,absorb
+192,30,6,growth
+192,40,13,razor leaf
+192,80,18,ingrain
+192,90,25,bullet seed
+192,70,30,sunny day
+192,60,37,petal dance
+192,50,42,solar beam
+193,20,1,tackle
+193,90,1,foresight
+193,60,6,quick attack
+193,80,12,double team
+193,40,17,sonic boom
+193,50,23,hypnosis
+193,100,28,detect
+193,110,34,uproar
+193,10,39,wing attack
+193,30,45,supersonic
+193,70,50,screech
+194,20,1,tail whip
+194,40,1,water gun
+194,10,11,slam
+194,100,16,mud shot
+194,70,21,amnesia
+194,90,31,yawn
+194,50,36,earthquake
+194,80,41,rain dance
+194,30,51,mist
+194,60,51,haze
+195,20,1,tail whip
+195,40,1,water gun
+195,10,11,slam
+195,100,16,mud shot
+195,70,23,amnesia
+195,90,35,yawn
+195,50,42,earthquake
+195,80,49,rain dance
+195,30,61,mist
+195,60,61,haze
+196,20,1,tackle
+196,30,1,tail whip
+196,110,1,helping hand
+196,10,8,sand attack
+196,50,16,confusion
+196,70,23,quick attack
+196,80,30,swift
+196,40,36,psybeam
+196,100,42,psych up
+196,60,47,psychic
+196,90,52,morning sun
+197,20,1,tackle
+197,30,1,tail whip
+197,110,1,helping hand
+197,10,8,sand attack
+197,90,16,pursuit
+197,40,23,quick attack
+197,60,30,confuse ray
+197,70,36,feint attack
+197,80,42,mean look
+197,50,47,screech
+197,100,52,moonlight
+198,10,1,peck
+198,80,9,astonish
+198,60,14,pursuit
+198,30,22,haze
+198,20,27,night shade
+198,40,35,feint attack
+198,70,40,taunt
+198,50,48,mean look
+199,20,1,tackle
+199,80,1,curse
+199,110,1,yawn
+199,30,6,growl
+199,50,13,water gun
+199,60,17,confusion
+199,40,24,disable
+199,10,29,headbutt
+199,90,36,swagger
+199,70,40,psychic
+199,100,47,psych up
+200,10,1,growl
+200,40,1,psywave
+200,50,6,spite
+200,100,11,astonish
+200,30,17,confuse ray
+200,70,23,mean look
+200,20,30,psybeam
+200,80,37,pain split
+200,60,45,perish song
+200,90,53,grudge
+201,10,1,hidden power
+202,10,1,counter
+202,20,1,destiny bond
+202,30,1,safeguard
+202,40,1,mirror coat
+203,20,1,tackle
+203,30,1,growl
+203,90,7,astonish
+203,50,13,confusion
+203,10,19,stomp
+203,100,25,odor sleuth
+203,60,31,agility
+203,70,37,baton pass
+203,40,43,psybeam
+203,80,49,crunch
+204,10,1,tackle
+204,70,1,protect
+204,50,8,self destruct
+204,20,15,take down
+204,90,22,rapid spin
+204,40,29,bide
+204,60,36,explosion
+204,80,43,spikes
+204,30,50,double edge
+205,10,1,tackle
+205,50,1,self destruct
+205,80,1,protect
+205,60,8,self destruct
+205,20,15,take down
+205,110,22,rapid spin
+205,40,29,bide
+205,100,31,zap cannon
+205,70,39,explosion
+205,90,49,spikes
+205,30,59,double edge
+206,20,1,rage
+206,40,4,defense curl
+206,100,11,yawn
+206,50,14,glare
+206,80,21,rollout
+206,70,24,spite
+206,90,31,pursuit
+206,30,34,screech
+206,10,41,take down
+206,60,44,flail
+206,110,51,endeavor
+207,30,1,poison sting
+207,20,6,sand attack
+207,60,13,harden
+207,40,20,quick attack
+207,80,28,feint attack
+207,70,36,slash
+207,50,44,screech
+207,10,52,guillotine
+208,30,1,tackle
+208,70,1,screech
+208,10,8,bind
+208,50,12,rock throw
+208,80,19,harden
+208,60,23,rage
+208,100,30,dragon breath
+208,90,34,sandstorm
+208,20,41,slam
+208,110,45,iron tail
+208,120,52,crunch
+208,40,56,double edge
+209,10,1,tackle
+209,80,1,scary face
+209,30,4,tail whip
+209,90,8,charm
+209,40,13,bite
+209,70,19,lick
+209,50,26,roar
+209,60,34,rage
+209,20,43,take down
+209,100,53,crunch
+210,10,1,tackle
+210,80,1,scary face
+210,30,4,tail whip
+210,90,8,charm
+210,40,13,bite
+210,70,19,lick
+210,50,28,roar
+210,60,38,rage
+210,20,49,take down
+210,100,61,crunch
+211,10,1,tackle
+211,30,1,poison sting
+211,90,1,spikes
+211,70,9,harden
+211,80,9,minimize
+211,50,13,water gun
+211,40,21,pin missile
+211,110,25,revenge
+211,20,33,take down
+211,60,37,hydro pump
+211,100,45,destiny bond
+212,20,1,leer
+212,40,1,quick attack
+212,50,6,focus energy
+212,90,11,pursuit
+212,70,16,false swipe
+212,30,21,agility
+212,100,26,metal claw
+212,60,31,slash
+212,10,36,swords dance
+212,110,41,iron defense
+212,80,46,fury cutter
+213,20,1,withdraw
+213,40,1,constrict
+213,10,9,wrap
+213,70,14,encore
+213,60,23,safeguard
+213,30,28,bide
+213,50,37,rest
+214,30,1,tackle
+214,50,1,leer
+214,10,6,horn attack
+214,80,11,endure
+214,20,17,fury attack
+214,100,23,brick break
+214,60,30,counter
+214,40,37,take down
+214,70,45,reversal
+214,90,53,megahorn
+215,10,1,scratch
+215,20,1,leer
+215,120,1,taunt
+215,40,8,quick attack
+215,50,15,screech
+215,80,22,feint attack
+215,60,29,fury swipes
+215,30,36,agility
+215,90,43,icy wind
+215,70,50,slash
+215,110,57,beat up
+215,100,64,metal claw
+216,10,1,scratch
+216,30,1,leer
+216,40,7,lick
+216,50,13,fury swipes
+216,100,19,fake tears
+216,90,25,feint attack
+216,60,31,rest
+216,70,37,slash
+216,80,43,snore
+216,20,49,thrash
+217,10,1,scratch
+217,30,1,leer
+217,40,1,lick
+217,60,1,fury swipes
+217,50,7,lick
+217,70,13,fury swipes
+217,120,19,fake tears
+217,110,25,feint attack
+217,80,31,rest
+217,90,37,slash
+217,100,43,snore
+217,20,49,thrash
+218,60,1,smog
+218,90,1,yawn
+218,20,8,ember
+218,40,15,rock throw
+218,50,22,harden
+218,70,29,amnesia
+218,30,36,flamethrower
+218,80,43,rock slide
+218,10,50,body slam
+219,20,1,ember
+219,50,1,rock throw
+219,80,1,smog
+219,110,1,yawn
+219,30,8,ember
+219,60,15,rock throw
+219,70,22,harden
+219,90,29,amnesia
+219,40,36,flamethrower
+219,100,48,rock slide
+219,10,60,body slam
+220,10,1,tackle
+220,80,1,odor sleuth
+220,60,10,powder snow
+220,70,19,endure
+220,20,28,take down
+220,30,37,mist
+220,40,46,blizzard
+220,50,55,amnesia
+221,10,1,horn attack
+221,70,1,powder snow
+221,90,1,endure
+221,110,1,odor sleuth
+221,80,10,powder snow
+221,100,19,endure
+221,30,28,take down
+221,20,33,fury attack
+221,40,42,mist
+221,50,56,blizzard
+221,60,70,amnesia
+222,10,1,tackle
+222,40,6,harden
+222,60,12,bubble
+222,30,17,recover
+222,90,17,refresh
+222,20,23,bubble beam
+222,50,28,spike cannon
+222,100,34,rock blast
+222,70,39,mirror coat
+222,80,45,ancient power
+223,10,1,water gun
+223,80,11,lock on
+223,30,22,psybeam
+223,40,22,bubble beam
+223,50,22,aurora beam
+223,70,33,focus energy
+223,20,44,ice beam
+223,60,55,hyper beam
+224,10,1,water gun
+224,80,11,constrict
+224,30,22,psybeam
+224,40,22,bubble beam
+224,50,22,aurora beam
+224,90,25,octazooka
+224,70,38,focus energy
+224,20,54,ice beam
+224,60,70,hyper beam
+225,10,1,present
+226,20,1,tackle
+226,80,1,bubble
+226,40,8,supersonic
+226,50,15,bubble beam
+226,30,22,take down
+226,60,29,agility
+226,10,36,wing attack
+226,90,43,water pulse
+226,70,50,confuse ray
+227,30,1,leer
+227,40,1,peck
+227,10,10,sand attack
+227,60,13,swift
+227,50,16,agility
+227,20,26,fury attack
+227,90,29,air cutter
+227,80,32,steel wing
+227,70,42,spikes
+227,100,45,metal sound
+228,10,1,leer
+228,40,1,ember
+228,100,7,howl
+228,60,13,smog
+228,30,19,roar
+228,20,25,bite
+228,90,31,odor sleuth
+228,70,37,feint attack
+228,50,43,flamethrower
+228,80,49,crunch
+229,10,1,leer
+229,40,1,ember
+229,100,1,howl
+229,110,7,howl
+229,60,13,smog
+229,30,19,roar
+229,20,27,bite
+229,90,35,odor sleuth
+229,70,43,feint attack
+229,50,51,flamethrower
+229,80,59,crunch
+230,10,1,leer
+230,30,1,water gun
+230,70,1,smokescreen
+230,90,1,bubble
+230,80,8,smokescreen
+230,20,15,leer
+230,40,22,water gun
+230,100,29,twister
+230,60,40,agility
+230,50,51,hydro pump
+230,110,62,dragon dance
+231,10,1,tackle
+231,40,1,growl
+231,90,1,odor sleuth
+231,50,9,defense curl
+231,60,17,flail
+231,20,25,take down
+231,80,33,rollout
+231,70,41,endure
+231,30,49,double edge
+232,10,1,horn attack
+232,30,1,growl
+232,90,1,odor sleuth
+232,50,9,defense curl
+232,60,17,flail
+232,20,25,fury attack
+232,70,33,rollout
+232,80,41,rapid spin
+232,40,49,earthquake
+233,10,1,tackle
+233,60,1,conversion
+233,80,1,conversion 2
+233,30,9,agility
+233,20,12,psybeam
+233,40,20,recover
+233,50,24,defense curl
+233,100,32,lock on
+233,70,36,tri attack
+233,110,44,recycle
+233,90,48,zap cannon
+234,30,1,tackle
+234,50,7,leer
+234,90,11,astonish
+234,60,17,hypnosis
+234,10,21,stomp
+234,20,27,sand attack
+234,80,31,role play
+234,40,37,take down
+234,70,41,confuse ray
+234,100,47,calm mind
+235,10,1,sketch
+235,20,11,sketch
+235,30,21,sketch
+235,40,31,sketch
+235,50,41,sketch
+235,60,51,sketch
+235,70,61,sketch
+235,80,71,sketch
+235,90,81,sketch
+235,100,91,sketch
+236,10,1,tackle
+237,10,1,rolling kick
+237,100,1,revenge
+237,50,7,focus energy
+237,80,13,pursuit
+237,40,19,quick attack
+237,60,20,triple kick
+237,90,25,rapid spin
+237,20,31,counter
+237,30,37,agility
+237,70,43,detect
+237,110,49,endeavor
+238,10,1,pound
+238,60,1,lick
+238,80,9,sweet kiss
+238,70,13,powder snow
+238,40,21,confusion
+238,20,25,sing
+238,100,33,mean look
+238,110,37,fake tears
+238,50,45,psychic
+238,90,49,perish song
+238,30,57,blizzard
+239,20,1,leer
+239,50,1,quick attack
+239,10,9,thunder punch
+239,70,17,light screen
+239,80,25,swift
+239,60,33,screech
+239,30,41,thunderbolt
+239,40,49,thunder
+240,30,1,ember
+240,20,7,leer
+240,70,13,smog
+240,10,19,fire punch
+240,50,25,smokescreen
+240,90,31,sunny day
+240,40,37,flamethrower
+240,60,43,confuse ray
+240,80,49,fire blast
+241,20,1,tackle
+241,40,4,growl
+241,50,8,defense curl
+241,10,13,stomp
+241,80,19,milk drink
+241,60,26,bide
+241,70,34,rollout
+241,30,43,body slam
+241,90,53,heal bell
+242,10,1,pound
+242,50,1,growl
+242,40,4,tail whip
+242,120,7,refresh
+242,110,10,soft boiled
+242,20,13,double slap
+242,70,18,minimize
+242,60,23,sing
+242,100,28,egg bomb
+242,80,33,defense curl
+242,90,40,light screen
+242,30,47,double edge
+243,10,1,leer
+243,20,1,bite
+243,40,11,thunder shock
+243,30,21,roar
+243,60,31,quick attack
+243,80,41,spark
+243,70,51,reflect
+243,90,61,crunch
+243,50,71,thunder
+243,100,81,calm mind
+244,20,1,leer
+244,30,1,bite
+244,50,11,ember
+244,40,21,roar
+244,70,31,fire spin
+244,10,41,stomp
+244,60,51,flamethrower
+244,90,61,swagger
+244,80,71,fire blast
+244,100,81,calm mind
+245,20,1,leer
+245,30,1,bite
+245,60,11,bubble beam
+245,80,21,rain dance
+245,10,31,gust
+245,70,41,aurora beam
+245,40,51,mist
+245,90,61,mirror coat
+245,50,71,hydro pump
+245,100,81,calm mind
+246,20,1,leer
+246,30,1,bite
+246,90,8,sandstorm
+246,60,15,screech
+246,70,22,rock slide
+246,10,29,thrash
+246,80,36,scary face
+246,100,43,crunch
+246,50,50,earthquake
+246,40,57,hyper beam
+247,20,1,leer
+247,30,1,bite
+247,60,1,screech
+247,100,1,sandstorm
+247,110,8,sandstorm
+247,70,15,screech
+247,80,22,rock slide
+247,10,29,thrash
+247,90,38,scary face
+247,120,47,crunch
+247,50,56,earthquake
+247,40,65,hyper beam
+248,20,1,leer
+248,30,1,bite
+248,60,1,screech
+248,100,1,sandstorm
+248,110,8,sandstorm
+248,70,15,screech
+248,80,22,rock slide
+248,10,29,thrash
+248,90,38,scary face
+248,120,47,crunch
+248,50,61,earthquake
+248,40,75,hyper beam
+249,20,1,whirlwind
+249,70,11,safeguard
+249,10,22,gust
+249,40,33,recover
+249,30,44,hydro pump
+249,80,55,rain dance
+249,50,66,swift
+249,60,77,aeroblast
+249,90,88,ancient power
+249,100,99,future sight
+250,20,1,whirlwind
+250,60,11,safeguard
+250,10,22,gust
+250,30,33,recover
+250,40,44,fire blast
+250,80,55,sunny day
+250,50,66,swift
+250,70,77,sacred fire
+250,90,88,ancient power
+250,100,99,future sight
+251,10,1,leech seed
+251,20,1,confusion
+251,30,1,recover
+251,50,1,heal bell
+251,60,10,safeguard
+251,80,20,ancient power
+251,90,30,future sight
+251,70,40,baton pass
+251,40,50,perish song
+252,10,1,pound
+252,30,1,leer
+252,40,6,absorb
+252,70,11,quick attack
+252,110,16,pursuit
+252,80,21,screech
+252,50,26,mega drain
+252,60,31,agility
+252,20,36,slam
+252,90,41,detect
+252,100,46,giga drain
+253,10,1,pound
+253,30,1,leer
+253,40,1,absorb
+253,70,1,quick attack
+253,50,6,absorb
+253,80,11,quick attack
+253,120,16,fury cutter
+253,130,17,pursuit
+253,90,23,screech
+253,140,29,leaf blade
+253,60,35,agility
+253,20,41,slam
+253,100,47,detect
+253,110,53,false swipe
+254,10,1,pound
+254,30,1,leer
+254,40,1,absorb
+254,70,1,quick attack
+254,50,6,absorb
+254,80,11,quick attack
+254,120,16,fury cutter
+254,130,17,pursuit
+254,90,23,screech
+254,140,29,leaf blade
+254,60,35,agility
+254,20,43,slam
+254,100,51,detect
+254,110,59,false swipe
+255,10,1,scratch
+255,30,1,growl
+255,90,7,focus energy
+255,40,10,ember
+255,60,16,peck
+255,20,19,sand attack
+255,70,25,fire spin
+255,80,28,quick attack
+255,110,34,slash
+255,100,37,mirror move
+255,50,43,flamethrower
+256,10,1,scratch
+256,40,1,growl
+256,50,1,ember
+256,90,1,focus energy
+256,100,7,focus energy
+256,60,13,ember
+256,20,16,double kick
+256,70,17,peck
+256,30,21,sand attack
+256,140,28,bulk up
+256,80,32,quick attack
+256,120,39,slash
+256,110,43,mirror move
+256,130,50,sky uppercut
+257,10,1,fire punch
+257,20,1,scratch
+257,50,1,growl
+257,60,1,ember
+257,100,1,focus energy
+257,110,7,focus energy
+257,70,13,ember
+257,30,16,double kick
+257,80,17,peck
+257,40,21,sand attack
+257,160,28,bulk up
+257,90,32,quick attack
+257,140,36,blaze kick
+257,130,42,slash
+257,120,49,mirror move
+257,150,59,sky uppercut
+258,10,1,tackle
+258,30,1,growl
+258,80,6,mud slap
+258,40,10,water gun
+258,60,15,bide
+258,90,19,foresight
+258,120,24,mud sport
+258,20,28,take down
+258,100,33,whirlpool
+258,70,37,protect
+258,50,42,hydro pump
+258,110,46,endeavor
+259,10,1,tackle
+259,30,1,growl
+259,40,1,water gun
+259,90,1,mud slap
+259,100,6,mud slap
+259,50,10,water gun
+259,70,15,bide
+259,150,16,mud shot
+259,110,20,foresight
+259,130,25,mud sport
+259,20,31,take down
+259,140,37,muddy water
+259,80,42,protect
+259,60,46,earthquake
+259,120,53,endeavor
+260,10,1,tackle
+260,30,1,growl
+260,40,1,water gun
+260,90,1,mud slap
+260,100,6,mud slap
+260,50,10,water gun
+260,70,15,bide
+260,150,16,mud shot
+260,110,20,foresight
+260,130,25,mud sport
+260,20,31,take down
+260,140,39,muddy water
+260,80,46,protect
+260,60,52,earthquake
+260,120,61,endeavor
+261,20,1,tackle
+261,120,5,howl
+261,10,9,sand attack
+261,40,13,bite
+261,110,17,odor sleuth
+261,50,21,roar
+261,80,25,swagger
+261,70,29,scary face
+261,30,33,take down
+261,100,37,taunt
+261,90,41,crunch
+261,60,45,thief
+262,10,1,sand attack
+262,30,1,tackle
+262,50,1,bite
+262,140,1,howl
+262,150,5,howl
+262,20,9,sand attack
+262,60,13,bite
+262,130,17,odor sleuth
+262,70,22,roar
+262,100,27,swagger
+262,90,32,scary face
+262,40,37,take down
+262,120,42,taunt
+262,110,47,crunch
+262,80,52,thief
+263,30,1,tackle
+263,60,1,growl
+263,40,5,tail whip
+263,20,9,headbutt
+263,10,13,sand attack
+263,110,17,odor sleuth
+263,100,21,mud sport
+263,50,25,pin missile
+263,120,29,covet
+263,80,33,flail
+263,70,37,rest
+263,90,41,belly drum
+264,20,1,headbutt
+264,40,1,tackle
+264,50,1,tail whip
+264,70,1,growl
+264,60,5,tail whip
+264,30,9,headbutt
+264,10,13,sand attack
+264,130,17,odor sleuth
+264,120,23,mud sport
+264,80,29,fury swipes
+264,140,35,covet
+264,100,41,slash
+264,90,47,rest
+264,110,53,belly drum
+265,10,1,tackle
+265,30,1,string shot
+265,20,5,poison sting
+266,10,1,harden
+266,20,7,harden
+267,30,1,absorb
+267,40,10,absorb
+267,10,13,gust
+267,60,17,stun spore
+267,90,20,morning sun
+267,50,24,mega drain
+267,20,27,whirlwind
+267,80,31,attract
+267,100,34,silver wind
+267,70,38,giga drain
+268,10,1,harden
+268,20,7,harden
+269,50,1,confusion
+269,60,10,confusion
+269,10,13,gust
+269,80,17,protect
+269,90,20,moonlight
+269,30,24,psybeam
+269,20,27,whirlwind
+269,70,31,light screen
+269,100,34,silver wind
+269,40,38,toxic
+270,70,1,astonish
+270,10,3,growl
+270,30,7,absorb
+270,60,13,nature power
+270,20,21,mist
+270,50,31,rain dance
+270,40,43,mega drain
+271,90,1,astonish
+271,10,3,growl
+271,30,7,absorb
+271,80,13,nature power
+271,60,19,fake out
+271,40,25,fury swipes
+271,100,31,water sport
+271,50,37,thief
+271,70,43,uproar
+271,20,49,hydro pump
+272,10,1,growl
+272,20,1,absorb
+272,30,1,nature power
+272,40,1,astonish
+273,30,1,bide
+273,20,3,harden
+273,10,7,growth
+273,70,13,nature power
+273,50,21,synthesis
+273,60,31,sunny day
+273,40,43,explosion
+274,10,1,pound
+274,40,3,harden
+274,30,7,growth
+274,90,13,nature power
+274,70,19,fake out
+274,80,25,torment
+274,50,31,feint attack
+274,20,37,razor wind
+274,60,43,swagger
+274,100,49,extrasensory
+275,10,1,pound
+275,20,1,growth
+275,30,1,harden
+275,40,1,nature power
+276,20,1,growl
+276,30,1,peck
+276,70,4,focus energy
+276,50,8,quick attack
+276,10,13,wing attack
+276,60,19,double team
+276,80,26,endeavor
+276,90,34,aerial ace
+276,40,43,agility
+277,20,1,growl
+277,30,1,peck
+277,50,1,quick attack
+277,80,1,focus energy
+277,90,4,focus energy
+277,60,8,quick attack
+277,10,13,wing attack
+277,70,19,double team
+277,100,28,endeavor
+277,110,38,aerial ace
+277,40,49,agility
+278,20,1,growl
+278,50,1,water gun
+278,30,7,supersonic
+278,10,13,wing attack
+278,40,21,mist
+278,70,31,quick attack
+278,80,43,pursuit
+278,60,55,agility
+279,10,1,wing attack
+279,30,1,growl
+279,60,1,water gun
+279,130,1,water sport
+279,70,3,water gun
+279,40,7,supersonic
+279,20,13,wing attack
+279,50,21,mist
+279,90,25,protect
+279,100,33,stockpile
+279,120,33,swallow
+279,110,47,spit up
+279,80,61,hydro pump
+280,10,1,growl
+280,20,6,confusion
+280,60,11,double team
+280,50,16,teleport
+280,100,21,calm mind
+280,30,26,psychic
+280,90,31,imprison
+280,80,36,future sight
+280,40,41,hypnosis
+280,70,46,dream eater
+281,10,1,growl
+281,20,1,confusion
+281,60,1,teleport
+281,80,1,double team
+281,130,1,magical leaf
+281,30,6,confusion
+281,90,11,double team
+281,70,16,teleport
+281,140,21,calm mind
+281,40,26,psychic
+281,120,33,imprison
+281,110,40,future sight
+281,50,47,hypnosis
+281,100,54,dream eater
+282,10,1,growl
+282,20,1,confusion
+282,60,1,teleport
+282,80,1,double team
+282,30,6,confusion
+282,90,11,double team
+282,70,16,teleport
+282,130,21,calm mind
+282,40,26,psychic
+282,120,33,imprison
+282,110,42,future sight
+282,50,51,hypnosis
+282,100,60,dream eater
+283,60,1,bubble
+283,40,7,quick attack
+283,70,13,sweet scent
+283,80,19,water sport
+283,20,25,bubble beam
+283,30,31,agility
+283,10,37,mist
+283,50,37,haze
+284,40,1,quick attack
+284,60,1,bubble
+284,80,1,sweet scent
+284,110,1,water sport
+284,50,7,quick attack
+284,90,13,sweet scent
+284,120,19,water sport
+284,10,26,gust
+284,70,33,scary face
+284,30,40,stun spore
+284,100,47,silver wind
+284,20,53,whirlwind
+285,30,1,absorb
+285,20,4,tackle
+285,80,7,stun spore
+285,50,10,leech seed
+285,40,16,mega drain
+285,10,22,headbutt
+285,70,28,poison powder
+285,60,36,growth
+285,100,45,giga drain
+285,90,54,spore
+286,20,1,tackle
+286,50,1,absorb
+286,70,1,leech seed
+286,90,1,stun spore
+286,30,4,tackle
+286,100,7,stun spore
+286,80,10,leech seed
+286,60,16,mega drain
+286,10,22,headbutt
+286,120,23,mach punch
+286,40,28,counter
+286,140,36,sky uppercut
+286,110,45,mind reader
+286,130,54,dynamic punch
+287,10,1,scratch
+287,70,1,yawn
+287,60,7,encore
+287,80,13,slack off
+287,50,19,feint attack
+287,30,25,amnesia
+287,90,31,covet
+287,20,37,counter
+287,40,43,flail
+288,10,1,scratch
+288,30,1,focus energy
+288,80,1,encore
+288,100,1,uproar
+288,90,7,encore
+288,110,13,uproar
+288,40,19,fury swipes
+288,70,25,endure
+288,50,31,slash
+288,20,37,counter
+288,120,43,focus punch
+288,60,49,reversal
+289,10,1,scratch
+289,70,1,encore
+289,90,1,yawn
+289,100,1,slack off
+289,80,7,encore
+289,110,13,slack off
+289,50,19,feint attack
+289,30,25,amnesia
+289,120,31,covet
+289,60,36,swagger
+289,20,37,counter
+289,40,43,flail
+290,10,1,scratch
+290,40,1,harden
+290,50,5,leech life
+290,20,9,sand attack
+290,60,14,fury swipes
+290,70,19,mind reader
+290,90,25,false swipe
+290,80,31,mud slap
+290,100,38,metal claw
+290,30,45,dig
+291,10,1,scratch
+291,30,1,sand attack
+291,80,1,harden
+291,90,1,leech life
+291,100,5,leech life
+291,40,9,sand attack
+291,110,14,fury swipes
+291,130,19,mind reader
+291,60,20,screech
+291,70,20,double team
+291,140,20,fury cutter
+291,20,25,swords dance
+291,120,31,slash
+291,50,38,agility
+291,150,45,baton pass
+292,10,1,scratch
+292,30,1,harden
+292,50,5,leech life
+292,20,9,sand attack
+292,60,14,fury swipes
+292,70,19,mind reader
+292,80,25,spite
+292,40,31,confuse ray
+292,90,38,shadow ball
+292,100,45,grudge
+293,10,1,pound
+293,80,5,uproar
+293,100,11,astonish
+293,110,15,howl
+293,40,21,supersonic
+293,20,25,stomp
+293,50,31,screech
+293,30,35,roar
+293,60,41,rest
+293,70,41,sleep talk
+293,90,45,hyper voice
+294,10,1,pound
+294,80,1,uproar
+294,110,1,astonish
+294,130,1,howl
+294,90,5,uproar
+294,120,11,astonish
+294,140,15,howl
+294,40,23,supersonic
+294,20,29,stomp
+294,50,37,screech
+294,30,43,roar
+294,60,51,rest
+294,70,51,sleep talk
+294,100,57,hyper voice
+295,10,1,pound
+295,90,1,uproar
+295,120,1,astonish
+295,140,1,howl
+295,100,5,uproar
+295,130,11,astonish
+295,150,15,howl
+295,40,23,supersonic
+295,20,29,stomp
+295,60,37,screech
+295,50,40,hyper beam
+295,30,45,roar
+295,70,55,rest
+295,80,55,sleep talk
+295,110,63,hyper voice
+296,30,1,tackle
+296,50,1,focus energy
+296,20,4,sand attack
+296,130,10,arm thrust
+296,90,13,vital throw
+296,100,19,fake out
+296,10,22,whirlwind
+296,120,28,knock off
+296,110,31,smelling salts
+296,70,37,belly drum
+296,80,40,endure
+296,40,46,seismic toss
+296,60,49,reversal
+297,20,1,sand attack
+297,40,1,tackle
+297,60,1,focus energy
+297,140,1,arm thrust
+297,30,4,sand attack
+297,150,10,arm thrust
+297,100,13,vital throw
+297,110,19,fake out
+297,10,22,whirlwind
+297,130,29,knock off
+297,120,33,smelling salts
+297,80,40,belly drum
+297,90,44,endure
+297,50,51,seismic toss
+297,70,55,reversal
+298,50,1,splash
+298,60,3,charm
+298,20,6,tail whip
+298,40,10,bubble
+298,10,15,slam
+298,30,21,water gun
+299,10,1,tackle
+299,40,7,harden
+299,30,13,rock throw
+299,100,16,block
+299,20,22,thunder wave
+299,60,28,rock slide
+299,90,31,sandstorm
+299,50,37,rest
+299,70,43,zap cannon
+299,80,46,lock on
+300,20,1,tackle
+300,50,1,growl
+300,40,3,tail whip
+300,90,7,attract
+300,60,13,sing
+300,10,15,double slap
+300,110,19,assist
+300,80,25,charm
+300,70,27,feint attack
+300,120,31,covet
+300,100,37,heal bell
+300,30,39,double edge
+301,10,1,double slap
+301,20,1,growl
+301,30,1,sing
+301,40,1,attract
+302,10,1,scratch
+302,20,1,leer
+302,70,5,foresight
+302,30,9,night shade
+302,130,13,astonish
+302,50,17,fury swipes
+302,110,21,fake out
+302,80,25,detect
+302,60,29,feint attack
+302,120,33,knock off
+302,40,37,confuse ray
+302,100,41,shadow ball
+302,90,45,mean look
+303,100,1,astonish
+303,110,6,fake tears
+303,20,11,bite
+303,50,16,sweet scent
+303,10,21,vice grip
+303,30,26,feint attack
+303,40,31,baton pass
+303,60,36,crunch
+303,120,41,iron defense
+303,70,46,stockpile
+303,80,46,spit up
+303,90,46,swallow
+304,20,1,tackle
+304,60,4,harden
+304,80,7,mud slap
+304,10,10,headbutt
+304,100,13,metal claw
+304,120,17,iron defense
+304,50,21,roar
+304,30,25,take down
+304,90,29,iron tail
+304,70,34,protect
+304,110,39,metal sound
+304,40,44,double edge
+305,10,1,headbutt
+305,30,1,tackle
+305,70,1,harden
+305,100,1,mud slap
+305,80,4,harden
+305,110,7,mud slap
+305,20,10,headbutt
+305,130,13,metal claw
+305,150,17,iron defense
+305,60,21,roar
+305,40,25,take down
+305,120,29,iron tail
+305,90,37,protect
+305,140,45,metal sound
+305,50,53,double edge
+306,10,1,headbutt
+306,30,1,tackle
+306,70,1,harden
+306,100,1,mud slap
+306,80,4,harden
+306,110,7,mud slap
+306,20,10,headbutt
+306,130,13,metal claw
+306,150,17,iron defense
+306,60,21,roar
+306,40,25,take down
+306,120,29,iron tail
+306,90,37,protect
+306,140,50,metal sound
+306,50,63,double edge
+307,40,1,bide
+307,20,4,meditate
+307,10,9,confusion
+307,80,12,detect
+307,100,17,hidden power
+307,90,20,swagger
+307,60,25,mind reader
+307,120,28,calm mind
+307,50,33,high jump kick
+307,110,36,psych up
+307,70,41,reversal
+307,30,44,recover
+308,10,1,fire punch
+308,20,1,ice punch
+308,30,1,thunder punch
+308,40,1,confusion
+308,60,1,meditate
+308,90,1,bide
+308,130,1,detect
+308,70,4,meditate
+308,50,9,confusion
+308,140,12,detect
+308,160,17,hidden power
+308,150,20,swagger
+308,110,25,mind reader
+308,180,28,calm mind
+308,100,33,high jump kick
+308,170,36,psych up
+308,120,47,reversal
+308,80,56,recover
+309,10,1,tackle
+309,50,4,thunder wave
+309,20,9,leer
+309,110,12,howl
+309,70,17,quick attack
+309,80,20,spark
+309,100,25,odor sleuth
+309,40,28,roar
+309,30,33,bite
+309,60,36,thunder
+309,90,41,charge
+310,10,1,tackle
+310,20,1,leer
+310,60,1,thunder wave
+310,130,1,howl
+310,70,4,thunder wave
+310,30,9,leer
+310,140,12,howl
+310,90,17,quick attack
+310,100,20,spark
+310,120,25,odor sleuth
+310,50,31,roar
+310,40,39,bite
+310,80,45,thunder
+310,110,53,charge
+311,10,1,growl
+311,20,4,thunder wave
+311,50,10,quick attack
+311,100,13,helping hand
+311,60,19,spark
+311,80,22,encore
+311,110,28,fake tears
+311,90,31,charge
+311,30,37,thunder
+311,70,40,baton pass
+311,40,47,agility
+312,10,1,growl
+312,20,4,thunder wave
+312,50,10,quick attack
+312,110,13,helping hand
+312,70,19,spark
+312,90,22,encore
+312,60,28,charm
+312,100,31,charge
+312,30,37,thunder
+312,80,40,baton pass
+312,40,47,agility
+313,10,1,tackle
+313,50,5,confuse ray
+313,40,9,double team
+313,70,13,moonlight
+313,30,17,quick attack
+313,90,21,tail glow
+313,100,25,signal beam
+313,60,29,protect
+313,80,33,helping hand
+313,20,37,double edge
+314,10,1,tackle
+314,50,5,sweet scent
+314,30,9,charm
+314,60,13,moonlight
+314,20,17,quick attack
+314,90,21,wish
+314,40,25,encore
+314,70,29,flatter
+314,80,33,helping hand
+314,100,37,covet
+315,20,1,absorb
+315,50,5,growth
+315,10,9,poison sting
+315,60,13,stun spore
+315,30,17,mega drain
+315,40,21,leech seed
+315,150,25,magical leaf
+315,140,29,grass whistle
+315,90,33,giga drain
+315,100,37,sweet scent
+315,120,41,ingrain
+315,80,45,toxic
+315,70,49,petal dance
+315,130,53,aromatherapy
+315,110,57,synthesis
+316,10,1,pound
+316,110,6,yawn
+316,50,9,poison gas
+316,30,14,sludge
+316,40,17,amnesia
+316,70,23,encore
+316,20,28,toxic
+316,80,34,stockpile
+316,90,34,spit up
+316,100,34,swallow
+316,60,39,sludge bomb
+317,10,1,pound
+317,40,1,sludge
+317,70,1,poison gas
+317,140,1,yawn
+317,150,6,yawn
+317,80,9,poison gas
+317,50,14,sludge
+317,60,17,amnesia
+317,100,23,encore
+317,20,26,body slam
+317,30,31,toxic
+317,110,40,stockpile
+317,120,40,spit up
+317,130,40,swallow
+317,90,48,sludge bomb
+318,20,1,leer
+318,30,1,bite
+318,50,7,rage
+318,70,13,focus energy
+318,80,16,scary face
+318,100,22,crunch
+318,60,28,screech
+318,10,31,take down
+318,90,37,swagger
+318,40,43,agility
+319,10,1,leer
+319,20,1,bite
+319,40,1,rage
+319,70,1,focus energy
+319,50,7,rage
+319,80,13,focus energy
+319,110,16,scary face
+319,130,22,crunch
+319,60,28,screech
+319,100,33,slash
+319,140,38,taunt
+319,120,43,swagger
+319,90,48,skull bash
+319,30,53,agility
+320,60,1,splash
+320,10,5,growl
+320,30,10,water gun
+320,80,14,rollout
+320,90,19,whirlpool
+320,100,23,astonish
+320,120,28,water pulse
+320,20,32,mist
+320,70,37,rest
+320,110,41,water spout
+320,50,46,amnesia
+320,40,50,hydro pump
+321,10,1,growl
+321,40,1,water gun
+321,80,1,splash
+321,100,1,rollout
+321,20,5,growl
+321,50,10,water gun
+321,110,14,rollout
+321,120,19,whirlpool
+321,130,23,astonish
+321,150,28,water pulse
+321,30,32,mist
+321,90,37,rest
+321,140,44,water spout
+321,70,52,amnesia
+321,60,59,hydro pump
+322,10,1,tackle
+322,40,1,growl
+322,50,11,ember
+322,100,19,magnitude
+322,80,25,focus energy
+322,20,29,take down
+322,90,31,amnesia
+322,70,35,earthquake
+322,60,41,flamethrower
+322,30,49,double edge
+323,10,1,tackle
+323,30,1,growl
+323,40,1,ember
+323,110,1,magnitude
+323,50,11,ember
+323,120,19,magnitude
+323,80,25,focus energy
+323,20,29,take down
+323,90,31,amnesia
+323,100,33,rock slide
+323,60,37,earthquake
+323,130,45,eruption
+323,70,55,fissure
+324,20,1,ember
+324,60,4,smog
+324,80,7,curse
+324,50,14,smokescreen
+324,40,17,fire spin
+324,10,20,body slam
+324,100,27,protect
+324,30,30,flamethrower
+324,120,33,iron defense
+324,70,40,amnesia
+324,90,43,flail
+324,110,46,heat wave
+325,50,1,splash
+325,40,7,psywave
+325,100,10,odor sleuth
+325,10,16,psybeam
+325,80,19,psych up
+325,30,25,confuse ray
+325,90,28,magic coat
+325,20,34,psychic
+325,60,37,rest
+325,70,37,snore
+325,110,43,bounce
+326,10,1,psybeam
+326,50,1,psywave
+326,70,1,splash
+326,120,1,odor sleuth
+326,60,7,psywave
+326,130,10,odor sleuth
+326,20,16,psybeam
+326,100,19,psych up
+326,40,25,confuse ray
+326,110,28,magic coat
+326,30,37,psychic
+326,80,43,rest
+326,90,43,snore
+326,140,55,bounce
+327,10,1,tackle
+327,100,5,uproar
+327,80,12,feint attack
+327,40,16,psybeam
+327,50,23,hypnosis
+327,60,27,dizzy punch
+327,110,34,teeter dance
+327,90,38,psych up
+327,30,45,double edge
+327,70,49,flail
+327,20,56,thrash
+328,20,1,bite
+328,10,9,sand attack
+328,50,17,feint attack
+328,80,25,sand tomb
+328,70,33,crunch
+328,40,41,dig
+328,60,49,sandstorm
+328,30,57,hyper beam
+329,10,1,sand attack
+329,30,1,bite
+329,60,1,feint attack
+329,110,1,sand tomb
+329,20,9,sand attack
+329,70,17,feint attack
+329,120,25,sand tomb
+329,100,33,crunch
+329,90,35,dragon breath
+329,50,41,screech
+329,80,49,sandstorm
+329,40,57,hyper beam
+330,10,1,sand attack
+330,30,1,bite
+330,60,1,feint attack
+330,110,1,sand tomb
+330,20,9,sand attack
+330,70,17,feint attack
+330,120,25,sand tomb
+330,100,33,crunch
+330,90,35,dragon breath
+330,50,41,screech
+330,80,53,sandstorm
+330,40,65,hyper beam
+331,20,1,poison sting
+331,40,1,leer
+331,50,5,absorb
+331,70,9,growth
+331,60,13,leech seed
+331,10,17,sand attack
+331,30,21,pin missile
+331,130,25,ingrain
+331,90,29,feint attack
+331,100,33,spikes
+331,140,37,needle arm
+331,80,41,cotton spore
+331,120,45,sandstorm
+331,110,49,destiny bond
+332,20,1,poison sting
+332,40,1,leer
+332,50,1,absorb
+332,80,1,growth
+332,160,1,revenge
+332,60,5,absorb
+332,90,9,growth
+332,70,13,leech seed
+332,10,17,sand attack
+332,30,21,pin missile
+332,150,25,ingrain
+332,110,29,feint attack
+332,120,35,spikes
+332,170,41,needle arm
+332,100,47,cotton spore
+332,140,53,sandstorm
+332,130,59,destiny bond
+333,30,1,growl
+333,60,1,peck
+333,110,8,astonish
+333,40,11,sing
+333,10,18,fury attack
+333,90,21,safeguard
+333,50,28,mist
+333,20,31,take down
+333,70,38,mirror move
+333,100,41,refresh
+333,80,48,perish song
+334,30,1,growl
+334,40,1,sing
+334,70,1,peck
+334,130,1,astonish
+334,140,8,astonish
+334,50,11,sing
+334,10,18,fury attack
+334,100,21,safeguard
+334,60,28,mist
+334,20,31,take down
+334,110,35,dragon breath
+334,150,40,dragon dance
+334,120,45,refresh
+334,90,54,perish song
+334,80,59,sky attack
+335,10,1,scratch
+335,30,4,leer
+335,40,7,quick attack
+335,20,10,swords dance
+335,80,13,fury cutter
+335,50,19,slash
+335,90,25,pursuit
+335,110,31,crush claw
+335,100,37,taunt
+335,60,46,detect
+335,70,55,false swipe
+336,10,1,wrap
+336,50,7,lick
+336,20,10,bite
+336,100,16,poison tail
+336,30,19,screech
+336,60,25,glare
+336,80,28,crunch
+336,90,34,poison fang
+336,70,37,swagger
+336,40,43,haze
+337,10,1,tackle
+337,60,1,harden
+337,30,7,confusion
+337,20,13,rock throw
+337,50,19,hypnosis
+337,70,25,psywave
+337,100,31,cosmic power
+337,40,37,psychic
+337,90,43,future sight
+337,80,49,explosion
+338,10,1,tackle
+338,60,1,harden
+338,50,7,confusion
+338,40,13,rock throw
+338,30,19,fire spin
+338,70,25,psywave
+338,100,31,cosmic power
+338,90,37,rock slide
+338,20,43,solar beam
+338,80,49,explosion
+339,70,1,mud slap
+339,100,6,mud sport
+339,110,6,water sport
+339,10,11,water gun
+339,80,16,magnitude
+339,40,21,amnesia
+339,50,26,rest
+339,60,26,snore
+339,20,31,earthquake
+339,90,36,future sight
+339,30,41,fissure
+340,70,1,mud slap
+340,100,1,mud sport
+340,120,1,tickle
+340,130,1,water sport
+340,110,6,mud sport
+340,140,6,water sport
+340,10,11,water gun
+340,80,16,magnitude
+340,40,21,amnesia
+340,50,26,rest
+340,60,26,snore
+340,20,36,earthquake
+340,90,46,future sight
+340,30,56,fissure
+341,70,1,bubble
+341,60,7,harden
+341,10,10,vice grip
+341,40,13,leer
+341,50,19,bubble beam
+341,90,22,protect
+341,120,25,knock off
+341,110,31,taunt
+341,80,34,crabhammer
+341,30,37,swords dance
+341,100,43,crunch
+341,20,46,guillotine
+342,10,1,vice grip
+342,50,1,leer
+342,80,1,harden
+342,100,1,bubble
+342,90,7,harden
+342,20,10,vice grip
+342,60,13,leer
+342,70,19,bubble beam
+342,120,22,protect
+342,150,25,knock off
+342,140,33,taunt
+342,110,38,crabhammer
+342,40,43,swords dance
+342,130,51,crunch
+342,30,56,guillotine
+343,20,1,confusion
+343,30,3,harden
+343,80,5,rapid spin
+343,60,7,mud slap
+343,10,11,psybeam
+343,100,15,rock tomb
+343,40,19,self destruct
+343,90,25,ancient power
+343,70,31,sandstorm
+343,110,37,cosmic power
+343,50,45,explosion
+344,30,1,confusion
+344,40,1,teleport
+344,50,1,harden
+344,110,1,rapid spin
+344,60,3,harden
+344,120,5,rapid spin
+344,90,7,mud slap
+344,10,11,psybeam
+344,140,15,rock tomb
+344,70,19,self destruct
+344,130,25,ancient power
+344,100,31,sandstorm
+344,20,36,hyper beam
+344,150,42,cosmic power
+344,80,55,explosion
+345,100,1,astonish
+345,30,8,constrict
+345,10,15,acid
+345,90,22,ingrain
+345,20,29,confuse ray
+345,40,36,amnesia
+345,50,43,ancient power
+345,60,50,stockpile
+345,70,50,spit up
+345,80,50,swallow
+346,10,1,acid
+346,40,1,constrict
+346,110,1,ingrain
+346,130,1,astonish
+346,50,8,constrict
+346,20,15,acid
+346,120,22,ingrain
+346,30,29,confuse ray
+346,60,36,amnesia
+346,70,48,ancient power
+346,80,60,stockpile
+346,90,60,spit up
+346,100,60,swallow
+347,10,1,scratch
+347,30,7,harden
+347,90,13,mud sport
+347,20,19,water gun
+347,70,25,metal claw
+347,50,31,protect
+347,80,37,ancient power
+347,60,43,fury cutter
+347,40,49,slash
+347,100,55,rock blast
+348,10,1,scratch
+348,20,1,water gun
+348,40,1,harden
+348,110,1,mud sport
+348,50,7,harden
+348,120,13,mud sport
+348,30,19,water gun
+348,90,25,metal claw
+348,70,31,protect
+348,100,37,ancient power
+348,80,46,fury cutter
+348,60,55,slash
+348,130,64,rock blast
+349,20,1,splash
+349,10,15,tackle
+349,30,30,flail
+350,20,1,water gun
+350,10,5,wrap
+350,100,10,water sport
+350,90,15,refresh
+350,110,20,water pulse
+350,70,25,twister
+350,40,30,recover
+350,80,35,rain dance
+350,30,40,hydro pump
+350,50,45,attract
+350,60,50,safeguard
+351,10,1,tackle
+351,20,10,ember
+351,30,10,water gun
+351,40,10,powder snow
+351,50,20,rain dance
+351,60,20,sunny day
+351,70,20,hail
+351,80,30,weather ball
+352,10,1,scratch
+352,30,1,tail whip
+352,60,1,lick
+352,100,1,thief
+352,130,1,astonish
+352,20,4,bind
+352,110,7,feint attack
+352,70,12,fury swipes
+352,40,17,psybeam
+352,50,24,screech
+352,80,31,slash
+352,90,40,substitute
+352,120,49,ancient power
+353,80,1,knock off
+353,20,8,screech
+353,10,13,night shade
+353,30,20,curse
+353,40,25,spite
+353,70,32,will o wisp
+353,50,37,feint attack
+353,60,44,shadow ball
+353,100,49,snatch
+353,90,56,grudge
+354,10,1,night shade
+354,30,1,screech
+354,50,1,curse
+354,110,1,knock off
+354,40,8,screech
+354,20,13,night shade
+354,60,20,curse
+354,70,25,spite
+354,100,32,will o wisp
+354,80,39,feint attack
+354,90,48,shadow ball
+354,130,55,snatch
+354,120,64,grudge
+355,10,1,leer
+355,30,1,night shade
+355,20,5,disable
+355,60,12,foresight
+355,110,16,astonish
+355,40,23,confuse ray
+355,80,27,pursuit
+355,50,34,curse
+355,100,38,will o wisp
+355,70,45,mean look
+355,90,49,future sight
+356,10,1,bind
+356,20,1,leer
+356,30,1,disable
+356,50,1,night shade
+356,40,5,disable
+356,80,12,foresight
+356,130,16,astonish
+356,60,23,confuse ray
+356,100,27,pursuit
+356,70,34,curse
+356,140,37,shadow punch
+356,120,41,will o wisp
+356,90,51,mean look
+356,110,58,future sight
+357,10,1,gust
+357,50,1,leer
+357,60,7,growth
+357,70,11,razor leaf
+357,30,17,stomp
+357,90,21,sweet scent
+357,20,27,whirlwind
+357,110,31,magical leaf
+357,40,37,body slam
+357,80,41,solar beam
+357,100,47,synthesis
+358,10,1,wrap
+358,40,6,growl
+358,120,9,astonish
+358,50,14,confusion
+358,20,17,take down
+358,100,22,uproar
+358,110,25,yawn
+358,70,30,psywave
+358,30,33,double edge
+358,80,38,heal bell
+358,90,41,safeguard
+358,60,46,psychic
+359,10,1,scratch
+359,40,5,leer
+359,110,9,taunt
+359,60,13,quick attack
+359,20,17,razor wind
+359,50,21,bite
+359,30,26,swords dance
+359,70,31,double team
+359,80,36,slash
+359,100,41,future sight
+359,90,46,perish song
+360,20,1,splash
+360,40,1,charm
+360,60,1,encore
+360,10,15,counter
+360,30,15,destiny bond
+360,50,15,safeguard
+360,70,15,mirror coat
+361,20,1,leer
+361,70,1,powder snow
+361,60,7,double team
+361,30,10,bite
+361,90,16,icy wind
+361,10,19,headbutt
+361,80,25,protect
+361,100,28,crunch
+361,40,34,ice beam
+361,110,37,hail
+361,50,43,blizzard
+362,20,1,leer
+362,30,1,bite
+362,70,1,double team
+362,90,1,powder snow
+362,80,7,double team
+362,40,10,bite
+362,110,16,icy wind
+362,10,19,headbutt
+362,100,25,protect
+362,120,28,crunch
+362,50,34,ice beam
+362,130,42,hail
+362,60,53,blizzard
+362,140,61,sheer cold
+363,20,1,growl
+363,30,1,water gun
+363,60,1,defense curl
+363,90,1,powder snow
+363,100,7,encore
+363,120,13,ice ball
+363,10,19,body slam
+363,50,25,aurora beam
+363,110,31,hail
+363,70,37,rest
+363,80,37,snore
+363,40,43,blizzard
+363,130,49,sheer cold
+364,20,1,growl
+364,30,1,water gun
+364,60,1,defense curl
+364,90,1,powder snow
+364,100,7,encore
+364,120,13,ice ball
+364,10,19,body slam
+364,50,25,aurora beam
+364,110,31,hail
+364,70,39,rest
+364,80,39,snore
+364,40,47,blizzard
+364,130,55,sheer cold
+365,20,1,growl
+365,30,1,water gun
+365,60,1,defense curl
+365,90,1,powder snow
+365,100,7,encore
+365,120,13,ice ball
+365,10,19,body slam
+365,50,25,aurora beam
+365,110,31,hail
+365,70,39,rest
+365,80,39,snore
+365,40,50,blizzard
+365,130,61,sheer cold
+366,10,1,water gun
+366,20,1,clamp
+366,30,1,whirlpool
+366,40,1,iron defense
+367,70,1,whirlpool
+367,10,8,bite
+367,30,15,screech
+367,80,22,water pulse
+367,40,29,scary face
+367,60,36,crunch
+367,50,43,baton pass
+367,20,50,hydro pump
+368,70,1,whirlpool
+368,20,8,confusion
+368,40,15,agility
+368,80,22,water pulse
+368,50,29,amnesia
+368,30,36,psychic
+368,60,43,baton pass
+368,10,50,hydro pump
+369,10,1,tackle
+369,60,1,harden
+369,40,8,water gun
+369,110,15,rock tomb
+369,90,22,yawn
+369,20,29,take down
+369,100,36,mud sport
+369,80,43,ancient power
+369,70,50,rest
+369,30,57,double edge
+369,50,64,hydro pump
+370,10,1,tackle
+370,70,4,charm
+370,30,12,water gun
+370,40,16,agility
+370,20,24,take down
+370,80,28,attract
+370,60,36,sweet kiss
+370,50,40,flail
+370,90,48,safeguard
+371,60,1,rage
+371,40,5,bite
+371,30,9,leer
+371,10,17,headbutt
+371,70,21,focus energy
+371,50,25,ember
+371,90,33,dragon breath
+371,80,37,scary face
+371,100,41,crunch
+371,110,49,dragon claw
+371,20,53,double edge
+372,10,1,headbutt
+372,40,1,leer
+372,60,1,bite
+372,90,1,rage
+372,70,5,bite
+372,50,9,leer
+372,20,17,headbutt
+372,100,21,focus energy
+372,80,25,ember
+372,110,30,protect
+372,130,38,dragon breath
+372,120,47,scary face
+372,140,56,crunch
+372,150,69,dragon claw
+372,30,78,double edge
+373,20,1,headbutt
+373,50,1,leer
+373,70,1,bite
+373,100,1,rage
+373,80,5,bite
+373,60,9,leer
+373,30,17,headbutt
+373,110,21,focus energy
+373,90,25,ember
+373,120,30,protect
+373,140,38,dragon breath
+373,130,47,scary face
+373,10,50,fly
+373,150,61,crunch
+373,160,79,dragon claw
+373,40,93,double edge
+374,10,1,take down
+375,10,1,take down
+375,30,20,confusion
+375,80,20,metal claw
+375,60,26,scary face
+375,70,32,pursuit
+375,40,38,psychic
+375,100,44,iron defense
+375,90,50,meteor mash
+375,50,56,agility
+375,20,62,hyper beam
+376,10,1,take down
+376,30,1,confusion
+376,70,1,scary face
+376,100,1,metal claw
+376,40,20,confusion
+376,110,20,metal claw
+376,80,26,scary face
+376,90,32,pursuit
+376,50,38,psychic
+376,130,44,iron defense
+376,120,55,meteor mash
+376,60,66,agility
+376,20,77,hyper beam
+377,30,1,explosion
+377,20,9,rock throw
+377,40,17,curse
+377,80,25,superpower
+377,70,33,ancient power
+377,90,41,iron defense
+377,50,49,zap cannon
+377,60,57,lock on
+377,10,65,hyper beam
+378,30,1,explosion
+378,60,9,icy wind
+378,40,17,curse
+378,90,25,superpower
+378,80,33,ancient power
+378,20,41,amnesia
+378,50,49,zap cannon
+378,70,57,lock on
+378,10,65,hyper beam
+379,30,1,explosion
+379,70,9,metal claw
+379,40,17,curse
+379,90,25,superpower
+379,80,33,ancient power
+379,20,41,amnesia
+379,100,41,iron defense
+379,50,49,zap cannon
+379,60,57,lock on
+379,10,65,hyper beam
+380,30,1,psywave
+380,80,5,wish
+380,70,10,helping hand
+380,50,15,safeguard
+380,60,20,dragon breath
+380,110,25,water sport
+380,90,30,refresh
+380,100,35,mist ball
+380,10,40,psychic
+380,20,45,recover
+380,40,50,charm
+381,30,1,psywave
+381,70,5,memento
+381,80,10,helping hand
+381,50,15,safeguard
+381,60,20,dragon breath
+381,40,25,protect
+381,90,30,refresh
+381,100,35,luster purge
+381,10,40,psychic
+381,20,45,recover
+381,110,50,dragon dance
+382,110,1,water pulse
+382,60,5,scary face
+382,70,15,ancient power
+382,10,20,body slam
+382,100,30,calm mind
+382,40,35,ice beam
+382,30,45,hydro pump
+382,50,50,rest
+382,90,60,sheer cold
+382,20,65,double edge
+382,80,75,water spout
+383,110,1,mud shot
+383,70,5,scary face
+383,80,15,ancient power
+383,60,20,slash
+383,100,30,bulk up
+383,20,35,earthquake
+383,40,45,fire blast
+383,50,50,rest
+383,30,60,fissure
+383,10,65,solar beam
+383,90,75,eruption
+384,60,1,twister
+384,40,5,scary face
+384,90,15,ancient power
+384,100,20,dragon claw
+384,110,30,dragon dance
+384,70,35,crunch
+384,10,45,fly
+384,30,50,rest
+384,80,60,extreme speed
+384,50,65,outrage
+384,20,75,hyper beam
+385,20,1,confusion
+385,90,1,wish
+385,50,5,rest
+385,40,10,swift
+385,80,15,helping hand
+385,30,20,psychic
+385,100,25,refresh
+385,60,30,rest
+385,10,35,double edge
+385,70,40,future sight
+385,110,45,cosmic power
+385,120,50,doom desire

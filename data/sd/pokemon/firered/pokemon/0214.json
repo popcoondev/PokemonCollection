@@ -1,0 +1,107 @@
+{
+  "id": 214,
+  "locations": [
+    {
+      "area": "しるしのはやし",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": true
+    },
+    {
+      "area": "しるしのはやし",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 20,
+      "max_level": 20,
+      "postgame_only": true
+    },
+    {
+      "area": "しるしのはやし",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 25,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "しるしのはやし",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 30,
+      "max_level": 30,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 6,
+      "name": "つのでつく"
+    },
+    {
+      "level": 17,
+      "name": "みだれづき"
+    },
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 37,
+      "name": "とっしん"
+    },
+    {
+      "level": 1,
+      "name": "にらみつける"
+    },
+    {
+      "level": 30,
+      "name": "カウンター"
+    },
+    {
+      "level": 45,
+      "name": "きしかいせい"
+    },
+    {
+      "level": 11,
+      "name": "こらえる"
+    },
+    {
+      "level": 53,
+      "name": "メガホーン"
+    },
+    {
+      "level": 23,
+      "name": "かわらわり"
+    }
+  ],
+  "machines": [
+    "はかいこうせん",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "どろぼう",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "にほんばれ",
+    "からげんき",
+    "きあいパンチ",
+    "かわらわり",
+    "ひみつのちから",
+    "がんせきふうじ",
+    "ビルドアップ"
+  ],
+  "hms": [
+    "いあいぎり",
+    "かいりき",
+    "いわくだき"
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "id": 211,
+  "locations": [
+    {
+      "area": "5のしまくさむら",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 33,
+      "name": "とっしん"
+    },
+    {
+      "level": 1,
+      "name": "どくばり"
+    },
+    {
+      "level": 21,
+      "name": "ミサイルばり"
+    },
+    {
+      "level": 13,
+      "name": "みずでっぽう"
+    },
+    {
+      "level": 37,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 9,
+      "name": "かたくなる"
+    },
+    {
+      "level": 9,
+      "name": "ちいさくなる"
+    },
+    {
+      "level": 1,
+      "name": "まきびし"
+    },
+    {
+      "level": 45,
+      "name": "みちづれ"
+    },
+    {
+      "level": 25,
+      "name": "リベンジ"
+    }
+  ],
+  "machines": [
+    "れいとうビーム",
+    "ふぶき",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "ヘドロばくだん",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "シャドーボール",
+    "あられ",
+    "からげんき",
+    "ひみつのちから",
+    "でんげきは",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "たきのぼり",
+    "ダイビング"
+  ]
+}

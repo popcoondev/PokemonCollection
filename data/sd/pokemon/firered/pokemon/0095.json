@@ -1,0 +1,131 @@
+{
+  "id": 95,
+  "locations": [
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 13,
+      "max_level": 13,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 13,
+      "max_level": 13,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "イワヤマトンネル",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 17,
+      "max_level": 17,
+      "postgame_only": false
+    },
+    {
+      "area": "ななしまきょうこく",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 54,
+      "max_level": 54,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [
+    "メタルコート"
+  ],
+  "level_up_moves": [
+    {
+      "level": 8,
+      "name": "しめつける"
+    },
+    {
+      "level": 41,
+      "name": "たたきつける"
+    },
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 56,
+      "name": "すてみタックル"
+    },
+    {
+      "level": 12,
+      "name": "いわおとし"
+    },
+    {
+      "level": 23,
+      "name": "いかり"
+    },
+    {
+      "level": 1,
+      "name": "いやなおと"
+    },
+    {
+      "level": 19,
+      "name": "かたくなる"
+    },
+    {
+      "level": 34,
+      "name": "すなあらし"
+    },
+    {
+      "level": 30,
+      "name": "りゅうのいぶき"
+    },
+    {
+      "level": 45,
+      "name": "アイアンテール"
+    },
+    {
+      "level": 52,
+      "name": "すなじごく"
+    }
+  ],
+  "machines": [
+    "ほえる",
+    "じしん",
+    "あなをほる",
+    "どくどく",
+    "かげぶんしん",
+    "ねむる",
+    "まもる",
+    "すなあらし",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "にほんばれ",
+    "いちゃもん",
+    "からげんき",
+    "ちょうはつ",
+    "ひみつのちから",
+    "がんせきふうじ"
+  ],
+  "hms": [
+    "かいりき",
+    "いわくだき"
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "id": 77,
+  "locations": [
+    {
+      "area": "1のしま ひのやま",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 30,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 33,
+      "max_level": 33,
+      "postgame_only": false
+    },
+    {
+      "area": "1のしま ひのやま",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 36,
+      "max_level": 36,
+      "postgame_only": false
+    }
+  ],
+  "evolution": [
+    "Lv40"
+  ],
+  "level_up_moves": [
+    {
+      "level": 19,
+      "name": "ふみつけ"
+    },
+    {
+      "level": 31,
+      "name": "とっしん"
+    },
+    {
+      "level": 9,
+      "name": "しっぽをふる"
+    },
+    {
+      "level": 5,
+      "name": "なきごえ"
+    },
+    {
+      "level": 14,
+      "name": "ひのこ"
+    },
+    {
+      "level": 25,
+      "name": "ほのおのうず"
+    },
+    {
+      "level": 38,
+      "name": "こうそくいどう"
+    },
+    {
+      "level": 1,
+      "name": "でんこうせっか"
+    },
+    {
+      "level": 53,
+      "name": "だいもんじ"
+    },
+    {
+      "level": 45,
+      "name": "とびはねる"
+    }
+  ],
+  "machines": [
+    "かえんほうしゃ",
+    "ソーラービーム",
+    "どくどく",
+    "かげぶんしん",
+    "だいもんじ",
+    "ねむる",
+    "まもる",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "アイアンテール",
+    "めざめるパワー",
+    "にほんばれ",
+    "からげんき",
+    "ひみつのちから",
+    "オーバーヒート"
+  ],
+  "hms": [
+    "かいりき"
+  ]
+}

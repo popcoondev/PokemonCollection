@@ -1,0 +1,366 @@
+{
+  "id": 130,
+  "locations": [
+    {
+      "area": "3のしま きのみのもり",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "3のしま きずなばし",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダのどうくつ",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": true
+    },
+    {
+      "area": "ハナダシティ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "グレンじま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5のしま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "5のしまくさむら",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "4のしま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "セキチクシティ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "みどりのさんどう",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "10ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "11ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "12ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "13ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "22ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "24ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "25ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "6ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "きねんのせきちゅう",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "あききち",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "マサラタウン",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "ゴージャスリゾート",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "いせきのたに",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "ふたごじま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "ふたごじま",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "アスカナいせき",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "トレーナータワー",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "たからのはま",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "クチバシティ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "トキワシティ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "みずのめいろ",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    },
+    {
+      "area": "みずのさんぽみち",
+      "method": "すごいつりざお",
+      "rate": "15%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": true
+    }
+  ],
+  "evolution": [],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "あばれる"
+    },
+    {
+      "level": 30,
+      "name": "にらみつける"
+    },
+    {
+      "level": 20,
+      "name": "かみつく"
+    },
+    {
+      "level": 40,
+      "name": "ハイドロポンプ"
+    },
+    {
+      "level": 55,
+      "name": "はかいこうせん"
+    },
+    {
+      "level": 25,
+      "name": "りゅうのいかり"
+    },
+    {
+      "level": 35,
+      "name": "たつまき"
+    },
+    {
+      "level": 45,
+      "name": "あまごい"
+    },
+    {
+      "level": 50,
+      "name": "りゅうのまい"
+    }
+  ],
+  "machines": [
+    "ほえる",
+    "かえんほうしゃ",
+    "れいとうビーム",
+    "ふぶき",
+    "はかいこうせん",
+    "１０まんボルト",
+    "かみなり",
+    "じしん",
+    "どくどく",
+    "かげぶんしん",
+    "だいもんじ",
+    "ねむる",
+    "まもる",
+    "すなあらし",
+    "メロメロ",
+    "おんがえし",
+    "やつあたり",
+    "めざめるパワー",
+    "あまごい",
+    "あられ",
+    "いちゃもん",
+    "からげんき",
+    "ちょうはつ",
+    "ひみつのちから",
+    "みずのはどう"
+  ],
+  "hms": [
+    "なみのり",
+    "かいりき",
+    "たきのぼり",
+    "いわくだき",
+    "ダイビング"
+  ]
+}

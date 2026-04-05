@@ -1,0 +1,24 @@
+{
+  "id": 265,
+  "locations": [],
+  "evolution": [
+    "Lv7",
+    "Lv7"
+  ],
+  "level_up_moves": [
+    {
+      "level": 1,
+      "name": "たいあたり"
+    },
+    {
+      "level": 5,
+      "name": "どくばり"
+    },
+    {
+      "level": 1,
+      "name": "いとをはく"
+    }
+  ],
+  "machines": [],
+  "hms": []
+}
