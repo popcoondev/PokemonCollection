@@ -44,6 +44,8 @@ public:
       const String& headerLabel,
       const std::vector<String>& lines,
       int activeTab,
+      bool caughtEnabled,
+      bool caughtPressed,
       bool backPressed,
       int pressedTab);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);

@@ -631,6 +631,8 @@ void UIController::drawGuidePokemonDetailScreen(
     const String& headerLabel,
     const std::vector<String>& lines,
     int activeTab,
+    bool caughtEnabled,
+    bool caughtPressed,
     bool backPressed,
     int pressedTab) {
   static const char* kTabs[5] = {"しゅつげん", "しんか", "わざ", "マシン", "ひでん"};
@@ -660,6 +662,17 @@ void UIController::drawGuidePokemonDetailScreen(
     sprite->fillRoundRect(12, 56, 92, 92, 10, COLOR_PK_CARD);
     sprite->drawRoundRect(12, 56, 92, 92, 10, COLOR_PK_BORDER);
     drawQuizPokemonImage(pokemonId, 16, 60, 84, 84);
+    drawActionButton(
+        16,
+        152,
+        84,
+        22,
+        "つかまえた",
+        caughtEnabled ? COLOR_PK_RED : COLOR_PK_BG,
+        caughtEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
+        caughtPressed,
+        caughtEnabled ? COLOR_PK_TEXT : COLOR_PK_BORDER,
+        caughtEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
     sprite->fillRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_CARD);
     sprite->drawRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_BORDER);
     textX = 120;

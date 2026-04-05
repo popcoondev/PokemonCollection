@@ -9,6 +9,7 @@
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 #include <math.h>
+#include <vector>
 #include "Config.h"
 #include "DataManager.h"
 #include "UIController.h"
@@ -55,6 +56,7 @@ constexpr uint32_t kQuizSideDurationMs = 7000;
 constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside.wav";
 constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
+constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -218,6 +220,7 @@ std::vector<GuideLocationEntry> guideLocations;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
 int guidePokemonTab = 0;
+std::vector<bool> guideCaughtFlags(387, false);
 bool preview3dEnabled = false;
 bool guideHallOfFameEnabled = false;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
@@ -426,6 +429,7 @@ enum PressedControl {
   PRESS_GUIDE_DETAIL_TAB_2,
   PRESS_GUIDE_DETAIL_TAB_3,
   PRESS_GUIDE_DETAIL_TAB_4,
+  PRESS_GUIDE_DETAIL_CAUGHT,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -497,6 +501,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    if (guidePokemonTab == 0 && hitTest(tx, ty, 16, 152, 84, 22, 6)) return PRESS_GUIDE_DETAIL_CAUGHT;
     for (int i = 0; i < 5; ++i) {
       const int x = i * (SCREEN_WIDTH / 5);
       if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
@@ -647,6 +652,7 @@ enum PendingActionType {
   ACTION_OPEN_GUIDE_POKEMON_DETAIL,
   ACTION_CLOSE_GUIDE_POKEMON_DETAIL,
   ACTION_SET_GUIDE_POKEMON_TAB,
+  ACTION_TOGGLE_GUIDE_CAUGHT,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
@@ -973,6 +979,53 @@ bool saveSettings() {
     SD.remove(kSettingsPath);
   }
   File file = SD.open(kSettingsPath, FILE_WRITE);
+  if (!file) {
+    return false;
+  }
+  const bool ok = serializeJson(doc, file) > 0;
+  file.close();
+  return ok;
+}
+
+bool loadGuideCaughtFlags() {
+  guideCaughtFlags.assign(387, false);
+  File file = SD.open(kGuideCaughtPath, FILE_READ);
+  if (!file) {
+    return true;
+  }
+  JsonDocument doc;
+  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+    file.close();
+    return false;
+  }
+  file.close();
+
+  JsonArray caught = doc["caught"].as<JsonArray>();
+  if (caught.isNull()) {
+    return true;
+  }
+  for (JsonVariant v : caught) {
+    const int id = v.as<int>();
+    if (id >= 1 && id <= 386) {
+      guideCaughtFlags[id] = true;
+    }
+  }
+  return true;
+}
+
+bool saveGuideCaughtFlags() {
+  JsonDocument doc;
+  JsonArray arr = doc["caught"].to<JsonArray>();
+  for (int id = 1; id <= 386; ++id) {
+    if (guideCaughtFlags[id]) {
+      arr.add(id);
+    }
+  }
+
+  if (SD.exists(kGuideCaughtPath)) {
+    SD.remove(kGuideCaughtPath);
+  }
+  File file = SD.open(kGuideCaughtPath, FILE_WRITE);
   if (!file) {
     return false;
   }
@@ -1462,6 +1515,7 @@ void setup() {
   }
 
   loadSettings();
+  loadGuideCaughtFlags();
 
   appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
   appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
@@ -1652,6 +1706,8 @@ void loop() {
       } else if (screenMode == SCREEN_GUIDE_POKEMON_DETAIL) {
         if (pressedControl == PRESS_GUIDE_DETAIL_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_DETAIL);
+        } else if (pressedControl == PRESS_GUIDE_DETAIL_CAUGHT) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_CAUGHT);
         } else if (pressedControl >= PRESS_GUIDE_DETAIL_TAB_0 && pressedControl <= PRESS_GUIDE_DETAIL_TAB_4) {
           pendingAction = makePendingAction(ACTION_SET_GUIDE_POKEMON_TAB, pressedControl - PRESS_GUIDE_DETAIL_TAB_0);
         }
@@ -1773,6 +1829,12 @@ void loop() {
         break;
       case ACTION_SET_GUIDE_POKEMON_TAB:
         guidePokemonTab = constrain(pendingAction.value, 0, 4);
+        break;
+      case ACTION_TOGGLE_GUIDE_CAUGHT:
+        if (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) {
+          guideCaughtFlags[guidePokemonSelectedId] = !guideCaughtFlags[guidePokemonSelectedId];
+          saveGuideCaughtFlags();
+        }
         break;
       case ACTION_OPEN_POKEDEX:
         detailReturnScreen = SCREEN_MENU;
@@ -2184,6 +2246,8 @@ void loop() {
           dataMgr.getPokemonName(guidePokemonSelectedId),
           getGuidePokemonTabLines(guidePokemonTab),
           guidePokemonTab,
+          (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) ? guideCaughtFlags[guidePokemonSelectedId] : false,
+          visualControl == PRESS_GUIDE_DETAIL_CAUGHT,
           visualControl == PRESS_GUIDE_DETAIL_BACK,
           (visualControl >= PRESS_GUIDE_DETAIL_TAB_0 && visualControl <= PRESS_GUIDE_DETAIL_TAB_4)
               ? (visualControl - PRESS_GUIDE_DETAIL_TAB_0)
