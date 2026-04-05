@@ -107,8 +107,11 @@ std::vector<uint16_t> DataManager::findPokemonIdsByName(const String& query, siz
   }
 
   size_t skipped = 0;
-  for (uint16_t id : pokemonIdsSortedByName) {
+  for (uint16_t id = MIN_POKEMON_ID; id <= maxPokemonId; ++id) {
     const String& name = pokemonNames[id];
+    if (name.length() == 0) {
+      continue;
+    }
     if (query.length() > 0 && name.indexOf(query) < 0) {
       continue;
     }

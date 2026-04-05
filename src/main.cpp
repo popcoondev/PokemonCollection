@@ -1929,6 +1929,12 @@ void loop() {
         guidePokemonPageIndex = 0;
         loadGuidePokemonDetail(guidePokemonSelectedId);
         break;
+      case ACTION_TOGGLE_GUIDE_CAUGHT:
+        if (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) {
+          guideCaughtFlags[guidePokemonSelectedId] = !guideCaughtFlags[guidePokemonSelectedId];
+          saveGuideCaughtFlags();
+        }
+        break;
       case ACTION_OPEN_POKEDEX:
         screenMode = SCREEN_SEARCH;
         searchMode = SEARCH_MODE_NAME;
