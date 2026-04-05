@@ -22,6 +22,7 @@ TabType currentTab = TAB_APPEARANCE;
 
 enum ScreenMode {
   SCREEN_MENU = 0,
+  SCREEN_SETTINGS,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
   SCREEN_GUIDE_LOCATION_LIST,
@@ -391,6 +392,7 @@ enum PressedControl {
   PRESS_MENU_QUIZ,
   PRESS_MENU_SLIDESHOW,
   PRESS_MENU_GUIDE,
+  PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
@@ -437,11 +439,17 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 24, 106, 130, 34, 8)) return PRESS_MENU_QUIZ;
     if (hitTest(tx, ty, 24, 148, 130, 34, 8)) return PRESS_MENU_SLIDESHOW;
     if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
-    if (hitTest(tx, ty, 246, 14, 50, 18, 6)) return PRESS_MENU_3D;
-    if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 242, 204, 42, 24, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_SETTINGS) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
+    if (hitTest(tx, ty, 24, 138, 58, 32, 6)) return PRESS_MENU_VOL_LARGE;
+    if (hitTest(tx, ty, 94, 138, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
+    if (hitTest(tx, ty, 164, 138, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
+    if (hitTest(tx, ty, 234, 138, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
     return PRESS_NONE;
   }
 
@@ -576,6 +584,8 @@ enum PendingActionType {
   ACTION_NONE = 0,
   ACTION_OPEN_GUIDE_MENU,
   ACTION_CLOSE_GUIDE_MENU,
+  ACTION_OPEN_SETTINGS,
+  ACTION_CLOSE_SETTINGS,
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
@@ -1597,6 +1607,14 @@ void loop() {
         } else if (pressedControl >= PRESS_GUIDE_DETAIL_TAB_0 && pressedControl <= PRESS_GUIDE_DETAIL_TAB_4) {
           pendingAction = makePendingAction(ACTION_SET_GUIDE_POKEMON_TAB, pressedControl - PRESS_GUIDE_DETAIL_TAB_0);
         }
+      } else if (screenMode == SCREEN_SETTINGS) {
+        if (pressedControl == PRESS_GUIDE_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
+        } else if (pressedControl == PRESS_MENU_3D) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
+        } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
+          pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
+        }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
@@ -1606,10 +1624,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_SLIDESHOW);
         } else if (pressedControl == PRESS_MENU_GUIDE) {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_MENU);
-        } else if (pressedControl == PRESS_MENU_3D) {
-          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
-        } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
-          pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
+        } else if (pressedControl == PRESS_MENU_SETTINGS) {
+          pendingAction = makePendingAction(ACTION_OPEN_SETTINGS);
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
@@ -1642,6 +1658,12 @@ void loop() {
         screenMode = SCREEN_GUIDE_MENU;
         break;
       case ACTION_CLOSE_GUIDE_MENU:
+        screenMode = SCREEN_MENU;
+        break;
+      case ACTION_OPEN_SETTINGS:
+        screenMode = SCREEN_SETTINGS;
+        break;
+      case ACTION_CLOSE_SETTINGS:
         screenMode = SCREEN_MENU;
         break;
       case ACTION_OPEN_GUIDE_POKEMON_LIST:
@@ -2055,6 +2077,15 @@ void loop() {
           visualControl == PRESS_MENU_QUIZ,
           visualControl == PRESS_MENU_SLIDESHOW,
           visualControl == PRESS_MENU_GUIDE,
+          preview3dEnabled,
+          visualControl == PRESS_MENU_SETTINGS,
+          static_cast<int>(quizVolumeSetting),
+          (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
+              ? (visualControl - PRESS_MENU_VOL_LARGE)
+              : -1);
+    } else if (screenMode == SCREEN_SETTINGS) {
+      ui.drawSettingsScreen(
+          visualControl == PRESS_GUIDE_BACK,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           static_cast<int>(quizVolumeSetting),

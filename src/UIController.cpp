@@ -467,17 +467,6 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawCenterString("ポケモン図鑑", SCREEN_WIDTH / 2, 22);
-  drawActionButton(
-      246,
-      14,
-      50,
-      18,
-      "3D",
-      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BG,
-      preview3dEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
-      preview3dPressed,
-      preview3dEnabled ? COLOR_PK_TEXT : COLOR_PK_BORDER,
-      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
 
   constexpr int menuLeftX = 24;
   constexpr int menuRightX = 166;
@@ -490,14 +479,39 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
   drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, "スライドショー", COLOR_PK_CARD, COLOR_PK_TEXT, slideshowPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, "こうりゃく", COLOR_PK_CARD, COLOR_PK_TEXT, guidePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "せってい", COLOR_PK_CARD, COLOR_PK_TEXT, preview3dPressed || pressedVolumeIndex >= 0, COLOR_PK_BORDER, COLOR_PK_BORDER);
+}
+
+void UIController::drawSettingsScreen(bool backPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("せってい", SCREEN_WIDTH / 2, 22);
+  drawActionButton(236, 14, 58, 18, "メニュー", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("おんりょう", 24, 212);
+  sprite->drawString("プレビュー", 24, 72);
+  drawActionButton(
+      202,
+      60,
+      94,
+      30,
+      preview3dEnabled ? "3D ON" : "3D OFF",
+      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_CARD,
+      preview3dEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
+      preview3dPressed,
+      COLOR_PK_RED,
+      preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
 
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("おんりょう", 24, 126);
   static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
   for (int i = 0; i < 4; ++i) {
-    const int x = 92 + (i * 50);
+    const int x = 24 + (i * 70);
     const bool selected = selectedVolumeIndex == i;
     const bool pressed = pressedVolumeIndex == i;
     const uint16_t fill = selected ? COLOR_PK_BAR : COLOR_PK_CARD;
@@ -505,9 +519,9 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
     const uint16_t border = selected ? COLOR_PK_BAR : COLOR_PK_BORDER;
     drawActionButton(
         x,
-        204,
-        42,
-        24,
+        138,
+        58,
+        32,
         volumeLabels[i],
         fill,
         text,
