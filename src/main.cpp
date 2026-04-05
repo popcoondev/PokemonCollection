@@ -221,7 +221,10 @@ std::vector<GuideLocationEntry> guideLocations;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
 int guidePokemonTab = 0;
+int guidePokemonPageIndex = 0;
 std::vector<bool> guideCaughtFlags(387, false);
+bool guideCaughtDirty = false;
+unsigned long guideCaughtSaveAt = 0;
 bool preview3dEnabled = false;
 bool guideHallOfFameEnabled = false;
 uint8_t settingsSecretTapCount = 0;
@@ -434,6 +437,9 @@ enum PressedControl {
   PRESS_GUIDE_DETAIL_TAB_3,
   PRESS_GUIDE_DETAIL_TAB_4,
   PRESS_GUIDE_DETAIL_CAUGHT,
+  PRESS_GUIDE_DETAIL_PAGE,
+  PRESS_GUIDE_DETAIL_PREV,
+  PRESS_GUIDE_DETAIL_NEXT,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -506,7 +512,14 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_DETAIL_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_DETAIL_NEXT;
     if (guidePokemonTab == 0 && hitTest(tx, ty, 16, 152, 84, 22, 6)) return PRESS_GUIDE_DETAIL_CAUGHT;
+    if (guidePokemonTab == 0) {
+      if (hitTest(tx, ty, 112, 56, SCREEN_WIDTH - 124, 122, 6)) return PRESS_GUIDE_DETAIL_PAGE;
+    } else {
+      if (hitTest(tx, ty, 12, 56, SCREEN_WIDTH - 24, 122, 6)) return PRESS_GUIDE_DETAIL_PAGE;
+    }
     for (int i = 0; i < 5; ++i) {
       const int x = i * (SCREEN_WIDTH / 5);
       if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
@@ -659,6 +672,9 @@ enum PendingActionType {
   ACTION_CLOSE_GUIDE_POKEMON_DETAIL,
   ACTION_SET_GUIDE_POKEMON_TAB,
   ACTION_TOGGLE_GUIDE_CAUGHT,
+  ACTION_NEXT_GUIDE_PAGE,
+  ACTION_GUIDE_DETAIL_PREV,
+  ACTION_GUIDE_DETAIL_NEXT,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
@@ -911,35 +927,59 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
 std::vector<String> getGuidePokemonTabLines(int tabIndex) {
   std::vector<String> lines;
   switch (tabIndex) {
-    case 0:
+    case 0: {
+      std::vector<String> locationLines;
       for (const auto& entry : guidePokemonDetail.locations) {
         String line = entry.area;
         if (entry.method.length() > 0) line += " / " + entry.method;
         if (entry.rate.length() > 0) line += " / " + entry.rate;
-        lines.push_back(line);
+        locationLines.push_back(line);
       }
+      std::sort(locationLines.begin(), locationLines.end());
+      lines = std::move(locationLines);
       break;
+    }
     case 1:
       lines = guidePokemonDetail.evolutions;
+      std::sort(lines.begin(), lines.end());
       break;
-    case 2:
-      for (const auto& entry : guidePokemonDetail.levelUpMoves) {
+    case 2: {
+      auto moves = guidePokemonDetail.levelUpMoves;
+      std::sort(moves.begin(), moves.end(), [](const GuidePokemonMoveEntry& a, const GuidePokemonMoveEntry& b) {
+        if (a.level != b.level) return a.level < b.level;
+        return a.name < b.name;
+      });
+      for (const auto& entry : moves) {
         char prefix[12];
         snprintf(prefix, sizeof(prefix), "Lv%d ", entry.level);
         lines.push_back(String(prefix) + entry.name);
       }
       break;
+    }
     case 3:
       lines = guidePokemonDetail.machines;
+      std::sort(lines.begin(), lines.end());
       break;
     case 4:
       lines = guidePokemonDetail.hms;
+      std::sort(lines.begin(), lines.end());
       break;
   }
   if (lines.empty()) {
     lines.push_back("データなし");
   }
   return lines;
+}
+
+int getGuidePokemonPageCount(int tabIndex) {
+  constexpr int kGuideLinesPerPage = 8;
+  const auto lines = getGuidePokemonTabLines(tabIndex);
+  const int lineCount = static_cast<int>(lines.size());
+  return std::max(1, (lineCount + kGuideLinesPerPage - 1) / kGuideLinesPerPage);
+}
+
+uint16_t getGuidePokemonMaxId() {
+  return guideHallOfFameEnabled ? 386 : 151;
 }
 
 uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction) {
@@ -1721,8 +1761,14 @@ void loop() {
       } else if (screenMode == SCREEN_GUIDE_POKEMON_DETAIL) {
         if (pressedControl == PRESS_GUIDE_DETAIL_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_DETAIL);
+        } else if (pressedControl == PRESS_GUIDE_DETAIL_PREV) {
+          pendingAction = makePendingAction(ACTION_GUIDE_DETAIL_PREV);
+        } else if (pressedControl == PRESS_GUIDE_DETAIL_NEXT) {
+          pendingAction = makePendingAction(ACTION_GUIDE_DETAIL_NEXT);
         } else if (pressedControl == PRESS_GUIDE_DETAIL_CAUGHT) {
           pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_CAUGHT);
+        } else if (pressedControl == PRESS_GUIDE_DETAIL_PAGE) {
+          pendingAction = makePendingAction(ACTION_NEXT_GUIDE_PAGE);
         } else if (pressedControl >= PRESS_GUIDE_DETAIL_TAB_0 && pressedControl <= PRESS_GUIDE_DETAIL_TAB_4) {
           pendingAction = makePendingAction(ACTION_SET_GUIDE_POKEMON_TAB, pressedControl - PRESS_GUIDE_DETAIL_TAB_0);
         }
@@ -1848,6 +1894,7 @@ void loop() {
       case ACTION_OPEN_GUIDE_POKEMON_DETAIL:
         guidePokemonSelectedId = static_cast<uint16_t>(pendingAction.value);
         guidePokemonTab = 0;
+        guidePokemonPageIndex = 0;
         loadGuidePokemonDetail(guidePokemonSelectedId);
         screenMode = SCREEN_GUIDE_POKEMON_DETAIL;
         break;
@@ -1856,12 +1903,31 @@ void loop() {
         break;
       case ACTION_SET_GUIDE_POKEMON_TAB:
         guidePokemonTab = constrain(pendingAction.value, 0, 4);
+        guidePokemonPageIndex = 0;
         break;
       case ACTION_TOGGLE_GUIDE_CAUGHT:
         if (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) {
           guideCaughtFlags[guidePokemonSelectedId] = !guideCaughtFlags[guidePokemonSelectedId];
-          saveGuideCaughtFlags();
+          guideCaughtDirty = true;
+          guideCaughtSaveAt = millis() + 250;
         }
+        break;
+      case ACTION_NEXT_GUIDE_PAGE: {
+        const int pageCount = getGuidePokemonPageCount(guidePokemonTab);
+        guidePokemonPageIndex = (guidePokemonPageIndex + 1) % pageCount;
+        break;
+      }
+      case ACTION_GUIDE_DETAIL_PREV:
+        guidePokemonSelectedId = (guidePokemonSelectedId <= 1) ? getGuidePokemonMaxId() : (guidePokemonSelectedId - 1);
+        guidePokemonTab = 0;
+        guidePokemonPageIndex = 0;
+        loadGuidePokemonDetail(guidePokemonSelectedId);
+        break;
+      case ACTION_GUIDE_DETAIL_NEXT:
+        guidePokemonSelectedId = (guidePokemonSelectedId >= getGuidePokemonMaxId()) ? 1 : (guidePokemonSelectedId + 1);
+        guidePokemonTab = 0;
+        guidePokemonPageIndex = 0;
+        loadGuidePokemonDetail(guidePokemonSelectedId);
         break;
       case ACTION_OPEN_POKEDEX:
         screenMode = SCREEN_SEARCH;
@@ -2327,12 +2393,17 @@ void loop() {
           dataMgr.getPokemonName(guidePokemonSelectedId),
           getGuidePokemonTabLines(guidePokemonTab),
           guidePokemonTab,
+          guidePokemonPageIndex,
+          getGuidePokemonPageCount(guidePokemonTab),
           (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) ? guideCaughtFlags[guidePokemonSelectedId] : false,
           visualControl == PRESS_GUIDE_DETAIL_CAUGHT,
           visualControl == PRESS_GUIDE_DETAIL_BACK,
           (visualControl >= PRESS_GUIDE_DETAIL_TAB_0 && visualControl <= PRESS_GUIDE_DETAIL_TAB_4)
               ? (visualControl - PRESS_GUIDE_DETAIL_TAB_0)
-              : -1);
+              : -1,
+          visualControl == PRESS_GUIDE_DETAIL_PAGE,
+          visualControl == PRESS_GUIDE_DETAIL_PREV,
+          visualControl == PRESS_GUIDE_DETAIL_NEXT);
     } else if (screenMode == SCREEN_QUIZ) {
       ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
@@ -2497,6 +2568,11 @@ void loop() {
 
     ui.pushToDisplay();
     needsRedraw = false;
+  }
+
+  if (guideCaughtDirty && millis() >= guideCaughtSaveAt) {
+    saveGuideCaughtFlags();
+    guideCaughtDirty = false;
   }
 
   delay(10);

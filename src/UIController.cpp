@@ -607,7 +607,7 @@ void UIController::drawGuidePokemonListScreen(
         COLOR_PK_RED,
         COLOR_PK_BORDER);
     if (i < static_cast<int>(caughtFlags.size()) && caughtFlags[i]) {
-      const int cx = x + itemW - 18;
+      const int cx = x + itemW - 8;
       const int cy = y + (itemH / 2);
       sprite->drawLine(cx - 4, cy, cx - 1, cy + 3, COLOR_PK_RED);
       sprite->drawLine(cx - 1, cy + 3, cx + 6, cy - 4, COLOR_PK_RED);
@@ -658,10 +658,15 @@ void UIController::drawGuidePokemonDetailScreen(
     const String& headerLabel,
     const std::vector<String>& lines,
     int activeTab,
+    int pageIndex,
+    int pageCount,
     bool caughtEnabled,
     bool caughtPressed,
     bool backPressed,
-    int pressedTab) {
+    int pressedTab,
+    bool pagePressed,
+    bool prevPressed,
+    bool nextPressed) {
   static const char* kTabs[5] = {"しゅつげん", "しんか", "わざ", "マシン", "ひでん"};
 
   sprite->fillScreen(COLOR_PK_BG);
@@ -680,6 +685,7 @@ void UIController::drawGuidePokemonDetailScreen(
   sprite->drawString(idText, 42, 16);
   sprite->setTextColor(COLOR_PK_TEXT);
   sprite->drawString(headerLabel, 92, 16);
+  drawDetailNavigation(prevPressed, nextPressed);
 
   const bool showIcon = activeTab == 0;
   int textX = 20;
@@ -702,15 +708,21 @@ void UIController::drawGuidePokemonDetailScreen(
         caughtEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
     sprite->fillRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_CARD);
     sprite->drawRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_BORDER);
+    if (pagePressed && pageCount > 1) {
+      drawPressedOverlay(112, 56, SCREEN_WIDTH - 124, 122, 10);
+    }
     textX = 120;
     textY = 64;
     textMaxLines = 8;
   } else {
     sprite->fillRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_CARD);
     sprite->drawRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_BORDER);
+    if (pagePressed && pageCount > 1) {
+      drawPressedOverlay(12, 56, SCREEN_WIDTH - 24, 122, 10);
+    }
     textX = 20;
     textY = 64;
-    textMaxLines = 9;
+    textMaxLines = 8;
   }
 
   sprite->setFont(&fonts::efontJA_12);
@@ -719,9 +731,24 @@ void UIController::drawGuidePokemonDetailScreen(
     sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 108);
   } else {
     const int lineH = 14;
-    for (int i = 0; i < static_cast<int>(lines.size()) && i < textMaxLines; ++i) {
+    const int startIndex = pageIndex * textMaxLines;
+    for (int i = 0; i < textMaxLines; ++i) {
+      const int lineIndex = startIndex + i;
+      if (lineIndex >= static_cast<int>(lines.size())) break;
       sprite->setTextColor(COLOR_PK_TEXT);
-      sprite->drawString(lines[i], textX, textY + (i * lineH));
+      sprite->drawString(lines[lineIndex], textX, textY + (i * lineH));
+    }
+  }
+
+  if (pageCount > 1) {
+    char pageText[12];
+    snprintf(pageText, sizeof(pageText), "%d/%d", pageIndex + 1, pageCount);
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(COLOR_PK_SUB);
+    if (showIcon) {
+      sprite->drawRightString(pageText, SCREEN_WIDTH - 18, 158);
+    } else {
+      sprite->drawRightString(pageText, SCREEN_WIDTH - 18, 158);
     }
   }
 
