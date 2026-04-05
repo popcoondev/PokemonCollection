@@ -544,7 +544,7 @@ void UIController::drawSettingsScreen(
   }
 
   if (secretPressed) {
-    drawPressedOverlay(8, 208, 88, 24, 6);
+    drawPressedOverlay(6, 184, 124, 50, 6);
   }
 }
 
@@ -619,38 +619,8 @@ void UIController::drawGuidePokemonListScreen(
 }
 
 void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
-  sprite->fillScreen(COLOR_PK_BG);
-
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
-  if (backPressed) {
-    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
-  }
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawCenterString("場所からみる", SCREEN_WIDTH / 2, 22);
-  drawDetailNavigation(prevPressed, nextPressed);
-
-  constexpr int listX = 44;
-  constexpr int listY = 48;
-  constexpr int listW = SCREEN_WIDTH - 88;
-  constexpr int rowH = 14;
-  constexpr int rowGap = 1;
-
-  sprite->setFont(&fonts::efontJA_12);
-  if (labels.empty()) {
-    sprite->setTextColor(COLOR_PK_SUB);
-    sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 110);
-  } else {
-    for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
-      const int y = listY + (i * (rowH + rowGap));
-      if (pressedItemIndex == i) {
-        drawPressedOverlay(listX, y, listW, rowH + 2, 6);
-      }
-      sprite->setTextColor(COLOR_PK_TEXT);
-      sprite->drawString(labels[i], listX + 6, y + 2);
-    }
-  }
+  std::vector<bool> emptyFlags(labels.size(), false);
+  drawGuidePokemonListScreen("場所からみる", labels, emptyFlags, backPressed, pressedItemIndex, prevPressed, nextPressed);
 }
 
 void UIController::drawGuidePokemonDetailScreen(
@@ -667,7 +637,7 @@ void UIController::drawGuidePokemonDetailScreen(
     bool pagePressed,
     bool prevPressed,
     bool nextPressed) {
-  static const char* kTabs[5] = {"しゅつげん", "しんか", "わざ", "マシン", "ひでん"};
+  static const char* kTabs[5] = {"しんか", "しゅつげん", "わざ", "マシン", "ひでん"};
 
   sprite->fillScreen(COLOR_PK_BG);
 
