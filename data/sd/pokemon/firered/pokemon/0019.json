@@ -1,0 +1,17 @@
+{
+  "id": 19,
+  "locations": [
+    { "area": "1ばんどうろ", "method": "くさむら", "rate": "50%" },
+    { "area": "2ばんどうろ", "method": "くさむら", "rate": "35%" }
+  ],
+  "evolution": [
+    "Lv20"
+  ],
+  "level_up_moves": [
+    { "level": 1, "name": "たいあたり" },
+    { "level": 1, "name": "しっぽをふる" },
+    { "level": 7, "name": "でんこうせっか" }
+  ],
+  "machines": [],
+  "hms": []
+}

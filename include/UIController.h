@@ -34,7 +34,17 @@ public:
       int shiftY,
       uint16_t transparentColor);
   void applyBlackFade(uint8_t alpha);
-  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
+  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
+  void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed, bool hallOfFameEnabled, bool hallOfFamePressed);
+  void drawGuidePokemonListScreen(const char* title, const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed);
+  void drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed);
+  void drawGuidePokemonDetailScreen(
+      uint16_t pokemonId,
+      const String& headerLabel,
+      const std::vector<String>& lines,
+      int activeTab,
+      bool backPressed,
+      int pressedTab);
   void drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName);
   void blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite);
   void pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite);

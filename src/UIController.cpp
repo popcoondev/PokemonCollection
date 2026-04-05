@@ -459,7 +459,7 @@ void UIController::applyBlackFade(uint8_t alpha) {
   }
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
@@ -479,13 +479,17 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
       preview3dEnabled ? COLOR_PK_TEXT : COLOR_PK_BORDER,
       preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
 
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawCenterString("モードを えらんでください", SCREEN_WIDTH / 2, 74);
+  constexpr int menuLeftX = 24;
+  constexpr int menuRightX = 166;
+  constexpr int menuButtonW = 130;
+  constexpr int menuButtonH = 34;
+  constexpr int menuRowY0 = 64;
+  constexpr int menuRowGap = 42;
 
-  drawActionButton(44, 92, SCREEN_WIDTH - 88, 34, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
-  drawActionButton(44, 136, SCREEN_WIDTH - 88, 34, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(44, 180, SCREEN_WIDTH - 88, 24, "スライドショー", COLOR_PK_CARD, COLOR_PK_TEXT, slideshowPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, "スライドショー", COLOR_PK_CARD, COLOR_PK_TEXT, slideshowPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, "こうりゃく", COLOR_PK_CARD, COLOR_PK_TEXT, guidePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(COLOR_PK_SUB);
@@ -510,6 +514,172 @@ void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool sl
         pressed,
         selected ? COLOR_PK_SUB : COLOR_PK_BORDER,
         border);
+  }
+}
+
+void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed, bool hallOfFameEnabled, bool hallOfFamePressed) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("こうりゃく", SCREEN_WIDTH / 2, 22);
+  drawActionButton(236, 14, 58, 18, "メニュー", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, "ポケモンからみる", COLOR_PK_RED, COLOR_PK_CARD, pokemonPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, "場所からみる", COLOR_PK_CARD, COLOR_PK_TEXT, locationPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(180, 184, 116, 30, hallOfFameEnabled ? "殿堂入り ON" : "殿堂入り OFF", COLOR_PK_BG, COLOR_PK_TEXT, hallOfFamePressed, COLOR_PK_RED, COLOR_PK_BORDER);
+}
+
+void UIController::drawGuidePokemonListScreen(const char* title, const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString(title, SCREEN_WIDTH / 2, 22);
+  drawActionButton(236, 14, 58, 18, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  sprite->setFont(&fonts::efontJA_12);
+  constexpr int itemX[2] = {12, 164};
+  constexpr int itemYStart = 48;
+  constexpr int itemW = 144;
+  constexpr int itemH = 24;
+  constexpr int itemGapY = 6;
+  for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+    const int col = i % 2;
+    const int row = i / 2;
+    const int x = itemX[col];
+    const int y = itemYStart + (row * (itemH + itemGapY));
+    drawActionButton(
+        x,
+        y,
+        itemW,
+        itemH,
+        labels[i].c_str(),
+        COLOR_PK_BG,
+        COLOR_PK_TEXT,
+        pressedItemIndex == i,
+        COLOR_PK_RED,
+        COLOR_PK_BORDER);
+  }
+
+  drawActionButton(16, 198, 72, 30, "◀", COLOR_PK_BG, COLOR_PK_TEXT, prevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+}
+
+void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawCenterString("場所からみる", SCREEN_WIDTH / 2, 22);
+  drawActionButton(236, 14, 58, 18, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  constexpr int listX = 12;
+  constexpr int listY = 48;
+  constexpr int listW = SCREEN_WIDTH - 24;
+  constexpr int rowH = 14;
+  constexpr int rowGap = 1;
+
+  sprite->setFont(&fonts::efontJA_12);
+  if (labels.empty()) {
+    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 110);
+  } else {
+    for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (pressedItemIndex == i) {
+        drawPressedOverlay(listX, y, listW, rowH + 2, 6);
+      }
+      sprite->setTextColor(COLOR_PK_TEXT);
+      sprite->drawString(labels[i], listX + 6, y + 2);
+    }
+  }
+
+  drawActionButton(16, 198, 72, 30, "◀", COLOR_PK_BG, COLOR_PK_TEXT, prevPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(232, 198, 72, 30, "▶", COLOR_PK_BG, COLOR_PK_TEXT, nextPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+}
+
+void UIController::drawGuidePokemonDetailScreen(
+    uint16_t pokemonId,
+    const String& headerLabel,
+    const std::vector<String>& lines,
+    int activeTab,
+    bool backPressed,
+    int pressedTab) {
+  static const char* kTabs[5] = {"しゅつげん", "しんか", "わざ", "マシン", "ひでん"};
+
+  sprite->fillScreen(COLOR_PK_BG);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->drawString("No.", 18, 16);
+  char idText[8];
+  snprintf(idText, sizeof(idText), "%04d", pokemonId);
+  sprite->setTextColor(COLOR_PK_RED);
+  sprite->drawString(idText, 42, 16);
+  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->drawString(headerLabel, 92, 16);
+  drawActionButton(236, 14, 58, 18, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+
+  const bool showIcon = activeTab == 0;
+  int textX = 20;
+  int textY = 62;
+  int textMaxLines = 9;
+  if (showIcon) {
+    sprite->fillRoundRect(12, 56, 92, 92, 10, COLOR_PK_CARD);
+    sprite->drawRoundRect(12, 56, 92, 92, 10, COLOR_PK_BORDER);
+    drawQuizPokemonImage(pokemonId, 16, 60, 84, 84);
+    sprite->fillRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_CARD);
+    sprite->drawRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_BORDER);
+    textX = 120;
+    textY = 64;
+    textMaxLines = 8;
+  } else {
+    sprite->fillRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_CARD);
+    sprite->drawRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_BORDER);
+    textX = 20;
+    textY = 64;
+    textMaxLines = 9;
+  }
+
+  sprite->setFont(&fonts::efontJA_12);
+  if (lines.empty()) {
+    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 108);
+  } else {
+    const int lineH = 14;
+    for (int i = 0; i < static_cast<int>(lines.size()) && i < textMaxLines; ++i) {
+      sprite->setTextColor(COLOR_PK_TEXT);
+      sprite->drawString(lines[i], textX, textY + (i * lineH));
+    }
+  }
+
+  const int tabW = SCREEN_WIDTH / 5;
+  const int tabH = TAB_BAR_H;
+  const int startX = 0;
+  const int y = TAB_BAR_Y;
+  for (int i = 0; i < 5; ++i) {
+    const int x = startX + (i * tabW);
+    const bool isActive = activeTab == i;
+    uint16_t bg = isActive ? COLOR_PK_RED : COLOR_PK_CARD;
+    uint16_t fg = isActive ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    if (pressedTab == i) {
+      bg = COLOR_PK_RED;
+      fg = COLOR_PK_CARD;
+    }
+    sprite->fillRect(x, y, tabW, tabH, bg);
+    sprite->drawRect(x, y, tabW, tabH, COLOR_PK_BORDER);
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(fg);
+    sprite->drawCenterString(kTabs[i], x + (tabW / 2), y + 11);
   }
 }
 

@@ -22,6 +22,10 @@ TabType currentTab = TAB_APPEARANCE;
 
 enum ScreenMode {
   SCREEN_MENU = 0,
+  SCREEN_GUIDE_MENU,
+  SCREEN_GUIDE_POKEMON_LIST,
+  SCREEN_GUIDE_LOCATION_LIST,
+  SCREEN_GUIDE_POKEMON_DETAIL,
   SCREEN_DETAIL,
   SCREEN_SEARCH,
   SCREEN_SEARCH_INPUT,
@@ -109,6 +113,31 @@ struct QuizSoundCache {
   bool ready = false;
 };
 
+struct GuideLocationEntry {
+  String id;
+  String name;
+};
+
+struct GuidePokemonLocationEntry {
+  String area;
+  String method;
+  String rate;
+};
+
+struct GuidePokemonMoveEntry {
+  int level = 0;
+  String name;
+};
+
+struct GuidePokemonDetailEntry {
+  bool loaded = false;
+  std::vector<GuidePokemonLocationEntry> locations;
+  std::vector<String> evolutions;
+  std::vector<GuidePokemonMoveEntry> levelUpMoves;
+  std::vector<String> machines;
+  std::vector<String> hms;
+};
+
 enum QuizVolumeSetting {
   QUIZ_VOLUME_LARGE = 0,
   QUIZ_VOLUME_MEDIUM,
@@ -183,7 +212,12 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+std::vector<GuideLocationEntry> guideLocations;
+GuidePokemonDetailEntry guidePokemonDetail;
+uint16_t guidePokemonSelectedId = 0;
+int guidePokemonTab = 0;
 bool preview3dEnabled = false;
+bool guideHallOfFameEnabled = false;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -356,6 +390,7 @@ enum PressedControl {
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
   PRESS_MENU_SLIDESHOW,
+  PRESS_MENU_GUIDE,
   PRESS_MENU_3D,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
@@ -365,6 +400,29 @@ enum PressedControl {
   PRESS_SEARCH_INPUT_DELETE,
   PRESS_SEARCH_INPUT_CLEAR,
   PRESS_SEARCH_INPUT_KEY_0,
+  PRESS_GUIDE_BACK,
+  PRESS_GUIDE_POKEMON,
+  PRESS_GUIDE_LOCATION,
+  PRESS_GUIDE_HALL_OF_FAME,
+  PRESS_GUIDE_LIST_BACK,
+  PRESS_GUIDE_LIST_ITEM_0,
+  PRESS_GUIDE_LIST_ITEM_1,
+  PRESS_GUIDE_LIST_ITEM_2,
+  PRESS_GUIDE_LIST_ITEM_3,
+  PRESS_GUIDE_LIST_ITEM_4,
+  PRESS_GUIDE_LIST_ITEM_5,
+  PRESS_GUIDE_LIST_ITEM_6,
+  PRESS_GUIDE_LIST_ITEM_7,
+  PRESS_GUIDE_LIST_ITEM_8,
+  PRESS_GUIDE_LIST_ITEM_9,
+  PRESS_GUIDE_LIST_PREV,
+  PRESS_GUIDE_LIST_NEXT,
+  PRESS_GUIDE_DETAIL_BACK,
+  PRESS_GUIDE_DETAIL_TAB_0,
+  PRESS_GUIDE_DETAIL_TAB_1,
+  PRESS_GUIDE_DETAIL_TAB_2,
+  PRESS_GUIDE_DETAIL_TAB_3,
+  PRESS_GUIDE_DETAIL_TAB_4,
   PRESS_NAV_PREV,
   PRESS_NAV_NEXT,
   PRESS_EVOLUTION_0,
@@ -375,14 +433,68 @@ enum PressedControl {
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
-    if (hitTest(tx, ty, 44, 92, SCREEN_WIDTH - 88, 34, 8)) return PRESS_MENU_POKEDEX;
-    if (hitTest(tx, ty, 44, 136, SCREEN_WIDTH - 88, 34, 8)) return PRESS_MENU_QUIZ;
-    if (hitTest(tx, ty, 44, 180, SCREEN_WIDTH - 88, 24, 8)) return PRESS_MENU_SLIDESHOW;
+    if (hitTest(tx, ty, 24, 64, 130, 34, 8)) return PRESS_MENU_POKEDEX;
+    if (hitTest(tx, ty, 24, 106, 130, 34, 8)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 24, 148, 130, 34, 8)) return PRESS_MENU_SLIDESHOW;
+    if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
     if (hitTest(tx, ty, 246, 14, 50, 18, 6)) return PRESS_MENU_3D;
     if (hitTest(tx, ty, 92, 204, 42, 24, 6)) return PRESS_MENU_VOL_LARGE;
     if (hitTest(tx, ty, 142, 204, 42, 24, 6)) return PRESS_MENU_VOL_MEDIUM;
     if (hitTest(tx, ty, 192, 204, 42, 24, 6)) return PRESS_MENU_VOL_SMALL;
     if (hitTest(tx, ty, 242, 204, 42, 24, 6)) return PRESS_MENU_VOL_MUTE;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_MENU) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_POKEMON;
+    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_LOCATION;
+    if (hitTest(tx, ty, 180, 184, 116, 30, 8)) return PRESS_GUIDE_HALL_OF_FAME;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_LIST) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_LIST_BACK;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      const int x = (col == 0) ? 12 : 164;
+      const int y = 48 + (row * 30);
+      if (hitTest(tx, ty, x, y, 144, 24, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_LOCATION_LIST) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_LIST_BACK;
+    constexpr int listX = 12;
+    constexpr int listY = 48;
+    constexpr int listW = SCREEN_WIDTH - 24;
+    constexpr int rowH = 14;
+    constexpr int rowGap = 1;
+    for (int i = 0; i < 10; ++i) {
+      const int y = listY + (i * (rowH + rowGap));
+      if (hitTest(tx, ty, listX, y, listW, rowH + 2, 6)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
+    if (hitTest(tx, ty, 236, 14, 58, 18, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    for (int i = 0; i < 5; ++i) {
+      const int x = i * (SCREEN_WIDTH / 5);
+      if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_DETAIL_TAB_0 + i);
+      }
+    }
     return PRESS_NONE;
   }
 
@@ -462,6 +574,18 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
 enum PendingActionType {
   ACTION_NONE = 0,
+  ACTION_OPEN_GUIDE_MENU,
+  ACTION_CLOSE_GUIDE_MENU,
+  ACTION_OPEN_GUIDE_POKEMON_LIST,
+  ACTION_CLOSE_GUIDE_POKEMON_LIST,
+  ACTION_GUIDE_POKEMON_LIST_PAGE,
+  ACTION_OPEN_GUIDE_LOCATION_LIST,
+  ACTION_CLOSE_GUIDE_LOCATION_LIST,
+  ACTION_GUIDE_LOCATION_LIST_PAGE,
+  ACTION_TOGGLE_GUIDE_HALL_OF_FAME,
+  ACTION_OPEN_GUIDE_POKEMON_DETAIL,
+  ACTION_CLOSE_GUIDE_POKEMON_DETAIL,
+  ACTION_SET_GUIDE_POKEMON_TAB,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
   ACTION_OPEN_QUIZ,
@@ -509,6 +633,236 @@ uint16_t getAvailableMaxPokemonId() {
   return (maxId >= MIN_POKEMON_ID) ? maxId : MIN_POKEMON_ID;
 }
 
+uint16_t getGuideDexMaxPokemonId() {
+  const uint16_t availableMax = getAvailableMaxPokemonId();
+  const uint16_t guideMax = guideHallOfFameEnabled ? 386 : 151;
+  return (availableMax < guideMax) ? availableMax : guideMax;
+}
+
+std::vector<uint16_t> getGuidePokemonPageIds(size_t offset, size_t limit) {
+  std::vector<uint16_t> ids;
+  const uint16_t maxId = getGuideDexMaxPokemonId();
+  for (uint16_t id = MIN_POKEMON_ID; id <= maxId; ++id) {
+    if (dataMgr.getPokemonName(id).length() == 0) {
+      continue;
+    }
+    if (offset > 0) {
+      --offset;
+      continue;
+    }
+    ids.push_back(id);
+    if (ids.size() >= limit) {
+      break;
+    }
+  }
+  return ids;
+}
+
+size_t getGuidePokemonCount() {
+  size_t count = 0;
+  const uint16_t maxId = getGuideDexMaxPokemonId();
+  for (uint16_t id = MIN_POKEMON_ID; id <= maxId; ++id) {
+    if (dataMgr.getPokemonName(id).length() > 0) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+bool loadGuideLocations() {
+  guideLocations.clear();
+
+  File file = SD.open("/pokemon/firered/locations.json");
+  if (!file) {
+    return false;
+  }
+
+  JsonDocument doc;
+  const DeserializationError error = deserializeJson(doc, file);
+  file.close();
+  if (error || !doc.is<JsonArray>()) {
+    return false;
+  }
+
+  for (JsonObject item : doc.as<JsonArray>()) {
+    GuideLocationEntry entry;
+    entry.id = item["id"].as<String>();
+    entry.name = item["name"].as<String>();
+    if (entry.name.length() > 0) {
+      guideLocations.push_back(entry);
+    }
+  }
+
+  return !guideLocations.empty();
+}
+
+std::vector<String> getGuideLocationPageLabels(size_t offset, size_t limit) {
+  std::vector<String> labels;
+  auto isGuideLocationUnlocked = [](const GuideLocationEntry& entry) {
+    if (guideHallOfFameEnabled) {
+      return true;
+    }
+
+    const String& id = entry.id;
+    const String& name = entry.name;
+    if (id == "island04" || id == "island05" || id == "island06" || id == "island07"
+        || id == "cerulean_cave" || id == "champion_road_hidden") {
+      return false;
+    }
+    if (name.indexOf("4のしま") >= 0 || name.indexOf("5のしま") >= 0
+        || name.indexOf("6のしま") >= 0 || name.indexOf("7のしま") >= 0
+        || name.indexOf("ハナダのどうくつ") >= 0
+        || name.indexOf("チャンピオンロード") >= 0) {
+      return false;
+    }
+    return true;
+  };
+
+  for (size_t i = 0; i < guideLocations.size(); ++i) {
+    if (!isGuideLocationUnlocked(guideLocations[i])) {
+      continue;
+    }
+    if (offset > 0) {
+      --offset;
+      continue;
+    }
+    labels.push_back(guideLocations[i].name);
+    if (labels.size() >= limit) {
+      break;
+    }
+  }
+  return labels;
+}
+
+size_t getGuideLocationCount() {
+  size_t count = 0;
+  for (const auto& entry : guideLocations) {
+    if (guideHallOfFameEnabled) {
+      ++count;
+      continue;
+    }
+    const String& id = entry.id;
+    const String& name = entry.name;
+    if (id == "island04" || id == "island05" || id == "island06" || id == "island07"
+        || id == "cerulean_cave" || id == "champion_road_hidden") {
+      continue;
+    }
+    if (name.indexOf("4のしま") >= 0 || name.indexOf("5のしま") >= 0
+        || name.indexOf("6のしま") >= 0 || name.indexOf("7のしま") >= 0
+        || name.indexOf("ハナダのどうくつ") >= 0
+        || name.indexOf("チャンピオンロード") >= 0) {
+      continue;
+    }
+    ++count;
+  }
+  return count;
+}
+
+bool loadGuidePokemonDetail(uint16_t pokemonId) {
+  guidePokemonDetail = GuidePokemonDetailEntry{};
+
+  char path[48];
+  snprintf(path, sizeof(path), "/pokemon/firered/pokemon/%04d.json", pokemonId);
+  File file = SD.open(path);
+  if (!file) {
+    return false;
+  }
+
+  JsonDocument doc;
+  const DeserializationError error = deserializeJson(doc, file);
+  file.close();
+  if (error || !doc.is<JsonObject>()) {
+    return false;
+  }
+
+  JsonObject root = doc.as<JsonObject>();
+
+  if (root["locations"].is<JsonArray>()) {
+    for (JsonObject item : root["locations"].as<JsonArray>()) {
+      GuidePokemonLocationEntry entry;
+      entry.area = item["area"].as<String>();
+      entry.method = item["method"].as<String>();
+      entry.rate = item["rate"].as<String>();
+      guidePokemonDetail.locations.push_back(entry);
+    }
+  }
+
+  if (root["evolution"].is<JsonArray>()) {
+    for (JsonVariant item : root["evolution"].as<JsonArray>()) {
+      const String value = item.as<String>();
+      if (value.length() > 0) {
+        guidePokemonDetail.evolutions.push_back(value);
+      }
+    }
+  }
+
+  if (root["level_up_moves"].is<JsonArray>()) {
+    for (JsonObject item : root["level_up_moves"].as<JsonArray>()) {
+      GuidePokemonMoveEntry entry;
+      entry.level = item["level"] | 0;
+      entry.name = item["name"].as<String>();
+      if (entry.name.length() > 0) {
+        guidePokemonDetail.levelUpMoves.push_back(entry);
+      }
+    }
+  }
+
+  if (root["machines"].is<JsonArray>()) {
+    for (JsonVariant item : root["machines"].as<JsonArray>()) {
+      const String value = item.as<String>();
+      if (value.length() > 0) {
+        guidePokemonDetail.machines.push_back(value);
+      }
+    }
+  }
+
+  if (root["hms"].is<JsonArray>()) {
+    for (JsonVariant item : root["hms"].as<JsonArray>()) {
+      const String value = item.as<String>();
+      if (value.length() > 0) {
+        guidePokemonDetail.hms.push_back(value);
+      }
+    }
+  }
+
+  guidePokemonDetail.loaded = true;
+  return true;
+}
+
+std::vector<String> getGuidePokemonTabLines(int tabIndex) {
+  std::vector<String> lines;
+  switch (tabIndex) {
+    case 0:
+      for (const auto& entry : guidePokemonDetail.locations) {
+        String line = entry.area;
+        if (entry.method.length() > 0) line += " / " + entry.method;
+        if (entry.rate.length() > 0) line += " / " + entry.rate;
+        lines.push_back(line);
+      }
+      break;
+    case 1:
+      lines = guidePokemonDetail.evolutions;
+      break;
+    case 2:
+      for (const auto& entry : guidePokemonDetail.levelUpMoves) {
+        char prefix[12];
+        snprintf(prefix, sizeof(prefix), "Lv%d ", entry.level);
+        lines.push_back(String(prefix) + entry.name);
+      }
+      break;
+    case 3:
+      lines = guidePokemonDetail.machines;
+      break;
+    case 4:
+      lines = guidePokemonDetail.hms;
+      break;
+  }
+  if (lines.empty()) {
+    lines.push_back("データなし");
+  }
+  return lines;
+}
+
 uint16_t adjustSearchDigit(uint16_t currentValue, int placeValue, int direction) {
   const int digit = (currentValue / placeValue) % 10;
   const int nextDigit = (digit + direction + 10) % 10;
@@ -551,6 +905,7 @@ bool saveSettings() {
   JsonDocument doc;
   doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
   doc["preview_3d"] = preview3dEnabled;
+  doc["guide_hall_of_fame"] = guideHallOfFameEnabled;
 
   if (SD.exists(kSettingsPath)) {
     SD.remove(kSettingsPath);
@@ -567,6 +922,7 @@ bool saveSettings() {
 void loadSettings() {
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
   preview3dEnabled = false;
+  guideHallOfFameEnabled = false;
 
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
@@ -579,6 +935,7 @@ void loadSettings() {
   if (deserializeJson(doc, file) == DeserializationError::Ok) {
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
     preview3dEnabled = doc["preview_3d"] | false;
+    guideHallOfFameEnabled = doc["guide_hall_of_fame"] | false;
   }
   file.close();
   applyQuizVolume();
@@ -1035,6 +1392,7 @@ void setup() {
     M5.Display.print("SD Error");
     while(1) delay(100);
   }
+  loadGuideLocations();
 
   if (!ui.begin()) {
     M5.Display.print("UI Error");
@@ -1132,6 +1490,8 @@ void loop() {
   static QuizPhase quizPhase = QUIZ_A_SIDE;
   static uint32_t quizPhaseStartedAt = 0;
   static uint16_t quizPokemonId = MIN_POKEMON_ID;
+  static size_t guidePokemonListOffset = 0;
+  static size_t guideLocationListOffset = 0;
 
   PressedControl pressedControl = PRESS_NONE;
 
@@ -1199,6 +1559,44 @@ void loop() {
         pendingAction = makePendingAction(ACTION_CLOSE_PREVIEW_POC);
       } else if (screenMode == SCREEN_SLIDESHOW) {
         pendingAction = makePendingAction(ACTION_CLOSE_SLIDESHOW);
+      } else if (screenMode == SCREEN_GUIDE_MENU) {
+        if (pressedControl == PRESS_GUIDE_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_MENU);
+        } else if (pressedControl == PRESS_GUIDE_POKEMON) {
+          pendingAction = makePendingAction(ACTION_OPEN_GUIDE_POKEMON_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LOCATION) {
+          pendingAction = makePendingAction(ACTION_OPEN_GUIDE_LOCATION_LIST);
+        } else if (pressedControl == PRESS_GUIDE_HALL_OF_FAME) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_HALL_OF_FAME);
+        }
+      } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_GUIDE_POKEMON_LIST_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_GUIDE_POKEMON_LIST_PAGE, 10);
+        } else if (pressedControl >= PRESS_GUIDE_LIST_ITEM_0 && pressedControl <= PRESS_GUIDE_LIST_ITEM_9) {
+          const auto pageIds = getGuidePokemonPageIds(guidePokemonListOffset, 10);
+          const int pageIndex = pressedControl - PRESS_GUIDE_LIST_ITEM_0;
+          if (pageIndex >= 0 && pageIndex < static_cast<int>(pageIds.size())) {
+            pendingAction = makePendingAction(ACTION_OPEN_GUIDE_POKEMON_DETAIL, pageIds[pageIndex]);
+          }
+        }
+      } else if (screenMode == SCREEN_GUIDE_LOCATION_LIST) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_LOCATION_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_GUIDE_LOCATION_LIST_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_GUIDE_LOCATION_LIST_PAGE, 10);
+        }
+      } else if (screenMode == SCREEN_GUIDE_POKEMON_DETAIL) {
+        if (pressedControl == PRESS_GUIDE_DETAIL_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_DETAIL);
+        } else if (pressedControl >= PRESS_GUIDE_DETAIL_TAB_0 && pressedControl <= PRESS_GUIDE_DETAIL_TAB_4) {
+          pendingAction = makePendingAction(ACTION_SET_GUIDE_POKEMON_TAB, pressedControl - PRESS_GUIDE_DETAIL_TAB_0);
+        }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
           pendingAction = makePendingAction(ACTION_OPEN_POKEDEX);
@@ -1206,6 +1604,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
         } else if (pressedControl == PRESS_MENU_SLIDESHOW) {
           pendingAction = makePendingAction(ACTION_OPEN_SLIDESHOW);
+        } else if (pressedControl == PRESS_MENU_GUIDE) {
+          pendingAction = makePendingAction(ACTION_OPEN_GUIDE_MENU);
         } else if (pressedControl == PRESS_MENU_3D) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
@@ -1238,6 +1638,72 @@ void loop() {
 
   if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
     switch (pendingAction.type) {
+      case ACTION_OPEN_GUIDE_MENU:
+        screenMode = SCREEN_GUIDE_MENU;
+        break;
+      case ACTION_CLOSE_GUIDE_MENU:
+        screenMode = SCREEN_MENU;
+        break;
+      case ACTION_OPEN_GUIDE_POKEMON_LIST:
+        screenMode = SCREEN_GUIDE_POKEMON_LIST;
+        guidePokemonListOffset = 0;
+        break;
+      case ACTION_CLOSE_GUIDE_POKEMON_LIST:
+        screenMode = SCREEN_GUIDE_MENU;
+        break;
+      case ACTION_GUIDE_POKEMON_LIST_PAGE: {
+        const size_t totalCount = getGuidePokemonCount();
+        const size_t maxOffset = (totalCount > 10) ? (((totalCount - 1) / 10) * 10) : 0;
+        if (totalCount == 0) {
+          guidePokemonListOffset = 0;
+          break;
+        }
+        if (pendingAction.value < 0) {
+          guidePokemonListOffset = (guidePokemonListOffset == 0) ? maxOffset : guidePokemonListOffset - 10;
+        } else if (pendingAction.value > 0) {
+          guidePokemonListOffset = (guidePokemonListOffset >= maxOffset) ? 0 : (guidePokemonListOffset + 10);
+        }
+        break;
+      }
+      case ACTION_OPEN_GUIDE_LOCATION_LIST:
+        screenMode = SCREEN_GUIDE_LOCATION_LIST;
+        guideLocationListOffset = 0;
+        break;
+      case ACTION_CLOSE_GUIDE_LOCATION_LIST:
+        screenMode = SCREEN_GUIDE_MENU;
+        break;
+      case ACTION_GUIDE_LOCATION_LIST_PAGE: {
+        const size_t totalCount = getGuideLocationCount();
+        const size_t maxOffset = (totalCount > 10) ? (((totalCount - 1) / 10) * 10) : 0;
+        if (totalCount == 0) {
+          guideLocationListOffset = 0;
+          break;
+        }
+        if (pendingAction.value < 0) {
+          guideLocationListOffset = (guideLocationListOffset == 0) ? maxOffset : guideLocationListOffset - 10;
+        } else if (pendingAction.value > 0) {
+          guideLocationListOffset = (guideLocationListOffset >= maxOffset) ? 0 : (guideLocationListOffset + 10);
+        }
+        break;
+      }
+      case ACTION_TOGGLE_GUIDE_HALL_OF_FAME:
+        guideHallOfFameEnabled = !guideHallOfFameEnabled;
+        guidePokemonListOffset = 0;
+        guideLocationListOffset = 0;
+        saveSettings();
+        break;
+      case ACTION_OPEN_GUIDE_POKEMON_DETAIL:
+        guidePokemonSelectedId = static_cast<uint16_t>(pendingAction.value);
+        guidePokemonTab = 0;
+        loadGuidePokemonDetail(guidePokemonSelectedId);
+        screenMode = SCREEN_GUIDE_POKEMON_DETAIL;
+        break;
+      case ACTION_CLOSE_GUIDE_POKEMON_DETAIL:
+        screenMode = SCREEN_GUIDE_POKEMON_LIST;
+        break;
+      case ACTION_SET_GUIDE_POKEMON_TAB:
+        guidePokemonTab = constrain(pendingAction.value, 0, 4);
+        break;
       case ACTION_OPEN_POKEDEX:
         screenMode = SCREEN_DETAIL;
         break;
@@ -1588,11 +2054,56 @@ void loop() {
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
           visualControl == PRESS_MENU_SLIDESHOW,
+          visualControl == PRESS_MENU_GUIDE,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
+              : -1);
+    } else if (screenMode == SCREEN_GUIDE_MENU) {
+      ui.drawGuideMenuScreen(
+          visualControl == PRESS_GUIDE_POKEMON,
+          visualControl == PRESS_GUIDE_LOCATION,
+          visualControl == PRESS_GUIDE_BACK,
+          guideHallOfFameEnabled,
+          visualControl == PRESS_GUIDE_HALL_OF_FAME);
+    } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
+      const auto pageIds = getGuidePokemonPageIds(guidePokemonListOffset, 10);
+      std::vector<String> pageLabels;
+      pageLabels.reserve(pageIds.size());
+      for (uint16_t id : pageIds) {
+        char prefix[8];
+        snprintf(prefix, sizeof(prefix), "%04d", id);
+        pageLabels.push_back(String(prefix) + " " + dataMgr.getPokemonName(id));
+      }
+      ui.drawGuidePokemonListScreen(
+          guideHallOfFameEnabled ? "全国図鑑" : "カントー図鑑",
+          pageLabels,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
+    } else if (screenMode == SCREEN_GUIDE_LOCATION_LIST) {
+      ui.drawGuideLocationListScreen(
+          getGuideLocationPageLabels(guideLocationListOffset, 10),
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
+    } else if (screenMode == SCREEN_GUIDE_POKEMON_DETAIL) {
+      ui.drawGuidePokemonDetailScreen(
+          guidePokemonSelectedId,
+          dataMgr.getPokemonName(guidePokemonSelectedId),
+          getGuidePokemonTabLines(guidePokemonTab),
+          guidePokemonTab,
+          visualControl == PRESS_GUIDE_DETAIL_BACK,
+          (visualControl >= PRESS_GUIDE_DETAIL_TAB_0 && visualControl <= PRESS_GUIDE_DETAIL_TAB_4)
+              ? (visualControl - PRESS_GUIDE_DETAIL_TAB_0)
               : -1);
     } else if (screenMode == SCREEN_QUIZ) {
       ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
