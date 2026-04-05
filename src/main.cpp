@@ -29,6 +29,7 @@ enum ScreenMode {
   SCREEN_GUIDE_POKEMON_DETAIL,
   SCREEN_DETAIL,
   SCREEN_SEARCH,
+  SCREEN_SEARCH_NUMBER,
   SCREEN_SEARCH_INPUT,
   SCREEN_PREVIEW,
   SCREEN_PREVIEW_POC,
@@ -220,6 +221,8 @@ uint16_t guidePokemonSelectedId = 0;
 int guidePokemonTab = 0;
 bool preview3dEnabled = false;
 bool guideHallOfFameEnabled = false;
+uint8_t settingsSecretTapCount = 0;
+unsigned long settingsSecretFlashUntil = 0;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -399,6 +402,7 @@ enum PressedControl {
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
   PRESS_MENU_VOL_MUTE,
+  PRESS_SETTINGS_SECRET,
   PRESS_SEARCH_INPUT_BACK,
   PRESS_SEARCH_INPUT_DELETE,
   PRESS_SEARCH_INPUT_CLEAR,
@@ -451,6 +455,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 94, 138, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
     if (hitTest(tx, ty, 164, 138, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
     if (hitTest(tx, ty, 234, 138, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 8, 208, 88, 24, 0)) return PRESS_SETTINGS_SECRET;
     return PRESS_NONE;
   }
 
@@ -463,25 +468,27 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_GUIDE_POKEMON_LIST) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     for (int i = 0; i < 10; ++i) {
       const int col = i % 2;
       const int row = i / 2;
-      const int x = (col == 0) ? 12 : 164;
+      const int x = (col == 0) ? 44 : 162;
       const int y = 48 + (row * 30);
-      if (hitTest(tx, ty, x, y, 144, 24, 8)) {
+      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
-    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
-    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_GUIDE_LOCATION_LIST) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
-    constexpr int listX = 12;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    constexpr int listX = 44;
     constexpr int listY = 48;
-    constexpr int listW = SCREEN_WIDTH - 24;
+    constexpr int listW = SCREEN_WIDTH - 88;
     constexpr int rowH = 14;
     constexpr int rowGap = 1;
     for (int i = 0; i < 10; ++i) {
@@ -490,8 +497,6 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
-    if (hitTest(tx, ty, 16, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_PREV;
-    if (hitTest(tx, ty, 232, 198, 72, 30, 6)) return PRESS_GUIDE_LIST_NEXT;
     return PRESS_NONE;
   }
 
@@ -569,31 +574,32 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_SEARCH) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_MENU;
-
-    if (searchMode == SEARCH_MODE_NUMBER) {
-      const int digitX[4] = {60, 110, 160, 210};
-      for (int i = 0; i < 4; ++i) {
-        if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
-        if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
-      }
-      if (hitTest(tx, ty, 20, 178, 280, 40, 10)) return PRESS_SEARCH_OPEN;
-      return PRESS_NONE;
-    }
-
-    if (hitTest(tx, ty, 20, 52, 280, 24, 6)) return PRESS_SEARCH_NAME_QUERY;
-    const int resultX[2] = {20, 166};
-    const int resultY = 84;
-    const int resultW = 134;
-    const int resultH = 22;
+    if (hitTest(tx, ty, 44, 52, 114, 24, 6)) return PRESS_SEARCH_NAME_QUERY;
+    if (hitTest(tx, ty, 162, 52, 114, 24, 6)) return PRESS_SEARCH_MODE;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_SEARCH_NAME_PAGE_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_SEARCH_NAME_PAGE_NEXT;
+    const int resultX[2] = {44, 162};
+    const int resultY = 82;
+    const int resultW = 114;
+    const int resultH = 24;
     for (int i = 0; i < 10; ++i) {
       const int col = i % 2;
       const int row = i / 2;
-      if (hitTest(tx, ty, resultX[col], resultY + (row * 24), resultW, resultH, 6)) {
+      if (hitTest(tx, ty, resultX[col], resultY + (row * 28), resultW, resultH, 6)) {
         return static_cast<PressedControl>(PRESS_SEARCH_NAME_RESULT_0 + i);
       }
     }
-    if (hitTest(tx, ty, 20, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_PREV;
-    if (hitTest(tx, ty, 236, 206, 64, 22, 6)) return PRESS_SEARCH_NAME_PAGE_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_SEARCH_NUMBER) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_MENU;
+    const int digitX[4] = {60, 110, 160, 210};
+    for (int i = 0; i < 4; ++i) {
+      if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
+      if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
+    }
+    if (hitTest(tx, ty, 20, 178, 280, 40, 10)) return PRESS_SEARCH_OPEN;
     return PRESS_NONE;
   }
 
@@ -656,6 +662,7 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
   ACTION_SEARCH_TO_MENU,
+  ACTION_OPEN_SEARCH_NUMBER,
   ACTION_SEARCH_TOGGLE_MODE,
   ACTION_SEARCH_OPEN_INPUT,
   ACTION_SEARCH_CLOSE_INPUT,
@@ -818,6 +825,10 @@ size_t getGuideLocationCount() {
     ++count;
   }
   return count;
+}
+
+std::vector<uint16_t> getSearchFilteredIds() {
+  return dataMgr.findPokemonIdsByName(searchNameQuery, 0, getAvailableMaxPokemonId());
 }
 
 bool loadGuidePokemonDetail(uint16_t pokemonId) {
@@ -1594,16 +1605,8 @@ void loop() {
       } else if (screenMode == SCREEN_SEARCH) {
         if (pressedControl == PRESS_SEARCH_NAME_QUERY) {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN_INPUT);
-        } else if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
-          const int digitStep[4] = {1000, 100, 10, 1};
-          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, digitStep[pressedControl - PRESS_SEARCH_DIGIT_UP_0]);
-        } else if (pressedControl >= PRESS_SEARCH_DIGIT_DOWN_0 && pressedControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
-          const int digitStep[4] = {1000, 100, 10, 1};
-          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, -digitStep[pressedControl - PRESS_SEARCH_DIGIT_DOWN_0]);
-        } else if (pressedControl == PRESS_SEARCH_CANCEL) {
-          pendingAction = makePendingAction(ACTION_SEARCH_CANCEL);
-        } else if (pressedControl == PRESS_SEARCH_OPEN) {
-          pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
+        } else if (pressedControl == PRESS_SEARCH_MODE) {
+          pendingAction = makePendingAction(ACTION_OPEN_SEARCH_NUMBER);
         } else if (pressedControl == PRESS_SEARCH_MENU) {
           pendingAction = makePendingAction(ACTION_SEARCH_TO_MENU);
         } else if (pressedControl == PRESS_SEARCH_NAME_PAGE_PREV) {
@@ -1612,6 +1615,18 @@ void loop() {
           pendingAction = makePendingAction(ACTION_SEARCH_NAME_PAGE, 10);
         } else if (pressedControl >= PRESS_SEARCH_NAME_RESULT_0 && pressedControl <= PRESS_SEARCH_NAME_RESULT_9) {
           pendingAction = makePendingAction(ACTION_SEARCH_NAME_OPEN, pressedControl - PRESS_SEARCH_NAME_RESULT_0);
+        }
+      } else if (screenMode == SCREEN_SEARCH_NUMBER) {
+        if (pressedControl >= PRESS_SEARCH_DIGIT_UP_0 && pressedControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+          const int digitStep[4] = {1000, 100, 10, 1};
+          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, digitStep[pressedControl - PRESS_SEARCH_DIGIT_UP_0]);
+        } else if (pressedControl >= PRESS_SEARCH_DIGIT_DOWN_0 && pressedControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
+          const int digitStep[4] = {1000, 100, 10, 1};
+          pendingAction = makePendingAction(ACTION_SEARCH_ADJUST, -digitStep[pressedControl - PRESS_SEARCH_DIGIT_DOWN_0]);
+        } else if (pressedControl == PRESS_SEARCH_OPEN) {
+          pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
+        } else if (pressedControl == PRESS_SEARCH_MENU) {
+          pendingAction = makePendingAction(ACTION_SEARCH_TO_MENU);
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
@@ -1657,11 +1672,22 @@ void loop() {
         }
       } else if (screenMode == SCREEN_SETTINGS) {
         if (pressedControl == PRESS_GUIDE_BACK) {
+          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
         } else if (pressedControl == PRESS_MENU_3D) {
+          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
+          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
+        } else if (pressedControl == PRESS_SETTINGS_SECRET) {
+          ++settingsSecretTapCount;
+          if (settingsSecretTapCount >= 10) {
+            settingsSecretTapCount = 0;
+            pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_HALL_OF_FAME);
+          }
+        } else {
+          settingsSecretTapCount = 0;
         }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
@@ -1760,6 +1786,7 @@ void loop() {
         guideHallOfFameEnabled = !guideHallOfFameEnabled;
         guidePokemonListOffset = 0;
         guideLocationListOffset = 0;
+        settingsSecretFlashUntil = millis() + 180;
         saveSettings();
         break;
       case ACTION_OPEN_GUIDE_POKEMON_DETAIL:
@@ -1775,8 +1802,12 @@ void loop() {
         guidePokemonTab = constrain(pendingAction.value, 0, 4);
         break;
       case ACTION_OPEN_POKEDEX:
-        detailReturnScreen = SCREEN_MENU;
-        screenMode = SCREEN_DETAIL;
+        screenMode = SCREEN_SEARCH;
+        searchMode = SEARCH_MODE_NAME;
+        searchNameOffset = 0;
+        searchNameQuery = "";
+        searchInputVowelMode = false;
+        searchInputRowIndex = -1;
         break;
       case ACTION_OPEN_QUIZ:
         screenMode = SCREEN_QUIZ;
@@ -1816,11 +1847,16 @@ void loop() {
         saveSettings();
         break;
       case ACTION_OPEN_SEARCH:
-        screenMode = SCREEN_SEARCH;
+        screenMode = SCREEN_SEARCH_NUMBER;
         returnId = currentId;
         searchId = currentId;
         searchMode = SEARCH_MODE_NUMBER;
         searchNameOffset = 0;
+        break;
+      case ACTION_OPEN_SEARCH_NUMBER:
+        screenMode = SCREEN_SEARCH_NUMBER;
+        searchMode = SEARCH_MODE_NUMBER;
+        searchId = currentId;
         break;
       case ACTION_SEARCH_TOGGLE_MODE:
         searchMode = (searchMode == SEARCH_MODE_NUMBER) ? SEARCH_MODE_NAME : SEARCH_MODE_NUMBER;
@@ -1892,11 +1928,24 @@ void loop() {
         screenMode = SCREEN_DETAIL;
         break;
       case ACTION_SEARCH_TO_MENU:
-        screenMode = SCREEN_DETAIL;
+        screenMode = (screenMode == SCREEN_SEARCH_NUMBER) ? SCREEN_SEARCH : SCREEN_MENU;
         break;
       case ACTION_SEARCH_NAME_PAGE: {
+        const size_t totalCount = getSearchFilteredIds().size();
+        if (totalCount == 0) {
+          searchNameOffset = 0;
+          break;
+        }
+        const int pageSize = 10;
+        const int lastPageOffset = static_cast<int>(((totalCount - 1) / pageSize) * pageSize);
         const int nextOffset = static_cast<int>(searchNameOffset) + pendingAction.value;
-        searchNameOffset = static_cast<size_t>(nextOffset < 0 ? 0 : nextOffset);
+        if (nextOffset < 0) {
+          searchNameOffset = static_cast<size_t>(lastPageOffset);
+        } else if (nextOffset >= static_cast<int>(totalCount)) {
+          searchNameOffset = 0;
+        } else {
+          searchNameOffset = static_cast<size_t>(nextOffset);
+        }
         break;
       }
       case ACTION_SEARCH_NAME_OPEN: {
@@ -1922,7 +1971,7 @@ void loop() {
             && dataMgr.getPokemonName(searchId).length() > 0) {
           currentId = searchId;
           returnId = currentId;
-          detailReturnScreen = SCREEN_SEARCH;
+          detailReturnScreen = SCREEN_SEARCH_NUMBER;
           screenMode = SCREEN_DETAIL;
           dataMgr.loadPokemonDetail(currentId);
         }
@@ -1948,12 +1997,38 @@ void loop() {
         screenMode = SCREEN_DETAIL;
         break;
       case ACTION_NAV_PREV: {
+        if (detailReturnScreen == SCREEN_SEARCH && searchMode == SEARCH_MODE_NAME) {
+          const auto ids = getSearchFilteredIds();
+          if (!ids.empty()) {
+            auto it = std::find(ids.begin(), ids.end(), currentId);
+            if (it == ids.end() || it == ids.begin()) {
+              currentId = ids.back();
+            } else {
+              currentId = *(it - 1);
+            }
+            dataMgr.loadPokemonDetail(currentId);
+            break;
+          }
+        }
         const uint16_t maxPokemonId = getAvailableMaxPokemonId();
         currentId = (currentId <= MIN_POKEMON_ID) ? maxPokemonId : (currentId - 1);
         dataMgr.loadPokemonDetail(currentId);
         break;
       }
       case ACTION_NAV_NEXT: {
+        if (detailReturnScreen == SCREEN_SEARCH && searchMode == SEARCH_MODE_NAME) {
+          const auto ids = getSearchFilteredIds();
+          if (!ids.empty()) {
+            auto it = std::find(ids.begin(), ids.end(), currentId);
+            if (it == ids.end() || (it + 1) == ids.end()) {
+              currentId = ids.front();
+            } else {
+              currentId = *(it + 1);
+            }
+            dataMgr.loadPokemonDetail(currentId);
+            break;
+          }
+        }
         const uint16_t maxPokemonId = getAvailableMaxPokemonId();
         currentId = (currentId >= maxPokemonId) ? MIN_POKEMON_ID : (currentId + 1);
         dataMgr.loadPokemonDetail(currentId);
@@ -2145,7 +2220,9 @@ void loop() {
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
-              : -1);
+              : -1,
+          visualControl == PRESS_SETTINGS_SECRET,
+          millis() < settingsSecretFlashUntil);
     } else if (screenMode == SCREEN_GUIDE_MENU) {
       ui.drawGuideMenuScreen(
           visualControl == PRESS_GUIDE_POKEMON,
@@ -2191,32 +2268,22 @@ void loop() {
     } else if (screenMode == SCREEN_QUIZ) {
       ui.drawQuizScreen(quizPhase == QUIZ_B_SIDE, quizPokemonId, dataMgr.getPokemonName(quizPokemonId));
     } else if (screenMode == SCREEN_SEARCH) {
-      int pressedDigitDelta = 0;
-      std::vector<uint16_t> nameCandidateIds;
+      std::vector<uint16_t> nameCandidateIds
+          = dataMgr.findPokemonIdsByName(searchNameQuery, searchNameOffset, 10);
       std::vector<String> nameCandidateLabels;
-      if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
-        const int digitStep[4] = {1000, 100, 10, 1};
-        pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
-      } else if (visualControl >= PRESS_SEARCH_DIGIT_DOWN_0 && visualControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
-        const int digitStep[4] = {1000, 100, 10, 1};
-        pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
-      }
-      if (searchMode == SEARCH_MODE_NAME) {
-        nameCandidateIds = dataMgr.findPokemonIdsByName(searchNameQuery, searchNameOffset, 10);
-        for (uint16_t id : nameCandidateIds) {
-          char prefix[8];
-          snprintf(prefix, sizeof(prefix), "%04d", id);
-          nameCandidateLabels.push_back(String(prefix) + " " + dataMgr.getPokemonName(id));
-        }
+      for (uint16_t id : nameCandidateIds) {
+        char prefix[8];
+        snprintf(prefix, sizeof(prefix), "%04d", id);
+        nameCandidateLabels.push_back(String(prefix) + " " + dataMgr.getPokemonName(id));
       }
       ui.drawSearchScreen(
-          searchMode == SEARCH_MODE_NAME,
+          true,
           searchId,
           dataMgr.getPokemonName(searchId),
           searchNameQuery,
           nameCandidateIds,
           nameCandidateLabels,
-          pressedDigitDelta,
+          0,
           visualControl == PRESS_SEARCH_MENU,
           visualControl == PRESS_SEARCH_MODE,
           (visualControl >= PRESS_SEARCH_NAME_RESULT_0 && visualControl <= PRESS_SEARCH_NAME_RESULT_9)
@@ -2224,7 +2291,31 @@ void loop() {
               : -1,
           visualControl == PRESS_SEARCH_NAME_PAGE_PREV,
           visualControl == PRESS_SEARCH_NAME_PAGE_NEXT,
-          visualControl == PRESS_SEARCH_CANCEL,
+          visualControl == PRESS_SEARCH_NAME_QUERY,
+          false);
+    } else if (screenMode == SCREEN_SEARCH_NUMBER) {
+      int pressedDigitDelta = 0;
+      if (visualControl >= PRESS_SEARCH_DIGIT_UP_0 && visualControl <= (PRESS_SEARCH_DIGIT_UP_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = digitStep[visualControl - PRESS_SEARCH_DIGIT_UP_0];
+      } else if (visualControl >= PRESS_SEARCH_DIGIT_DOWN_0 && visualControl <= (PRESS_SEARCH_DIGIT_DOWN_0 + 3)) {
+        const int digitStep[4] = {1000, 100, 10, 1};
+        pressedDigitDelta = -digitStep[visualControl - PRESS_SEARCH_DIGIT_DOWN_0];
+      }
+      ui.drawSearchScreen(
+          false,
+          searchId,
+          dataMgr.getPokemonName(searchId),
+          "",
+          {},
+          {},
+          pressedDigitDelta,
+          visualControl == PRESS_SEARCH_MENU,
+          false,
+          -1,
+          false,
+          false,
+          false,
           visualControl == PRESS_SEARCH_OPEN);
     } else if (screenMode == SCREEN_SEARCH_INPUT) {
       ui.drawSearchInputScreen(
