@@ -10,5 +10,7 @@
 *.log
 *.tmp
 *.bak
+*.pyc
+__pycache__/
 
 /.clangd/
