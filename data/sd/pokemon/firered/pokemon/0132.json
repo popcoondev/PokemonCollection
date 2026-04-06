@@ -50,7 +50,7 @@
       "postgame_only": true
     },
     {
-      "area": "13ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 25,
@@ -58,7 +58,7 @@
       "postgame_only": false
     },
     {
-      "area": "14ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 23,
@@ -66,7 +66,7 @@
       "postgame_only": false
     },
     {
-      "area": "14ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "4%",
       "min_level": 23,
@@ -74,7 +74,7 @@
       "postgame_only": false
     },
     {
-      "area": "14ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "1%",
       "min_level": 23,
@@ -82,7 +82,7 @@
       "postgame_only": false
     },
     {
-      "area": "15ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 25,

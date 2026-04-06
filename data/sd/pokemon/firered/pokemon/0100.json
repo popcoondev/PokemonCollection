@@ -2,7 +2,7 @@
   "id": 100,
   "locations": [
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 14,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "4%",
       "min_level": 14,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "1%",
       "min_level": 14,
@@ -26,7 +26,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 16,
@@ -34,7 +34,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 17,

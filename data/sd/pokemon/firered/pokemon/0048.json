@@ -2,7 +2,7 @@
   "id": 48,
   "locations": [
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 34,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "12ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 24,
@@ -26,7 +26,7 @@
       "postgame_only": false
     },
     {
-      "area": "12ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 26,
@@ -34,7 +34,7 @@
       "postgame_only": false
     },
     {
-      "area": "13ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 24,
@@ -42,7 +42,7 @@
       "postgame_only": false
     },
     {
-      "area": "13ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 26,
@@ -50,7 +50,7 @@
       "postgame_only": false
     },
     {
-      "area": "14ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 24,
@@ -58,7 +58,7 @@
       "postgame_only": false
     },
     {
-      "area": "14ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 26,
@@ -66,7 +66,7 @@
       "postgame_only": false
     },
     {
-      "area": "15ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 24,
@@ -74,7 +74,7 @@
       "postgame_only": false
     },
     {
-      "area": "15ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 26,

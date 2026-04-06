@@ -93,11 +93,8 @@ def load_item_name_map() -> dict[str, str]:
 
 
 def curate_locations(location_rows: list[dict[str, str]], enabled_locations: dict[str, dict[str, str]]) -> list[dict[str, str]]:
-    raw_ids = {row["location_id"] for row in location_rows}
     rows: list[dict[str, str]] = []
     for location_id, row in enabled_locations.items():
-        if location_id not in raw_ids:
-            continue
         rows.append(
             {
                 "location_id": location_id,

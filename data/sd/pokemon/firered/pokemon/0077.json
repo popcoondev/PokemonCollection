@@ -2,7 +2,7 @@
   "id": 77,
   "locations": [
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 30,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 33,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 36,

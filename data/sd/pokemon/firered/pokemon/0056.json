@@ -2,7 +2,7 @@
   "id": 56,
   "locations": [
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 2,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 3,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 4,
@@ -26,7 +26,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "4%",
       "min_level": 5,
@@ -34,11 +34,27 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "1%",
       "min_level": 5,
       "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 34,
+      "max_level": 34,
       "postgame_only": false
     },
     {
@@ -47,6 +63,22 @@
       "rate": "10%",
       "min_level": 7,
       "max_level": 7,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 12,
+      "max_level": 12,
       "postgame_only": false
     },
     {

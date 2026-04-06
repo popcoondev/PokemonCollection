@@ -2,7 +2,7 @@
   "id": 21,
   "locations": [
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 13,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 16,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 17,
@@ -50,7 +50,7 @@
       "postgame_only": false
     },
     {
-      "area": "16ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 20,
@@ -58,7 +58,7 @@
       "postgame_only": false
     },
     {
-      "area": "16ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 22,
@@ -66,7 +66,7 @@
       "postgame_only": false
     },
     {
-      "area": "17ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 20,
@@ -74,7 +74,7 @@
       "postgame_only": false
     },
     {
-      "area": "17ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 22,
@@ -82,7 +82,7 @@
       "postgame_only": false
     },
     {
-      "area": "18ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 20,
@@ -90,7 +90,7 @@
       "postgame_only": false
     },
     {
-      "area": "18ばんどうろ",
+      "area": "16・17・18ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 22,
@@ -98,7 +98,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 3,
@@ -106,11 +106,35 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 5,
       "max_level": 5,
+      "postgame_only": false
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "4%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "1%",
+      "min_level": 32,
+      "max_level": 32,
+      "postgame_only": false
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 34,
+      "max_level": 34,
       "postgame_only": false
     },
     {
@@ -138,7 +162,31 @@
       "postgame_only": false
     },
     {
-      "area": "9ばんどうろ",
+      "area": "4ばんどうろ",
+      "method": "くさむら",
+      "rate": "10%",
+      "min_level": 8,
+      "max_level": 8,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
+      "method": "くさむら",
+      "rate": "20%",
+      "min_level": 10,
+      "max_level": 10,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 12,
+      "max_level": 12,
+      "postgame_only": false
+    },
+    {
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 13,
@@ -146,7 +194,7 @@
       "postgame_only": false
     },
     {
-      "area": "9ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 16,
@@ -154,7 +202,7 @@
       "postgame_only": false
     },
     {
-      "area": "9ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 17,
@@ -162,7 +210,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "4%",
       "min_level": 30,
@@ -170,7 +218,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "1%",
       "min_level": 30,
@@ -178,7 +226,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 32,

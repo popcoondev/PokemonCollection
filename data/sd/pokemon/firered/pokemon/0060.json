@@ -2,7 +2,7 @@
   "id": 60,
   "locations": [
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -66,7 +66,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "いいつりざお",
       "rate": "60%",
       "min_level": 5,
@@ -74,7 +74,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "40%",
       "min_level": 15,
@@ -82,7 +82,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "いいつりざお",
       "rate": "60%",
       "min_level": 5,
@@ -90,7 +90,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "40%",
       "min_level": 15,
@@ -98,7 +98,7 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "いいつりざお",
       "rate": "60%",
       "min_level": 5,
@@ -106,7 +106,23 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "40%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "60%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
       "method": "すごいつりざお",
       "rate": "40%",
       "min_level": 15,
