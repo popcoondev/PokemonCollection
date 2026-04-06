@@ -2,7 +2,7 @@
   "id": 54,
   "locations": [
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "くさむら",
       "rate": "5%",
       "min_level": 31,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "すごいつりざお",
       "rate": "4%",
       "min_level": 15,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -26,7 +26,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "なみのり",
       "rate": "60%",
       "min_level": 5,
@@ -34,7 +34,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "なみのり",
       "rate": "30%",
       "min_level": 20,
@@ -42,7 +42,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "なみのり",
       "rate": "5%",
       "min_level": 35,
@@ -178,7 +178,7 @@
       "postgame_only": false
     },
     {
-      "area": "グレンじま",
+      "area": "グレンタウン",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -298,7 +298,7 @@
       "postgame_only": true
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -314,7 +314,7 @@
       "postgame_only": false
     },
     {
-      "area": "12ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -322,7 +322,7 @@
       "postgame_only": false
     },
     {
-      "area": "13ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -330,7 +330,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "4%",
       "min_level": 15,
@@ -338,7 +338,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -346,7 +346,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "60%",
       "min_level": 20,
@@ -354,7 +354,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "30%",
       "min_level": 20,
@@ -362,7 +362,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "5%",
       "min_level": 25,
@@ -370,7 +370,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "4%",
       "min_level": 30,
@@ -378,7 +378,7 @@
       "postgame_only": false
     },
     {
-      "area": "22ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "1%",
       "min_level": 35,
@@ -386,15 +386,7 @@
       "postgame_only": false
     },
     {
-      "area": "24ばんどうろ",
-      "method": "すごいつりざお",
-      "rate": "1%",
-      "min_level": 25,
-      "max_level": 35,
-      "postgame_only": false
-    },
-    {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "4%",
       "min_level": 15,
@@ -402,7 +394,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -410,7 +402,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "60%",
       "min_level": 20,
@@ -418,7 +410,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "30%",
       "min_level": 20,
@@ -426,7 +418,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "5%",
       "min_level": 25,
@@ -434,7 +426,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "4%",
       "min_level": 30,
@@ -442,7 +434,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "22・23ばんどうろ",
       "method": "なみのり",
       "rate": "1%",
       "min_level": 35,
@@ -450,15 +442,7 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
-      "method": "すごいつりざお",
-      "rate": "4%",
-      "min_level": 15,
-      "max_level": 25,
-      "postgame_only": false
-    },
-    {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -466,7 +450,23 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "24・25ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "24・25ばんどうろ",
       "method": "なみのり",
       "rate": "60%",
       "min_level": 20,
@@ -474,7 +474,7 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "なみのり",
       "rate": "30%",
       "min_level": 20,
@@ -482,7 +482,7 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "なみのり",
       "rate": "5%",
       "min_level": 25,
@@ -490,7 +490,7 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "なみのり",
       "rate": "4%",
       "min_level": 30,
@@ -498,7 +498,71 @@
       "postgame_only": false
     },
     {
-      "area": "6ばんどうろ",
+      "area": "24・25ばんどうろ",
+      "method": "なみのり",
+      "rate": "1%",
+      "min_level": 35,
+      "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "4%",
+      "min_level": 15,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "なみのり",
+      "rate": "60%",
+      "min_level": 20,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "なみのり",
+      "rate": "30%",
+      "min_level": 20,
+      "max_level": 25,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "なみのり",
+      "rate": "5%",
+      "min_level": 25,
+      "max_level": 30,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
+      "method": "なみのり",
+      "rate": "4%",
+      "min_level": 30,
+      "max_level": 35,
+      "postgame_only": false
+    },
+    {
+      "area": "5・6ばんどうろ",
       "method": "なみのり",
       "rate": "1%",
       "min_level": 35,
@@ -514,7 +578,7 @@
       "postgame_only": true
     },
     {
-      "area": "あききち",
+      "area": "ロケット団そうこ",
       "method": "すごいつりざお",
       "rate": "1%",
       "min_level": 25,
@@ -687,6 +751,14 @@
       "rate": "4%",
       "min_level": 30,
       "max_level": 40,
+      "postgame_only": false
+    },
+    {
+      "area": "サント・アンヌごう",
+      "method": "すごいつりざお",
+      "rate": "1%",
+      "min_level": 25,
+      "max_level": 35,
       "postgame_only": false
     },
     {

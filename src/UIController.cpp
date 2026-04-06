@@ -112,6 +112,52 @@ EvolutionCardLayout getEvolutionCardLayout(int index, int totalCount) {
       11,
   };
 }
+
+String truncateUtf8Label(const String& text, int maxChars) {
+  if (maxChars <= 0) return "";
+
+  String out = "";
+  int chars = 0;
+  for (size_t i = 0; i < text.length() && chars < maxChars; ++chars) {
+    const uint8_t b0 = static_cast<uint8_t>(text[i]);
+    size_t len = 1;
+    if ((b0 & 0xE0) == 0xC0 && i + 1 < text.length()) {
+      len = 2;
+    } else if ((b0 & 0xF0) == 0xE0 && i + 2 < text.length()) {
+      len = 3;
+    } else if ((b0 & 0xF8) == 0xF0 && i + 3 < text.length()) {
+      len = 4;
+    }
+    for (size_t j = 0; j < len; ++j) {
+      out += text[i + j];
+    }
+    i += len;
+  }
+
+  if (out.length() < text.length()) {
+    if (maxChars <= 3) return String("...");
+    String trimmed = "";
+    int kept = 0;
+    for (size_t i = 0; i < out.length() && kept < maxChars - 3; ++kept) {
+      const uint8_t b0 = static_cast<uint8_t>(out[i]);
+      size_t len = 1;
+      if ((b0 & 0xE0) == 0xC0 && i + 1 < out.length()) {
+        len = 2;
+      } else if ((b0 & 0xF0) == 0xE0 && i + 2 < out.length()) {
+        len = 3;
+      } else if ((b0 & 0xF8) == 0xF0 && i + 3 < out.length()) {
+        len = 4;
+      }
+      for (size_t j = 0; j < len; ++j) {
+        trimmed += out[i + j];
+      }
+      i += len;
+    }
+    return trimmed + "...";
+  }
+
+  return out;
+}
 }
 
 UIController::UIController() : sprite(nullptr) {}
@@ -620,7 +666,12 @@ void UIController::drawGuidePokemonListScreen(
 
 void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
   std::vector<bool> emptyFlags(labels.size(), false);
-  drawGuidePokemonListScreen("場所からみる", labels, emptyFlags, backPressed, pressedItemIndex, prevPressed, nextPressed);
+  std::vector<String> displayLabels;
+  displayLabels.reserve(labels.size());
+  for (const auto& label : labels) {
+    displayLabels.push_back(truncateUtf8Label(label, 9));
+  }
+  drawGuidePokemonListScreen("場所からみる", displayLabels, emptyFlags, backPressed, pressedItemIndex, prevPressed, nextPressed);
 }
 
 void UIController::drawGuidePokemonDetailScreen(

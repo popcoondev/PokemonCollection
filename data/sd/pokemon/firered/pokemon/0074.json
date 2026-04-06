@@ -74,7 +74,7 @@
       "postgame_only": true
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "いわくだき",
       "rate": "60%",
       "min_level": 5,
@@ -82,7 +82,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "いわくだき",
       "rate": "30%",
       "min_level": 10,
@@ -90,7 +90,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "いわくだき",
       "rate": "5%",
       "min_level": 15,
@@ -98,7 +98,7 @@
       "postgame_only": false
     },
     {
-      "area": "1のしま ひのやま",
+      "area": "ともしびやま",
       "method": "くさむら",
       "rate": "10%",
       "min_level": 33,

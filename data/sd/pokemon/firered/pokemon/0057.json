@@ -16,6 +16,14 @@
       "min_level": 61,
       "max_level": 61,
       "postgame_only": true
+    },
+    {
+      "area": "22・23ばんどうろ",
+      "method": "くさむら",
+      "rate": "5%",
+      "min_level": 42,
+      "max_level": 42,
+      "postgame_only": false
     }
   ],
   "evolution": [],

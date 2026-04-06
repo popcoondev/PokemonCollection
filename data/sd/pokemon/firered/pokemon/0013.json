@@ -2,7 +2,7 @@
   "id": 13,
   "locations": [
     {
-      "area": "24ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 7,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "25ばんどうろ",
+      "area": "24・25ばんどうろ",
       "method": "くさむら",
       "rate": "20%",
       "min_level": 8,

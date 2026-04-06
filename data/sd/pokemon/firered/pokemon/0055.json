@@ -2,7 +2,7 @@
   "id": 55,
   "locations": [
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "なみのり",
       "rate": "4%",
       "min_level": 35,
@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "3のしま きのみのもり",
+      "area": "きのみのもり",
       "method": "なみのり",
       "rate": "1%",
       "min_level": 35,

@@ -10,7 +10,7 @@
       "postgame_only": false
     },
     {
-      "area": "グレンじま",
+      "area": "グレンタウン",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -18,7 +18,7 @@
       "postgame_only": false
     },
     {
-      "area": "10ばんどうろ",
+      "area": "9・10ばんどうろ",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -34,7 +34,7 @@
       "postgame_only": false
     },
     {
-      "area": "12ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -42,7 +42,7 @@
       "postgame_only": false
     },
     {
-      "area": "13ばんどうろ",
+      "area": "12・13・14・15ばんどうろ",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -50,7 +50,15 @@
       "postgame_only": false
     },
     {
-      "area": "24ばんどうろ",
+      "area": "24・25ばんどうろ",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "4ばんどうろ",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
@@ -75,6 +83,14 @@
     },
     {
       "area": "ふたごじま",
+      "method": "いいつりざお",
+      "rate": "20%",
+      "min_level": 5,
+      "max_level": 15,
+      "postgame_only": false
+    },
+    {
+      "area": "サント・アンヌごう",
       "method": "いいつりざお",
       "rate": "20%",
       "min_level": 5,
