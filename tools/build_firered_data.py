@@ -38,18 +38,38 @@ def build_locations() -> tuple[list[dict], dict[str, dict]]:
     for row in encounter_rows:
         pokemon_by_location[row["location_id"]].add(as_int(row["pokemon_id"]))
 
-    ordered_locations: list[dict] = []
+    merged_by_name: dict[str, dict] = {}
     location_index: dict[str, dict] = {}
     for row in sorted(location_rows, key=lambda r: as_int(r["order"])):
-        entry = {
-            "id": row["location_id"],
-            "name": row["name"],
-            "order": as_int(row["order"]),
-            "postgame_only": as_bool(row["postgame_only"]),
-            "pokemon": sorted(pokemon_by_location.get(row["location_id"], set())),
-        }
+        location_id = row["location_id"]
+        location_name = row["name"]
+        order = as_int(row["order"])
+        pokemon_ids = pokemon_by_location.get(location_id, set())
+        postgame_only = as_bool(row["postgame_only"])
+
+        entry = merged_by_name.get(location_name)
+        if entry is None:
+            entry = {
+                "id": location_id,
+                "name": location_name,
+                "order": order,
+                "postgame_only": postgame_only,
+                "pokemon": set(pokemon_ids),
+            }
+            merged_by_name[location_name] = entry
+        else:
+            if order < entry["order"]:
+                entry["order"] = order
+                entry["id"] = location_id
+            entry["postgame_only"] = entry["postgame_only"] or postgame_only
+            entry["pokemon"].update(pokemon_ids)
+
+        location_index[location_id] = entry
+
+    ordered_locations: list[dict] = []
+    for entry in sorted(merged_by_name.values(), key=lambda e: (e["order"], e["name"])):
+        entry["pokemon"] = sorted(entry["pokemon"])
         ordered_locations.append(entry)
-        location_index[row["location_id"]] = entry
 
     return ordered_locations, location_index
 

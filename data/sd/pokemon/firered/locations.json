@@ -68,13 +68,6 @@
     ]
   },
   {
-    "id": "kanto_route_2_north_towards_pewter_city",
-    "name": "2ばんどうろ",
-    "order": 50,
-    "postgame_only": false,
-    "pokemon": []
-  },
-  {
     "id": "kanto_route_3_area",
     "name": "3ばんどうろ",
     "order": 70,
@@ -90,27 +83,6 @@
   },
   {
     "id": "mt_moon_1f",
-    "name": "おつきみやま",
-    "order": 80,
-    "postgame_only": false,
-    "pokemon": [
-      35,
-      41,
-      46,
-      74
-    ]
-  },
-  {
-    "id": "mt_moon_b1f",
-    "name": "おつきみやま",
-    "order": 80,
-    "postgame_only": false,
-    "pokemon": [
-      46
-    ]
-  },
-  {
-    "id": "mt_moon_b2f",
     "name": "おつきみやま",
     "order": 80,
     "postgame_only": false,
@@ -285,19 +257,6 @@
       56,
       66,
       74,
-      95
-    ]
-  },
-  {
-    "id": "rock_tunnel_b1f",
-    "name": "イワヤマトンネル",
-    "order": 190,
-    "postgame_only": false,
-    "pokemon": [
-      41,
-      56,
-      66,
-      74,
       75,
       95
     ]
@@ -328,50 +287,6 @@
   },
   {
     "id": "pokemon_tower_3f",
-    "name": "ポケモンタワー",
-    "order": 230,
-    "postgame_only": false,
-    "pokemon": [
-      92,
-      93,
-      104
-    ]
-  },
-  {
-    "id": "pokemon_tower_4f",
-    "name": "ポケモンタワー",
-    "order": 230,
-    "postgame_only": false,
-    "pokemon": [
-      92,
-      93,
-      104
-    ]
-  },
-  {
-    "id": "pokemon_tower_5f",
-    "name": "ポケモンタワー",
-    "order": 230,
-    "postgame_only": false,
-    "pokemon": [
-      92,
-      93,
-      104
-    ]
-  },
-  {
-    "id": "pokemon_tower_6f",
-    "name": "ポケモンタワー",
-    "order": 230,
-    "postgame_only": false,
-    "pokemon": [
-      92,
-      93,
-      104
-    ]
-  },
-  {
-    "id": "pokemon_tower_7f",
     "name": "ポケモンタワー",
     "order": 230,
     "postgame_only": false,
@@ -523,60 +438,6 @@
     "pokemon": [
       41,
       42,
-      54
-    ]
-  },
-  {
-    "id": "seafoam_islands_b1f",
-    "name": "ふたごじま",
-    "order": 360,
-    "postgame_only": false,
-    "pokemon": [
-      41,
-      42,
-      54,
-      55,
-      86
-    ]
-  },
-  {
-    "id": "seafoam_islands_b2f",
-    "name": "ふたごじま",
-    "order": 360,
-    "postgame_only": false,
-    "pokemon": [
-      41,
-      42,
-      54,
-      55,
-      86
-    ]
-  },
-  {
-    "id": "seafoam_islands_b3f",
-    "name": "ふたごじま",
-    "order": 360,
-    "postgame_only": false,
-    "pokemon": [
-      41,
-      42,
-      54,
-      55,
-      86,
-      87,
-      98,
-      116,
-      129,
-      130
-    ]
-  },
-  {
-    "id": "seafoam_islands_b4f",
-    "name": "ふたごじま",
-    "order": 360,
-    "postgame_only": false,
-    "pokemon": [
-      42,
       54,
       55,
       86,
@@ -709,48 +570,6 @@
       54,
       55,
       57,
-      60,
-      61,
-      67,
-      74,
-      75,
-      82,
-      101,
-      118,
-      129,
-      130,
-      132,
-      202
-    ]
-  },
-  {
-    "id": "cerulean_cave_2f",
-    "name": "ハナダのどうくつ",
-    "order": 900,
-    "postgame_only": true,
-    "pokemon": [
-      42,
-      47,
-      64,
-      67,
-      74,
-      75,
-      82,
-      101,
-      132,
-      202
-    ]
-  },
-  {
-    "id": "cerulean_cave_b1f",
-    "name": "ハナダのどうくつ",
-    "order": 900,
-    "postgame_only": true,
-    "pokemon": [
-      42,
-      47,
-      54,
-      55,
       60,
       61,
       64,
