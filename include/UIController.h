@@ -33,16 +33,18 @@ public:
       int shiftX,
       int shiftY,
       uint16_t transparentColor);
+  void drawPreviewCaption(uint16_t pokemonId, const String& pokemonName);
+  void redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName);
   void applyBlackFade(uint8_t alpha);
   void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
   void drawSettingsScreen(
       bool backPressed,
       bool preview3dEnabled,
       bool preview3dPressed,
+      bool previewCaptionEnabled,
+      bool previewCaptionPressed,
       int selectedVolumeIndex,
-      int pressedVolumeIndex,
-      bool secretPressed,
-      bool secretFlashed);
+      int pressedVolumeIndex);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);
   void drawGuidePokemonListScreen(
       const char* title,

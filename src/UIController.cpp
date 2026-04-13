@@ -494,6 +494,26 @@ void UIController::drawPreviewPocScreenLayered(
   iconSprite.pushSprite(sprite, iconX, iconY, transparentColor);
 }
 
+void UIController::drawPreviewCaption(uint16_t pokemonId, const String& pokemonName) {
+  char label[32];
+  snprintf(label, sizeof(label), "No.%04d", pokemonId);
+  const String caption = String(label) + " " + pokemonName;
+
+  sprite->setFont(&fonts::efontJA_12_b);
+  sprite->setTextColor(TFT_WHITE);
+  sprite->drawRightString(caption, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 24);
+}
+
+void UIController::redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName) {
+  char label[32];
+  snprintf(label, sizeof(label), "No.%04d", pokemonId);
+  const String caption = String(label) + " " + pokemonName;
+
+  M5.Display.setFont(&fonts::efontJA_12_b);
+  M5.Display.setTextColor(TFT_WHITE);
+  M5.Display.drawRightString(caption, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 24);
+}
+
 void UIController::applyBlackFade(uint8_t alpha) {
   if (alpha == 0 || sprite == nullptr || sprite->getBuffer() == nullptr) {
     return;
@@ -532,15 +552,11 @@ void UIController::drawSettingsScreen(
     bool backPressed,
     bool preview3dEnabled,
     bool preview3dPressed,
+    bool previewCaptionEnabled,
+    bool previewCaptionPressed,
     int selectedVolumeIndex,
-    int pressedVolumeIndex,
-    bool secretPressed,
-    bool secretFlashed) {
+    int pressedVolumeIndex) {
   sprite->fillScreen(COLOR_PK_BG);
-
-  if (secretFlashed) {
-    sprite->fillScreen(COLOR_PK_BAR);
-  }
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
   sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
@@ -565,9 +581,20 @@ void UIController::drawSettingsScreen(
       preview3dPressed,
       COLOR_PK_RED,
       preview3dEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
+  drawActionButton(
+      202,
+      98,
+      94,
+      30,
+      previewCaptionEnabled ? "文字 ON" : "文字 OFF",
+      previewCaptionEnabled ? COLOR_PK_RED : COLOR_PK_CARD,
+      previewCaptionEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
+      previewCaptionPressed,
+      COLOR_PK_RED,
+      previewCaptionEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
 
   sprite->setTextColor(COLOR_PK_SUB);
-  sprite->drawString("おんりょう", 24, 126);
+  sprite->drawString("おんりょう", 24, 150);
   static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
   for (int i = 0; i < 4; ++i) {
     const int x = 24 + (i * 70);
@@ -578,7 +605,7 @@ void UIController::drawSettingsScreen(
     const uint16_t border = selected ? COLOR_PK_BAR : COLOR_PK_BORDER;
     drawActionButton(
         x,
-        138,
+        162,
         58,
         32,
         volumeLabels[i],
@@ -589,9 +616,6 @@ void UIController::drawSettingsScreen(
         border);
   }
 
-  if (secretPressed) {
-    drawPressedOverlay(6, 184, 124, 50, 6);
-  }
 }
 
 void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed) {
