@@ -36,6 +36,7 @@ public:
   void drawPreviewCaption(uint16_t pokemonId, const String& pokemonName);
   void redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName);
   void applyBlackFade(uint8_t alpha);
+  void drawWakeSplashScreen(uint8_t progressPercent, const char* statusText);
   void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
   void drawSettingsScreen(
       bool backPressed,
@@ -106,6 +107,7 @@ public:
 
 private:
   LGFX_Sprite* sprite;
+  LGFX_Sprite* wakeSplashSprite;
   ImageLoader imageLoader;
   void drawPressedOverlay(int x, int y, int w, int h, int radius = 0);
   void drawActionButton(

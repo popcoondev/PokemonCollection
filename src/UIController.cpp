@@ -13,6 +13,8 @@ constexpr int kEvolutionImageOffsetY = 6;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr const char* kQuizBackgroundPath = "/pokemon/quiz/backgrounds/quiz_bg.png";
+constexpr const char* kWakeSplashPath = "/pokemon/splash/wake_splash.png";
+constexpr uint16_t kWakeSplashAccentColor = 0x67BF;
 
 uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t fgR = (fg >> 11) & 0x1F;
@@ -160,13 +162,18 @@ String truncateUtf8Label(const String& text, int maxChars) {
 }
 }
 
-UIController::UIController() : sprite(nullptr) {}
+UIController::UIController() : sprite(nullptr), wakeSplashSprite(nullptr) {}
 
 UIController::~UIController() {
   if (sprite != nullptr) {
     sprite->deleteSprite();
     delete sprite;
     sprite = nullptr;
+  }
+  if (wakeSplashSprite != nullptr) {
+    wakeSplashSprite->deleteSprite();
+    delete wakeSplashSprite;
+    wakeSplashSprite = nullptr;
   }
 }
 
@@ -175,10 +182,24 @@ bool UIController::begin() {
   if (sprite == nullptr) {
     return false;
   }
+  wakeSplashSprite = new LGFX_Sprite(&M5.Display);
+  if (wakeSplashSprite == nullptr) {
+    return false;
+  }
   if (!imageLoader.begin()) {
     return false;
   }
-  return sprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT);
+  if (!sprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    return false;
+  }
+  wakeSplashSprite->setColorDepth(16);
+  wakeSplashSprite->setPsram(true);
+  if (!wakeSplashSprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    return false;
+  }
+  wakeSplashSprite->fillScreen(TFT_BLACK);
+  imageLoader.loadAndDisplayPNGPath(*wakeSplashSprite, kWakeSplashPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, false);
+  return true;
 }
 
 void UIController::drawBase() {
@@ -522,6 +543,30 @@ void UIController::applyBlackFade(uint8_t alpha) {
   const size_t pixelCount = static_cast<size_t>(SCREEN_WIDTH) * static_cast<size_t>(SCREEN_HEIGHT);
   for (size_t i = 0; i < pixelCount; ++i) {
     buffer[i] = blend565(0x0000, buffer[i], alpha);
+  }
+}
+
+void UIController::drawWakeSplashScreen(uint8_t progressPercent, const char* statusText) {
+  sprite->pushImage(
+      0,
+      0,
+      SCREEN_WIDTH,
+      SCREEN_HEIGHT,
+      static_cast<const uint16_t*>(wakeSplashSprite->getBuffer()));
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(kWakeSplashAccentColor);
+  sprite->drawString(statusText != nullptr ? statusText : "", 18, 18);
+
+  const int barX = 22;
+  const int barY = SCREEN_HEIGHT - 30;
+  const int barW = SCREEN_WIDTH - 44;
+  const int barH = 10;
+  sprite->fillRoundRect(barX, barY, barW, barH, 5, blend565(TFT_BLACK, COLOR_PK_CARD, 120));
+
+  const int fillW = ((barW - 4) * constrain(progressPercent, 0, 100)) / 100;
+  if (fillW > 0) {
+    sprite->fillRoundRect(barX + 2, barY + 2, fillW, barH - 4, 4, kWakeSplashAccentColor);
   }
 }
 
