@@ -242,6 +242,7 @@ size_t searchNameOffset = 0;
 String searchNameQuery = "";
 bool searchInputVowelMode = false;
 int searchInputRowIndex = -1;
+unsigned long searchFlashUntil = 0;
 uint16_t slideshowPokemonId = MIN_POKEMON_ID;
 uint32_t slideshowPhaseStartedAt = 0;
 
@@ -375,6 +376,10 @@ void applySearchSmallToggle() {
   for (const auto& entry : table) {
     if (replaceSearchQuerySuffix(entry.normal, entry.small)) return;
   }
+}
+
+bool isHallOfFameSearchCommand(const String& query) {
+  return query == "デンドウイリ";
 }
 
 enum PressedControl {
@@ -2062,6 +2067,14 @@ void loop() {
           searchInputVowelMode = false;
           searchInputRowIndex = -1;
         } else {
+          if (isHallOfFameSearchCommand(searchNameQuery)) {
+            guideHallOfFameEnabled = !guideHallOfFameEnabled;
+            searchNameQuery = "";
+            searchNameOffset = 0;
+            settingsDirty = true;
+            settingsSaveAt = millis() + 250;
+            searchFlashUntil = millis() + 180;
+          }
           screenMode = SCREEN_SEARCH;
         }
         break;
@@ -2518,6 +2531,7 @@ void loop() {
               : -1,
           visualControl == PRESS_SEARCH_NAME_PAGE_PREV,
           visualControl == PRESS_SEARCH_NAME_PAGE_NEXT,
+          millis() < searchFlashUntil,
           visualControl == PRESS_SEARCH_NAME_QUERY,
           false);
     } else if (screenMode == SCREEN_SEARCH_NUMBER) {
@@ -2540,6 +2554,7 @@ void loop() {
           visualControl == PRESS_SEARCH_MENU,
           false,
           -1,
+          false,
           false,
           false,
           false,
