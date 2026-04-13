@@ -59,6 +59,20 @@ constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside
 constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
+constexpr uint8_t kDisplayBrightnessOn = 128;
+constexpr uint8_t kLtr553Address = 0x23;
+constexpr uint8_t kLtr553RegPsContr = 0x81;
+constexpr uint8_t kLtr553RegPsLed = 0x82;
+constexpr uint8_t kLtr553RegPsNPulses = 0x83;
+constexpr uint8_t kLtr553RegPsMeasRate = 0x84;
+constexpr uint8_t kLtr553RegPartId = 0x86;
+constexpr uint8_t kLtr553RegPsDataLow = 0x8D;
+constexpr uint8_t kLtr553RegPsDataHigh = 0x8E;
+constexpr uint16_t kCoverClosedThreshold = 900;
+constexpr uint16_t kCoverOpenThreshold = 650;
+constexpr uint32_t kCoverSleepDelayMs = 700;
+constexpr uint32_t kCoverPollIntervalMs = 50;
+constexpr uint32_t kWakeSplashDurationMs = 2000;
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -237,6 +251,13 @@ bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
+bool coverProximityReady = false;
+bool coverDisplaySleeping = false;
+bool wakeSplashActive = false;
+unsigned long wakeSplashStartedAt = 0;
+unsigned long coverClosedSince = 0;
+unsigned long coverLastPollAt = 0;
+uint16_t coverLastProximityValue = 0;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -249,6 +270,77 @@ uint32_t slideshowPhaseStartedAt = 0;
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
       && ty >= (y - pad) && ty <= (y + h + pad);
+}
+
+bool initCoverProximitySensor() {
+  const uint8_t partId = M5.In_I2C.readRegister8(kLtr553Address, kLtr553RegPartId, 400000);
+  if (partId == 0x00 || partId == 0xFF) {
+    return false;
+  }
+
+  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsLed, 0x3F, 400000)) return false;
+  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsNPulses, 0x04, 400000)) return false;
+  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsMeasRate, 0x02, 400000)) return false;
+  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsContr, 0x03, 400000)) return false;
+  delay(10);
+  return true;
+}
+
+uint16_t readCoverProximityValue() {
+  uint8_t valueLow = 0;
+  uint8_t valueHigh = 0;
+  if (!M5.In_I2C.readRegister(kLtr553Address, kLtr553RegPsDataLow, &valueLow, 1, 400000)) {
+    return coverLastProximityValue;
+  }
+  if (!M5.In_I2C.readRegister(kLtr553Address, kLtr553RegPsDataHigh, &valueHigh, 1, 400000)) {
+    return coverLastProximityValue;
+  }
+  return static_cast<uint16_t>(((valueHigh & 0x07) << 8) | valueLow);
+}
+
+uint8_t getWakeSplashProgressPercent(unsigned long elapsedMs) {
+  static constexpr struct {
+    uint32_t ms;
+    uint8_t progress;
+  } kKeyframes[] = {
+      {0, 0},
+      {220, 15},
+      {460, 30},
+      {820, 45},
+      {1120, 45},
+      {1450, 80},
+      {1760, 95},
+      {2000, 100},
+  };
+
+  if (elapsedMs >= kWakeSplashDurationMs) return 100;
+
+  for (size_t i = 1; i < (sizeof(kKeyframes) / sizeof(kKeyframes[0])); ++i) {
+    if (elapsedMs <= kKeyframes[i].ms) {
+      const uint32_t startMs = kKeyframes[i - 1].ms;
+      const uint8_t startProgress = kKeyframes[i - 1].progress;
+      const uint32_t endMs = kKeyframes[i].ms;
+      const uint8_t endProgress = kKeyframes[i].progress;
+      if (endMs <= startMs || endProgress == startProgress) {
+        return startProgress;
+      }
+      const uint32_t span = endMs - startMs;
+      const uint32_t local = elapsedMs - startMs;
+      return static_cast<uint8_t>(startProgress + ((endProgress - startProgress) * local) / span);
+    }
+  }
+  return 100;
+}
+
+const char* getWakeSplashStatusText(uint8_t progressPercent) {
+  if (progressPercent >= 100) return "SUCCESS!";
+  if (progressPercent >= 95) return "SYSTEM READY";
+  if (progressPercent >= 80) return "ESTABLISHING NETWORK...";
+  if (progressPercent >= 60) return "LOADING BIOMETRIC SCANNER";
+  if (progressPercent >= 45) return "SYNCING POKE-DATABASE";
+  if (progressPercent >= 30) return "PROXIMITY SENSOR ACTIVE";
+  if (progressPercent >= 15) return "CORE S3 INITIALIZING";
+  return "SYSTEM BOOTING...";
 }
 
 String getPrimaryTypeOrNormal(const PokemonDetail& pk) {
@@ -1580,6 +1672,7 @@ void setup() {
   }
   M5.Speaker.begin();
   M5.Speaker.setVolume(128);
+  M5.Display.setBrightness(kDisplayBrightnessOn);
 
   if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
     M5.Display.print("SD Init Error");
@@ -1599,6 +1692,9 @@ void setup() {
 
   loadSettings();
   loadGuideCaughtFlags();
+  coverProximityReady = initCoverProximitySensor();
+  wakeSplashActive = true;
+  wakeSplashStartedAt = millis();
 
   appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
   appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
@@ -1693,8 +1789,79 @@ void loop() {
   static size_t guideLocationListOffset = 0;
 
   PressedControl pressedControl = PRESS_NONE;
+  const unsigned long now = millis();
 
-  if (screenMode == SCREEN_QUIZ && M5.Touch.getCount() > 0) {
+  if (coverProximityReady && (now - coverLastPollAt) >= kCoverPollIntervalMs) {
+    coverLastPollAt = now;
+    coverLastProximityValue = readCoverProximityValue();
+
+    const bool coverClosed = coverLastProximityValue >= kCoverClosedThreshold;
+    const bool coverOpened = coverLastProximityValue <= kCoverOpenThreshold;
+
+    if (coverDisplaySleeping) {
+      if (coverOpened) {
+        M5.Display.wakeup();
+        M5.Display.setBrightness(kDisplayBrightnessOn);
+        coverDisplaySleeping = false;
+        wakeSplashActive = true;
+        wakeSplashStartedAt = now;
+        coverClosedSince = 0;
+        heldControl = PRESS_NONE;
+        latchedControl = PRESS_NONE;
+        pendingAction = {};
+        if (screenMode == SCREEN_QUIZ) {
+          quizPhaseStartedAt = now;
+        } else if (screenMode == SCREEN_SLIDESHOW) {
+          slideshowPhaseStartedAt = now;
+        }
+        needsRedraw = true;
+      }
+    } else {
+      if (coverClosed) {
+        if (coverClosedSince == 0) {
+          coverClosedSince = now;
+        } else if ((now - coverClosedSince) >= kCoverSleepDelayMs) {
+          M5.Display.sleep();
+          coverDisplaySleeping = true;
+          wakeSplashActive = false;
+          heldControl = PRESS_NONE;
+          latchedControl = PRESS_NONE;
+          pendingAction = {};
+        }
+      } else if (coverOpened) {
+        coverClosedSince = 0;
+      }
+    }
+  }
+
+  if (wakeSplashActive) {
+    if ((now - wakeSplashStartedAt) >= kWakeSplashDurationMs) {
+      wakeSplashActive = false;
+      needsRedraw = true;
+      if (screenMode == SCREEN_QUIZ) {
+        quizPhaseStartedAt = now;
+      } else if (screenMode == SCREEN_SLIDESHOW) {
+        slideshowPhaseStartedAt = now;
+      }
+    } else {
+      needsRedraw = true;
+    }
+  }
+
+  if (coverDisplaySleeping) {
+    if (guideCaughtDirty && now >= guideCaughtSaveAt) {
+      saveGuideCaughtFlags();
+      guideCaughtDirty = false;
+    }
+    if (settingsDirty && now >= settingsSaveAt) {
+      saveSettings();
+      settingsDirty = false;
+    }
+    delay(20);
+    return;
+  }
+
+  if (!wakeSplashActive && screenMode == SCREEN_QUIZ && M5.Touch.getCount() > 0) {
     auto t = M5.Touch.getDetail(0);
     heldControl = PRESS_MENU_QUIZ;
     if (t.wasClicked()) {
@@ -1702,7 +1869,7 @@ void loop() {
       pendingAction = makePendingAction(ACTION_CLOSE_QUIZ);
       needsRedraw = true;
     }
-  } else if (M5.Touch.getCount() > 0) {
+  } else if (!wakeSplashActive && M5.Touch.getCount() > 0) {
     auto t = M5.Touch.getDetail(0);
     pressedControl = getPressedControl(t.x, t.y, screenMode);
     if (pressedControl != heldControl) {
@@ -2259,8 +2426,7 @@ void loop() {
     needsRedraw = true;
   }
 
-  if (screenMode == SCREEN_QUIZ && pendingAction.type == ACTION_NONE) {
-    const uint32_t now = millis();
+  if (!wakeSplashActive && screenMode == SCREEN_QUIZ && pendingAction.type == ACTION_NONE) {
     if ((now - quizPhaseStartedAt) >= kQuizSideDurationMs) {
       if (quizPhase == QUIZ_A_SIDE) {
         quizPhase = QUIZ_B_SIDE;
@@ -2274,7 +2440,7 @@ void loop() {
     }
   }
 
-  if (screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
+  if (!wakeSplashActive && screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
     const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
     if (elapsed >= kSlideshowSlideDurationMs) {
       const uint16_t maxPokemonId = getAvailableMaxPokemonId();
@@ -2293,7 +2459,7 @@ void loop() {
   static float previewPocShiftYF = 0.0f;
   static int previewPocShiftX = 0;
   static int previewPocShiftY = 0;
-  if (screenMode == SCREEN_PREVIEW_POC || (screenMode == SCREEN_SLIDESHOW && preview3dEnabled)) {
+  if (!wakeSplashActive && (screenMode == SCREEN_PREVIEW_POC || (screenMode == SCREEN_SLIDESHOW && preview3dEnabled))) {
     float ax = 0.0f;
     float ay = 0.0f;
     float az = 0.0f;
@@ -2406,7 +2572,10 @@ void loop() {
     ui.drawBase();
     const auto& pk = dataMgr.getCurrentPokemon();
 
-    if (screenMode == SCREEN_MENU) {
+    if (wakeSplashActive) {
+      const uint8_t progressPercent = getWakeSplashProgressPercent(now - wakeSplashStartedAt);
+      ui.drawWakeSplashScreen(progressPercent, getWakeSplashStatusText(progressPercent));
+    } else if (screenMode == SCREEN_MENU) {
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
