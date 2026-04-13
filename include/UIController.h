@@ -90,6 +90,7 @@ public:
       int pressedCandidateIndex,
       bool pagePrevPressed,
       bool pageNextPressed,
+      bool flashActive,
       bool cancelPressed,
       bool openPressed);
   void drawSearchInputScreen(

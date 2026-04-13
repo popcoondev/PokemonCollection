@@ -919,9 +919,10 @@ void UIController::drawSearchScreen(
     int pressedCandidateIndex,
     bool pagePrevPressed,
     bool pageNextPressed,
+    bool flashActive,
     bool cancelPressed,
     bool openPressed) {
-  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_CARD);
+  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, flashActive ? COLOR_PK_BAR : COLOR_PK_CARD);
   sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
