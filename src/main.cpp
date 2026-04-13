@@ -233,11 +233,10 @@ std::vector<bool> guideCaughtFlags(387, false);
 bool guideCaughtDirty = false;
 unsigned long guideCaughtSaveAt = 0;
 bool preview3dEnabled = false;
+bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
-uint8_t settingsSecretTapCount = 0;
-unsigned long settingsSecretFlashUntil = 0;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -413,11 +412,11 @@ enum PressedControl {
   PRESS_MENU_GUIDE,
   PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
+  PRESS_MENU_PREVIEW_CAPTION,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
   PRESS_MENU_VOL_MUTE,
-  PRESS_SETTINGS_SECRET,
   PRESS_SEARCH_INPUT_BACK,
   PRESS_SEARCH_INPUT_DELETE,
   PRESS_SEARCH_INPUT_CLEAR,
@@ -470,11 +469,11 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_SETTINGS) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
     if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
-    if (hitTest(tx, ty, 24, 138, 58, 32, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 94, 138, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 164, 138, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 234, 138, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
-    if (hitTest(tx, ty, 6, 184, 124, 50, 0)) return PRESS_SETTINGS_SECRET;
+    if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
+    if (hitTest(tx, ty, 24, 162, 58, 32, 6)) return PRESS_MENU_VOL_LARGE;
+    if (hitTest(tx, ty, 94, 162, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
+    if (hitTest(tx, ty, 164, 162, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
+    if (hitTest(tx, ty, 234, 162, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
     return PRESS_NONE;
   }
 
@@ -640,7 +639,6 @@ enum PendingActionType {
   ACTION_OPEN_GUIDE_LOCATION_DETAIL,
   ACTION_CLOSE_GUIDE_LOCATION_DETAIL,
   ACTION_GUIDE_LOCATION_DETAIL_PAGE,
-  ACTION_TOGGLE_GUIDE_HALL_OF_FAME,
   ACTION_OPEN_GUIDE_POKEMON_DETAIL,
   ACTION_CLOSE_GUIDE_POKEMON_DETAIL,
   ACTION_SET_GUIDE_POKEMON_TAB,
@@ -656,6 +654,7 @@ enum PendingActionType {
   ACTION_CLOSE_PREVIEW_POC,
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
+  ACTION_TOGGLE_PREVIEW_CAPTION,
   ACTION_SEARCH_TO_MENU,
   ACTION_OPEN_SEARCH_NUMBER,
   ACTION_SEARCH_TOGGLE_MODE,
@@ -1049,6 +1048,7 @@ bool saveSettings() {
   JsonDocument doc;
   doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
   doc["preview_3d"] = preview3dEnabled;
+  doc["preview_caption"] = previewCaptionEnabled;
   doc["guide_hall_of_fame"] = guideHallOfFameEnabled;
 
   if (SD.exists(kSettingsPath)) {
@@ -1113,6 +1113,7 @@ bool saveGuideCaughtFlags() {
 void loadSettings() {
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
   preview3dEnabled = false;
+  previewCaptionEnabled = true;
   guideHallOfFameEnabled = false;
 
   File file = SD.open(kSettingsPath, FILE_READ);
@@ -1126,6 +1127,7 @@ void loadSettings() {
   if (deserializeJson(doc, file) == DeserializationError::Ok) {
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
     preview3dEnabled = doc["preview_3d"] | false;
+    previewCaptionEnabled = doc["preview_caption"] | true;
     guideHallOfFameEnabled = doc["guide_hall_of_fame"] | false;
   }
   file.close();
@@ -1819,22 +1821,13 @@ void loop() {
         }
       } else if (screenMode == SCREEN_SETTINGS) {
         if (pressedControl == PRESS_GUIDE_BACK) {
-          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
         } else if (pressedControl == PRESS_MENU_3D) {
-          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
+        } else if (pressedControl == PRESS_MENU_PREVIEW_CAPTION) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_CAPTION);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
-          settingsSecretTapCount = 0;
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
-        } else if (pressedControl == PRESS_SETTINGS_SECRET) {
-          ++settingsSecretTapCount;
-          if (settingsSecretTapCount >= 10) {
-            settingsSecretTapCount = 0;
-            pendingAction = makePendingAction(ACTION_TOGGLE_GUIDE_HALL_OF_FAME);
-          }
-        } else {
-          settingsSecretTapCount = 0;
         }
       } else if (screenMode == SCREEN_MENU) {
         if (pressedControl == PRESS_MENU_POKEDEX) {
@@ -1955,15 +1948,6 @@ void loop() {
         }
         break;
       }
-      case ACTION_TOGGLE_GUIDE_HALL_OF_FAME:
-        guideHallOfFameEnabled = !guideHallOfFameEnabled;
-        guidePokemonListOffset = 0;
-        guideLocationListOffset = 0;
-        guideLocationPokemonListOffset = 0;
-        settingsSecretFlashUntil = millis() + 180;
-        settingsDirty = true;
-        settingsSaveAt = millis() + 250;
-        break;
       case ACTION_OPEN_GUIDE_POKEMON_DETAIL:
         guidePokemonSelectedId = static_cast<uint16_t>(pendingAction.value);
         guidePokemonTab = 0;
@@ -2037,6 +2021,10 @@ void loop() {
         break;
       case ACTION_TOGGLE_PREVIEW_3D:
         preview3dEnabled = !preview3dEnabled;
+        saveSettings();
+        break;
+      case ACTION_TOGGLE_PREVIEW_CAPTION:
+        previewCaptionEnabled = !previewCaptionEnabled;
         saveSettings();
         break;
       case ACTION_CLOSE_QUIZ:
@@ -2374,6 +2362,9 @@ void loop() {
         && xSemaphoreTake(previewSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
       ui.blitPreviewImageToCanvas(*previewImageSprite);
       ui.pushPreviewImageToDisplay(*previewImageSprite);
+      if (previewCaptionEnabled) {
+        ui.redrawPreviewCaptionToDisplay(previewResult.pokemonId, dataMgr.getPokemonName(previewResult.pokemonId));
+      }
       xSemaphoreGive(previewSpriteMutex);
     }
   }
@@ -2419,12 +2410,12 @@ void loop() {
           visualControl == PRESS_GUIDE_BACK,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
+          previewCaptionEnabled,
+          visualControl == PRESS_MENU_PREVIEW_CAPTION,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
-              : -1,
-          visualControl == PRESS_SETTINGS_SECRET,
-          millis() < settingsSecretFlashUntil);
+              : -1);
     } else if (screenMode == SCREEN_GUIDE_MENU) {
       ui.drawGuideMenuScreen(
           visualControl == PRESS_GUIDE_POKEMON,
@@ -2576,6 +2567,9 @@ void loop() {
       } else {
         queuePreviewImageRequest(currentId);
       }
+      if (previewCaptionEnabled) {
+        ui.drawPreviewCaption(currentId, dataMgr.getPokemonName(currentId));
+      }
     } else if (screenMode == SCREEN_PREVIEW_POC) {
       const String previewType = pk.types.empty() ? String("ノーマル") : pk.types[0];
       if (ensurePreviewPocCacheReady(currentId, previewType) && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
@@ -2588,6 +2582,9 @@ void loop() {
             kPreviewPocTransparentColor);
       } else {
         ui.drawPreviewPocScreen(3, previewPocShiftX, previewPocShiftY);
+      }
+      if (previewCaptionEnabled) {
+        ui.drawPreviewCaption(currentId, dataMgr.getPokemonName(currentId));
       }
     } else if (screenMode == SCREEN_SLIDESHOW) {
       if (preview3dEnabled) {
@@ -2605,6 +2602,9 @@ void loop() {
         }
       } else {
         ui.drawFullscreenPreview(true, slideshowPokemonId);
+      }
+      if (previewCaptionEnabled) {
+        ui.drawPreviewCaption(slideshowPokemonId, dataMgr.getPokemonName(slideshowPokemonId));
       }
     } else {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
