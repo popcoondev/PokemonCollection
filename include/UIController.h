@@ -12,6 +12,9 @@ public:
   UIController();
   ~UIController();
   bool begin();
+  void setTheme(UIThemeStyle theme);
+  UIThemeStyle getTheme() const;
+  uint16_t getBackgroundColor() const;
   void drawBase();
   void drawHeader(const PokemonDetail& pk, bool searchPressed);
   void drawTabBar(TabType activeTab, int pressedTab);
@@ -52,6 +55,8 @@ public:
       bool preview3dPressed,
       bool previewCaptionEnabled,
       bool previewCaptionPressed,
+      int selectedThemeIndex,
+      int pressedThemeIndex,
       int selectedVolumeIndex,
       int pressedVolumeIndex);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);
@@ -117,6 +122,7 @@ private:
   LGFX_Sprite* sprite;
   LGFX_Sprite* wakeSplashSprite;
   ImageLoader imageLoader;
+  UIThemeStyle currentTheme;
   void drawPressedOverlay(int x, int y, int w, int h, int radius = 0);
   void drawActionButton(
       int x,
