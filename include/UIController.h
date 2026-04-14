@@ -37,7 +37,15 @@ public:
   void redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName);
   void applyBlackFade(uint8_t alpha);
   void drawWakeSplashScreen(uint8_t progressPercent, const char* statusText);
-  void drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex);
+  void drawMenuScreen(
+      bool pokedexPressed,
+      bool quizPressed,
+      bool slideshowPressed,
+      bool guidePressed,
+      bool settingsPressed,
+      const char* volumeLabel,
+      int batteryLevel,
+      bool batteryCharging);
   void drawSettingsScreen(
       bool backPressed,
       bool preview3dEnabled,
