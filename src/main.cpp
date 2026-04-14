@@ -73,6 +73,8 @@ constexpr uint16_t kCoverOpenThreshold = 650;
 constexpr uint32_t kCoverSleepDelayMs = 700;
 constexpr uint32_t kCoverPollIntervalMs = 50;
 constexpr uint32_t kWakeSplashDurationMs = 2000;
+constexpr gpio_num_t kPortBBackButtonPins[] = {GPIO_NUM_8, GPIO_NUM_9};
+constexpr uint32_t kPortBBackButtonDebounceMs = 30;
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -258,6 +260,9 @@ unsigned long wakeSplashStartedAt = 0;
 unsigned long coverClosedSince = 0;
 unsigned long coverLastPollAt = 0;
 uint16_t coverLastProximityValue = 0;
+bool portBBackButtonStablePressed = false;
+bool portBBackButtonLastRawPressed = false;
+unsigned long portBBackButtonLastChangeAt = 0;
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -296,6 +301,21 @@ uint16_t readCoverProximityValue() {
     return coverLastProximityValue;
   }
   return static_cast<uint16_t>(((valueHigh & 0x07) << 8) | valueLow);
+}
+
+void initPortBBackButton() {
+  for (gpio_num_t pin : kPortBBackButtonPins) {
+    pinMode(static_cast<int>(pin), INPUT_PULLUP);
+  }
+}
+
+bool readPortBBackButtonRawPressed() {
+  for (gpio_num_t pin : kPortBBackButtonPins) {
+    if (digitalRead(static_cast<int>(pin)) == LOW) {
+      return true;
+    }
+  }
+  return false;
 }
 
 uint8_t getWakeSplashProgressPercent(unsigned long elapsedMs) {
@@ -786,6 +806,99 @@ PendingAction makePendingAction(PendingActionType type, int value = 0) {
   action.type = type;
   action.value = value;
   return action;
+}
+
+PressedControl getBackPressedControlForScreen(ScreenMode mode) {
+  switch (mode) {
+    case SCREEN_SETTINGS:
+      return PRESS_GUIDE_BACK;
+    case SCREEN_GUIDE_MENU:
+      return PRESS_GUIDE_BACK;
+    case SCREEN_GUIDE_POKEMON_LIST:
+    case SCREEN_GUIDE_LOCATION_LIST:
+    case SCREEN_GUIDE_LOCATION_DETAIL:
+      return PRESS_GUIDE_LIST_BACK;
+    case SCREEN_GUIDE_POKEMON_DETAIL:
+      return PRESS_GUIDE_DETAIL_BACK;
+    case SCREEN_DETAIL:
+      return PRESS_SEARCH_HEADER;
+    case SCREEN_SEARCH:
+    case SCREEN_SEARCH_NUMBER:
+      return PRESS_SEARCH_MENU;
+    case SCREEN_SEARCH_INPUT:
+      return PRESS_SEARCH_INPUT_BACK;
+    case SCREEN_PREVIEW:
+      return PRESS_APPEARANCE_PREVIEW;
+    case SCREEN_PREVIEW_POC:
+      return PRESS_MENU_3D;
+    case SCREEN_SLIDESHOW:
+      return PRESS_MENU_SLIDESHOW;
+    case SCREEN_QUIZ:
+      return PRESS_MENU_QUIZ;
+    case SCREEN_MENU:
+    default:
+      return PRESS_NONE;
+  }
+}
+
+PendingAction getBackPendingActionForScreen(ScreenMode mode) {
+  switch (mode) {
+    case SCREEN_SETTINGS:
+      return makePendingAction(ACTION_CLOSE_SETTINGS);
+    case SCREEN_GUIDE_MENU:
+      return makePendingAction(ACTION_CLOSE_GUIDE_MENU);
+    case SCREEN_GUIDE_POKEMON_LIST:
+      return makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_LIST);
+    case SCREEN_GUIDE_LOCATION_LIST:
+      return makePendingAction(ACTION_CLOSE_GUIDE_LOCATION_LIST);
+    case SCREEN_GUIDE_LOCATION_DETAIL:
+      return makePendingAction(ACTION_CLOSE_GUIDE_LOCATION_DETAIL);
+    case SCREEN_GUIDE_POKEMON_DETAIL:
+      return makePendingAction(ACTION_CLOSE_GUIDE_POKEMON_DETAIL);
+    case SCREEN_DETAIL:
+      return makePendingAction(ACTION_DETAIL_BACK);
+    case SCREEN_SEARCH:
+    case SCREEN_SEARCH_NUMBER:
+      return makePendingAction(ACTION_SEARCH_TO_MENU);
+    case SCREEN_SEARCH_INPUT:
+      return makePendingAction(ACTION_SEARCH_CLOSE_INPUT);
+    case SCREEN_PREVIEW:
+      return makePendingAction(ACTION_PREVIEW_CLOSE);
+    case SCREEN_PREVIEW_POC:
+      return makePendingAction(ACTION_CLOSE_PREVIEW_POC);
+    case SCREEN_SLIDESHOW:
+      return makePendingAction(ACTION_CLOSE_SLIDESHOW);
+    case SCREEN_QUIZ:
+      return makePendingAction(ACTION_CLOSE_QUIZ);
+    case SCREEN_MENU:
+    default:
+      return {};
+  }
+}
+
+bool pollPortBBackButton(unsigned long now, ScreenMode mode, PressedControl& pressedControl, PendingAction& clickedAction) {
+  pressedControl = PRESS_NONE;
+  clickedAction = {};
+
+  const bool rawPressed = readPortBBackButtonRawPressed();
+  if (rawPressed != portBBackButtonLastRawPressed) {
+    portBBackButtonLastRawPressed = rawPressed;
+    portBBackButtonLastChangeAt = now;
+  }
+
+  if ((now - portBBackButtonLastChangeAt) >= kPortBBackButtonDebounceMs
+      && portBBackButtonStablePressed != rawPressed) {
+    portBBackButtonStablePressed = rawPressed;
+    if (portBBackButtonStablePressed) {
+      clickedAction = getBackPendingActionForScreen(mode);
+    }
+  }
+
+  if (portBBackButtonStablePressed) {
+    pressedControl = getBackPressedControlForScreen(mode);
+  }
+
+  return clickedAction.type != ACTION_NONE;
 }
 
 uint16_t getAvailableMaxPokemonId() {
@@ -1693,6 +1806,7 @@ void setup() {
   loadSettings();
   loadGuideCaughtFlags();
   coverProximityReady = initCoverProximitySensor();
+  initPortBBackButton();
   wakeSplashActive = true;
   wakeSplashStartedAt = millis();
 
@@ -1789,6 +1903,8 @@ void loop() {
   static size_t guideLocationListOffset = 0;
 
   PressedControl pressedControl = PRESS_NONE;
+  PressedControl portBPressedControl = PRESS_NONE;
+  PendingAction portBClickedAction;
   const unsigned long now = millis();
 
   if (coverProximityReady && (now - coverLastPollAt) >= kCoverPollIntervalMs) {
@@ -1859,6 +1975,16 @@ void loop() {
     }
     delay(20);
     return;
+  }
+
+  if (!wakeSplashActive) {
+    pollPortBBackButton(now, screenMode, portBPressedControl, portBClickedAction);
+    if (pendingAction.type == ACTION_NONE && portBClickedAction.type != ACTION_NONE) {
+      heldControl = portBPressedControl;
+      latchedControl = portBPressedControl;
+      pendingAction = portBClickedAction;
+      needsRedraw = true;
+    }
   }
 
   if (!wakeSplashActive && screenMode == SCREEN_QUIZ && M5.Touch.getCount() > 0) {
@@ -2029,6 +2155,13 @@ void loop() {
         } else if (pressedControl >= PRESS_TAB_0 && pressedControl <= (PRESS_TAB_0 + 4)) {
           pendingAction = makePendingAction(ACTION_SET_TAB, pressedControl - PRESS_TAB_0);
         }
+      }
+    }
+  } else if (portBPressedControl != PRESS_NONE) {
+    if (heldControl != portBPressedControl) {
+      heldControl = portBPressedControl;
+      if (latchedControl == PRESS_NONE) {
+        needsRedraw = true;
       }
     }
   } else if (heldControl != PRESS_NONE) {
