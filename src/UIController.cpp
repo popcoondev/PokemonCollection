@@ -16,6 +16,38 @@ constexpr const char* kQuizBackgroundPath = "/pokemon/quiz/backgrounds/quiz_bg.p
 constexpr const char* kWakeSplashPath = "/pokemon/splash/wake_splash.png";
 constexpr uint16_t kWakeSplashAccentColor = 0x67BF;
 
+void drawBatteryIcon(LGFX_Sprite* sprite, int x, int y, int level, bool charging) {
+  if (sprite == nullptr) {
+    return;
+  }
+  const int width = 18;
+  const int height = 10;
+  const uint16_t outlineColor = COLOR_PK_SUB;
+  uint16_t fillColor = COLOR_PK_SUB;
+  if (level >= 60) {
+    fillColor = 0x6E4D;
+  } else if (level >= 25) {
+    fillColor = 0xFDC0;
+  } else if (level >= 0) {
+    fillColor = COLOR_PK_RED;
+  }
+
+  sprite->drawRoundRect(x, y, width, height, 2, outlineColor);
+  sprite->fillRect(x + width, y + 3, 2, 4, outlineColor);
+
+  const int clampedLevel = constrain(level, 0, 100);
+  const int innerWidth = ((width - 4) * clampedLevel) / 100;
+  if (innerWidth > 0) {
+    sprite->fillRect(x + 2, y + 2, innerWidth, height - 4, fillColor);
+  }
+
+  if (charging) {
+    sprite->setFont(&fonts::Font0);
+    sprite->setTextColor(COLOR_PK_TEXT);
+    sprite->drawString("+", x + 6, y + 1);
+  }
+}
+
 uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   const uint8_t fgR = (fg >> 11) & 0x1F;
   const uint8_t fgG = (fg >> 5) & 0x3F;
@@ -570,27 +602,60 @@ void UIController::drawWakeSplashScreen(uint8_t progressPercent, const char* sta
   }
 }
 
-void UIController::drawMenuScreen(bool pokedexPressed, bool quizPressed, bool slideshowPressed, bool guidePressed, bool preview3dEnabled, bool preview3dPressed, int selectedVolumeIndex, int pressedVolumeIndex) {
+void UIController::drawMenuScreen(
+    bool pokedexPressed,
+    bool quizPressed,
+    bool slideshowPressed,
+    bool guidePressed,
+    bool settingsPressed,
+    const char* volumeLabel,
+    int batteryLevel,
+    bool batteryCharging) {
   sprite->fillScreen(COLOR_PK_BG);
 
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
-  sprite->drawCenterString("ポケモン図鑑", SCREEN_WIDTH / 2, 22);
+  constexpr int statusBarX = 0;
+  constexpr int statusBarY = 0;
+  constexpr int statusBarW = SCREEN_WIDTH;
+  constexpr int statusBarH = 22;
+  sprite->fillRect(statusBarX, statusBarY, statusBarW, statusBarH, COLOR_PK_CARD);
+  sprite->drawFastHLine(statusBarX, statusBarH - 1, statusBarW, COLOR_PK_BORDER);
+
+  int statusRightX = statusBarX + statusBarW - 8;
+  if (batteryLevel >= 0) {
+    char batteryLabel[8];
+    snprintf(batteryLabel, sizeof(batteryLabel), "%d%%", constrain(batteryLevel, 0, 100));
+    sprite->setFont(&fonts::efontJA_10);
+    sprite->setTextColor(COLOR_PK_TEXT);
+    const int batteryTextW = sprite->textWidth(batteryLabel);
+    statusRightX -= batteryTextW;
+    sprite->drawString(batteryLabel, statusRightX, statusBarY + 6);
+    statusRightX -= 24;
+    drawBatteryIcon(sprite, statusRightX, statusBarY + 6, batteryLevel, batteryCharging);
+    statusRightX -= 8;
+  }
+
+  if (volumeLabel != nullptr && volumeLabel[0] != '\0') {
+    char volumeText[16];
+    snprintf(volumeText, sizeof(volumeText), "VOL %s", volumeLabel);
+    sprite->setFont(&fonts::efontJA_10);
+    sprite->setTextColor(COLOR_PK_TEXT);
+    const int volumeTextW = sprite->textWidth(volumeText);
+    statusRightX -= volumeTextW;
+    sprite->drawString(volumeText, statusRightX, statusBarY + 6);
+  }
 
   constexpr int menuLeftX = 24;
   constexpr int menuRightX = 166;
   constexpr int menuButtonW = 130;
   constexpr int menuButtonH = 34;
-  constexpr int menuRowY0 = 64;
+  constexpr int menuRowY0 = 42;
   constexpr int menuRowGap = 42;
 
   drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, "ポケモンずかん", COLOR_PK_RED, COLOR_PK_CARD, pokedexPressed, COLOR_PK_TEXT, COLOR_PK_RED);
   drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "ポケモンクイズ", COLOR_PK_CARD, COLOR_PK_TEXT, quizPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, "スライドショー", COLOR_PK_CARD, COLOR_PK_TEXT, slideshowPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, "こうりゃく", COLOR_PK_CARD, COLOR_PK_TEXT, guidePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "せってい", COLOR_PK_CARD, COLOR_PK_TEXT, preview3dPressed || pressedVolumeIndex >= 0, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "せってい", COLOR_PK_CARD, COLOR_PK_TEXT, settingsPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
 }
 
 void UIController::drawSettingsScreen(

@@ -1242,6 +1242,16 @@ const char* getQuizVolumeKey(QuizVolumeSetting setting) {
   return "medium";
 }
 
+const char* getQuizVolumeStatusLabel(QuizVolumeSetting setting) {
+  switch (setting) {
+    case QUIZ_VOLUME_LARGE: return "L";
+    case QUIZ_VOLUME_MEDIUM: return "M";
+    case QUIZ_VOLUME_SMALL: return "S";
+    case QUIZ_VOLUME_MUTE: return "OFF";
+  }
+  return "M";
+}
+
 QuizVolumeSetting parseQuizVolumeKey(const char* value) {
   if (value == nullptr) return QUIZ_VOLUME_MEDIUM;
   if (strcmp(value, "large") == 0) return QUIZ_VOLUME_LARGE;
@@ -2709,17 +2719,18 @@ void loop() {
       const uint8_t progressPercent = getWakeSplashProgressPercent(now - wakeSplashStartedAt);
       ui.drawWakeSplashScreen(progressPercent, getWakeSplashStatusText(progressPercent));
     } else if (screenMode == SCREEN_MENU) {
+      const int batteryLevel = M5.Power.getBatteryLevel();
+      const bool batteryCharging =
+          M5.Power.isCharging() == m5::Power_Class::is_charging_t::is_charging;
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
           visualControl == PRESS_MENU_SLIDESHOW,
           visualControl == PRESS_MENU_GUIDE,
-          preview3dEnabled,
           visualControl == PRESS_MENU_SETTINGS,
-          static_cast<int>(quizVolumeSetting),
-          (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
-              ? (visualControl - PRESS_MENU_VOL_LARGE)
-              : -1);
+          getQuizVolumeStatusLabel(quizVolumeSetting),
+          batteryLevel,
+          batteryCharging);
     } else if (screenMode == SCREEN_SETTINGS) {
       ui.drawSettingsScreen(
           visualControl == PRESS_GUIDE_BACK,
