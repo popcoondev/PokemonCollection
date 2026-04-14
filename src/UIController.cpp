@@ -457,23 +457,25 @@ void UIController::drawAppearancePreviewFeedback() {
 }
 
 void UIController::drawDescriptionTab(const PokemonDetail& pk) {
-  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.surface);
+  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.border);
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   drawWrappedText(pk.description, 20, 72, 280, 22, 5);
 }
 
 void UIController::drawBodyTab(const PokemonDetail& pk) {
-  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.surface);
+  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.border);
 
   drawInfoRow("分類", pk.category, 74);
   drawInfoRow("高さ", pk.height, 102);
   drawInfoRow("重さ", pk.weight, 130);
 
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawString("タイプ", 24, 160);
 
   int typeX = 92;
@@ -484,32 +486,34 @@ void UIController::drawBodyTab(const PokemonDetail& pk) {
 }
 
 void UIController::drawAbilityTab(const PokemonDetail& pk) {
-  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.surface);
+  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.border);
 
   int y = 72;
   for (size_t i = 0; i < pk.abilities.size() && i < 2; ++i) {
     sprite->setFont(&fonts::efontJA_16_b);
-    sprite->setTextColor(COLOR_PK_TEXT);
+    sprite->setTextColor(theme.text);
     sprite->drawString(pk.abilities[i].name, 20, y);
     sprite->setFont(&fonts::efontJA_12);
-    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->setTextColor(theme.sub);
     drawWrappedText(pk.abilities[i].description, 20, y + 24, 280, 20, 2);
     y += 62;
   }
 }
 
 void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutionIndex, bool drawImages) {
-  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.surface);
+  sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.border);
 
   const int totalCount = std::min<int>(pk.evolutions.size(), 8);
   for (int i = 0; i < totalCount; ++i) {
     const auto layout = getEvolutionCardLayout(i, totalCount);
-    sprite->fillRoundRect(layout.x, layout.y, layout.w, layout.h, 8, COLOR_PK_BG);
-    sprite->drawRoundRect(layout.x, layout.y, layout.w, layout.h, 8, COLOR_PK_BORDER);
+    sprite->fillRoundRect(layout.x, layout.y, layout.w, layout.h, 8, theme.bg);
+    sprite->drawRoundRect(layout.x, layout.y, layout.w, layout.h, 8, theme.border);
 
-    sprite->fillRect(layout.imageX, layout.imageY, layout.imageW, layout.imageH, COLOR_PK_BG);
+    sprite->fillRect(layout.imageX, layout.imageY, layout.imageW, layout.imageH, theme.bg);
     if (drawImages) {
       imageLoader.loadAndDisplayPNG(
           *sprite,
@@ -522,11 +526,11 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutio
 
     char idStr[12];
     snprintf(idStr, sizeof(idStr), "No.%04d", pk.evolutions[i].id);
-    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->setTextColor(theme.sub);
     if (totalCount <= 3) {
       sprite->setFont(&fonts::efontJA_12);
       sprite->drawCenterString(idStr, layout.x + (layout.w / 2), layout.idCenterY);
-      sprite->setTextColor(COLOR_PK_TEXT);
+      sprite->setTextColor(theme.text);
       drawWrappedText(pk.evolutions[i].name, layout.nameX, layout.nameY, layout.nameMaxW, layout.nameLineH, 2);
     } else {
       sprite->setFont(&fonts::efontJA_10);
@@ -540,7 +544,8 @@ void UIController::drawEvolutionTab(const PokemonDetail& pk, int pressedEvolutio
 }
 
 void UIController::drawDetailNavigation(bool prevPressed, bool nextPressed) {
-  sprite->setTextColor(COLOR_PK_SUB);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->setTextColor(theme.sub);
   sprite->setFont(&fonts::efontJA_12);
   sprite->drawCenterString("◀", 18, 50);
   sprite->drawCenterString("▶", SCREEN_WIDTH - 18, 50);
@@ -830,19 +835,20 @@ void UIController::drawSettingsScreen(
 }
 
 void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed) {
-  sprite->fillScreen(COLOR_PK_BG);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
 
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
   if (backPressed) {
     drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
   }
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawCenterString("こうりゃく", SCREEN_WIDTH / 2, 22);
 
-  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, "ポケモンからみる", COLOR_PK_RED, COLOR_PK_CARD, pokemonPressed, COLOR_PK_TEXT, COLOR_PK_RED);
-  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, "場所からみる", COLOR_PK_CARD, COLOR_PK_TEXT, locationPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, "ポケモンからみる", theme.accent, theme.invertedText, pokemonPressed, theme.text, theme.accent);
+  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, "場所からみる", theme.surface, theme.text, locationPressed, theme.border, theme.border);
 }
 
 void UIController::drawGuidePokemonListScreen(
@@ -853,15 +859,16 @@ void UIController::drawGuidePokemonListScreen(
     int pressedItemIndex,
     bool prevPressed,
     bool nextPressed) {
-  sprite->fillScreen(COLOR_PK_BG);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
 
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
   if (backPressed) {
     drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
   }
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawCenterString(title, SCREEN_WIDTH / 2, 22);
   drawDetailNavigation(prevPressed, nextPressed);
 
@@ -882,18 +889,18 @@ void UIController::drawGuidePokemonListScreen(
         itemW,
         itemH,
         labels[i].c_str(),
-        COLOR_PK_BG,
-        COLOR_PK_TEXT,
+        theme.bg,
+        theme.text,
         pressedItemIndex == i,
-        COLOR_PK_RED,
-        COLOR_PK_BORDER);
+        theme.accent,
+        theme.border);
     if (i < static_cast<int>(caughtFlags.size()) && caughtFlags[i]) {
       const int cx = x + itemW - 8;
       const int cy = y + (itemH / 2);
-      sprite->drawLine(cx - 4, cy, cx - 1, cy + 3, COLOR_PK_RED);
-      sprite->drawLine(cx - 1, cy + 3, cx + 6, cy - 4, COLOR_PK_RED);
-      sprite->drawLine(cx - 4, cy + 1, cx - 1, cy + 4, COLOR_PK_RED);
-      sprite->drawLine(cx - 1, cy + 4, cx + 6, cy - 3, COLOR_PK_RED);
+      sprite->drawLine(cx - 4, cy, cx - 1, cy + 3, theme.accent);
+      sprite->drawLine(cx - 1, cy + 3, cx + 6, cy - 4, theme.accent);
+      sprite->drawLine(cx - 4, cy + 1, cx - 1, cy + 4, theme.accent);
+      sprite->drawLine(cx - 1, cy + 4, cx + 6, cy - 3, theme.accent);
     }
   }
 
@@ -923,23 +930,24 @@ void UIController::drawGuidePokemonDetailScreen(
     bool pagePressed,
     bool prevPressed,
     bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
   static const char* kTabs[5] = {"しんか", "しゅつげん", "わざ", "マシン", "ひでん"};
 
-  sprite->fillScreen(COLOR_PK_BG);
+  sprite->fillScreen(theme.bg);
 
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
   if (backPressed) {
     drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
   }
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->setTextColor(theme.sub);
   sprite->drawString("No.", 18, 16);
   char idText[8];
   snprintf(idText, sizeof(idText), "%04d", pokemonId);
-  sprite->setTextColor(COLOR_PK_RED);
+  sprite->setTextColor(theme.accent);
   sprite->drawString(idText, 42, 16);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawString(headerLabel, 92, 16);
   drawDetailNavigation(prevPressed, nextPressed);
 
@@ -948,8 +956,8 @@ void UIController::drawGuidePokemonDetailScreen(
   int textY = 62;
   int textMaxLines = 9;
   if (showIcon) {
-    sprite->fillRoundRect(12, 56, 92, 92, 10, COLOR_PK_CARD);
-    sprite->drawRoundRect(12, 56, 92, 92, 10, COLOR_PK_BORDER);
+    sprite->fillRoundRect(12, 56, 92, 92, 10, theme.surface);
+    sprite->drawRoundRect(12, 56, 92, 92, 10, theme.border);
     drawQuizPokemonImage(pokemonId, 16, 60, 84, 84);
     drawActionButton(
         16,
@@ -957,13 +965,13 @@ void UIController::drawGuidePokemonDetailScreen(
         84,
         22,
         "つかまえた",
-        caughtEnabled ? COLOR_PK_RED : COLOR_PK_BG,
-        caughtEnabled ? COLOR_PK_CARD : COLOR_PK_TEXT,
+        caughtEnabled ? theme.accent : theme.bg,
+        caughtEnabled ? theme.invertedText : theme.text,
         caughtPressed,
-        caughtEnabled ? COLOR_PK_TEXT : COLOR_PK_BORDER,
-        caughtEnabled ? COLOR_PK_RED : COLOR_PK_BORDER);
-    sprite->fillRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_CARD);
-    sprite->drawRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, COLOR_PK_BORDER);
+        caughtEnabled ? theme.text : theme.border,
+        caughtEnabled ? theme.accent : theme.border);
+    sprite->fillRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, theme.surface);
+    sprite->drawRoundRect(112, 56, SCREEN_WIDTH - 124, 122, 10, theme.border);
     if (pagePressed && pageCount > 1) {
       drawPressedOverlay(112, 56, SCREEN_WIDTH - 124, 122, 10);
     }
@@ -971,8 +979,8 @@ void UIController::drawGuidePokemonDetailScreen(
     textY = 64;
     textMaxLines = 8;
   } else {
-    sprite->fillRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_CARD);
-    sprite->drawRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, COLOR_PK_BORDER);
+    sprite->fillRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, theme.surface);
+    sprite->drawRoundRect(12, 56, SCREEN_WIDTH - 24, 122, 10, theme.border);
     if (pagePressed && pageCount > 1) {
       drawPressedOverlay(12, 56, SCREEN_WIDTH - 24, 122, 10);
     }
@@ -983,7 +991,7 @@ void UIController::drawGuidePokemonDetailScreen(
 
   sprite->setFont(&fonts::efontJA_12);
   if (lines.empty()) {
-    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->setTextColor(theme.sub);
     sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 108);
   } else {
     const int lineH = 14;
@@ -991,7 +999,7 @@ void UIController::drawGuidePokemonDetailScreen(
     for (int i = 0; i < textMaxLines; ++i) {
       const int lineIndex = startIndex + i;
       if (lineIndex >= static_cast<int>(lines.size())) break;
-      sprite->setTextColor(COLOR_PK_TEXT);
+      sprite->setTextColor(theme.text);
       sprite->drawString(lines[lineIndex], textX, textY + (i * lineH));
     }
   }
@@ -1000,7 +1008,7 @@ void UIController::drawGuidePokemonDetailScreen(
     char pageText[12];
     snprintf(pageText, sizeof(pageText), "%d/%d", pageIndex + 1, pageCount);
     sprite->setFont(&fonts::efontJA_12);
-    sprite->setTextColor(COLOR_PK_SUB);
+    sprite->setTextColor(theme.sub);
     if (showIcon) {
       sprite->drawRightString(pageText, SCREEN_WIDTH - 18, 158);
     } else {
@@ -1015,14 +1023,14 @@ void UIController::drawGuidePokemonDetailScreen(
   for (int i = 0; i < 5; ++i) {
     const int x = startX + (i * tabW);
     const bool isActive = activeTab == i;
-    uint16_t bg = isActive ? COLOR_PK_RED : COLOR_PK_CARD;
-    uint16_t fg = isActive ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    uint16_t bg = isActive ? theme.accent : theme.surface;
+    uint16_t fg = isActive ? theme.invertedText : theme.text;
     if (pressedTab == i) {
-      bg = COLOR_PK_RED;
-      fg = COLOR_PK_CARD;
+      bg = theme.buttonPressedFill;
+      fg = theme.invertedText;
     }
     sprite->fillRect(x, y, tabW, tabH, bg);
-    sprite->drawRect(x, y, tabW, tabH, COLOR_PK_BORDER);
+    sprite->drawRect(x, y, tabW, tabH, theme.border);
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(fg);
     sprite->drawCenterString(kTabs[i], x + (tabW / 2), y + 11);
@@ -1074,7 +1082,8 @@ void UIController::pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite) {
 }
 
 void UIController::redrawDetailNavigationToDisplay() {
-  M5.Display.setTextColor(COLOR_PK_SUB);
+  const auto& theme = getThemePalette(currentTheme);
+  M5.Display.setTextColor(theme.sub);
   M5.Display.setFont(&fonts::efontJA_12);
   M5.Display.drawCenterString("◀", 18, 50);
   M5.Display.drawCenterString("▶", SCREEN_WIDTH - 18, 50);
@@ -1133,16 +1142,18 @@ void UIController::drawSearchScreen(
     bool flashActive,
     bool cancelPressed,
     bool openPressed) {
-  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, flashActive ? COLOR_PK_BAR : COLOR_PK_CARD);
-  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, flashActive ? theme.statusBarBg : theme.surface);
+  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, theme.border);
 
-  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_CARD);
-  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, COLOR_PK_BORDER);
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
   if (menuPressed) {
     drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
   }
   sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawCenterString(nameMode ? "ポケモンずかん" : "No.でえらぶ", SCREEN_WIDTH / 2, 22);
 
   if (!nameMode) {
@@ -1157,36 +1168,36 @@ void UIController::drawSearchScreen(
       const bool upPressed = pressedDigitDelta == digitStep[i];
       const bool downPressed = pressedDigitDelta == -digitStep[i];
 
-      drawActionButton(digitX[i], 52, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, upPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+      drawActionButton(digitX[i], 52, 40, 34, "", theme.bg, theme.text, upPressed, theme.accent, theme.border);
       sprite->setFont(&fonts::efontJA_16_b);
-      sprite->setTextColor(upPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+      sprite->setTextColor(upPressed ? theme.invertedText : theme.text);
       sprite->drawCenterString("▲", digitX[i] + 20, 61);
 
       char digitText[2] = {idText[i], '\0'};
       sprite->setFont(&fonts::efontJA_16_b);
-      sprite->setTextColor(COLOR_PK_RED);
+      sprite->setTextColor(theme.accent);
       sprite->drawCenterString(digitText, digitX[i] + 20, 92);
 
-      drawActionButton(digitX[i], 120, 40, 34, "", COLOR_PK_BG, COLOR_PK_TEXT, downPressed, COLOR_PK_RED, COLOR_PK_BORDER);
+      drawActionButton(digitX[i], 120, 40, 34, "", theme.bg, theme.text, downPressed, theme.accent, theme.border);
       sprite->setFont(&fonts::efontJA_16_b);
-      sprite->setTextColor(downPressed ? COLOR_PK_CARD : COLOR_PK_TEXT);
+      sprite->setTextColor(downPressed ? theme.invertedText : theme.text);
       sprite->drawCenterString("▼", digitX[i] + 20, 129);
     }
 
     sprite->setFont(&fonts::efontJA_16_b);
-    sprite->setTextColor(validId ? COLOR_PK_TEXT : COLOR_PK_SUB);
+    sprite->setTextColor(validId ? theme.text : theme.sub);
     sprite->drawCenterString(validId ? selectedName : "データなし", 160, 156);
 
-    drawActionButton(20, 178, 280, 40, "ひらく", COLOR_PK_RED, COLOR_PK_CARD, openPressed, COLOR_PK_TEXT, COLOR_PK_RED);
+    drawActionButton(20, 178, 280, 40, "ひらく", theme.accent, theme.invertedText, openPressed, theme.text, theme.accent);
     return;
   }
 
   const bool hasKeyword = nameQuery.length() > 0;
   const String keywordLabel = hasKeyword ? nameQuery : "キーワード";
-  const uint16_t keywordFill = hasKeyword ? COLOR_PK_RED : COLOR_PK_BG;
-  const uint16_t keywordText = hasKeyword ? COLOR_PK_CARD : COLOR_PK_TEXT;
-  drawActionButton(44, 52, 114, 24, keywordLabel.c_str(), keywordFill, keywordText, cancelPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(162, 52, 114, 24, "ばんごう", COLOR_PK_BG, COLOR_PK_TEXT, modePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  const uint16_t keywordFill = hasKeyword ? theme.accent : theme.bg;
+  const uint16_t keywordText = hasKeyword ? theme.invertedText : theme.text;
+  drawActionButton(44, 52, 114, 24, keywordLabel.c_str(), keywordFill, keywordText, cancelPressed, theme.border, theme.border);
+  drawActionButton(162, 52, 114, 24, "ばんごう", theme.bg, theme.text, modePressed, theme.border, theme.border);
 
   drawDetailNavigation(pagePrevPressed, pageNextPressed);
 
@@ -1201,10 +1212,10 @@ void UIController::drawSearchScreen(
     const int y = startY + (row * 28);
     const bool pressed = pressedCandidateIndex == i;
 
-    uint16_t fill = pressed ? COLOR_PK_TEXT : COLOR_PK_BG;
-    uint16_t textColor = pressed ? COLOR_PK_CARD : COLOR_PK_TEXT;
+    uint16_t fill = pressed ? theme.buttonPressedFill : theme.bg;
+    uint16_t textColor = pressed ? theme.invertedText : theme.text;
     sprite->fillRoundRect(x, y, itemW, itemH, 6, fill);
-    sprite->drawRoundRect(x, y, itemW, itemH, 6, COLOR_PK_BORDER);
+    sprite->drawRoundRect(x, y, itemW, itemH, 6, theme.border);
 
     if (i < static_cast<int>(nameCandidateIds.size())) {
       const String candidateText = nameCandidateLabels[i];
@@ -1223,24 +1234,26 @@ void UIController::drawSearchInputScreen(
     bool clearPressed,
     bool deletePressed,
     int pressedKeyIndex) {
-  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_CARD);
-  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, COLOR_PK_BORDER);
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+  sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, theme.surface);
+  sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, theme.border);
 
-  drawActionButton(12, 202, 88, 28, "もどる", COLOR_PK_BG, COLOR_PK_TEXT, backPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(116, 202, 88, 28, "けす", COLOR_PK_BG, COLOR_PK_TEXT, deletePressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
-  drawActionButton(220, 202, 88, 28, "クリア", COLOR_PK_BG, COLOR_PK_TEXT, clearPressed, COLOR_PK_BORDER, COLOR_PK_BORDER);
+  drawActionButton(12, 202, 88, 28, "もどる", theme.bg, theme.text, backPressed, theme.border, theme.border);
+  drawActionButton(116, 202, 88, 28, "けす", theme.bg, theme.text, deletePressed, theme.border, theme.border);
+  drawActionButton(220, 202, 88, 28, "クリア", theme.bg, theme.text, clearPressed, theme.border, theme.border);
 
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->setTextColor(theme.sub);
   sprite->drawString("おとを えらぶ", 12, 16);
 
-  sprite->fillRoundRect(12, 32, 296, 24, 6, COLOR_PK_BG);
-  sprite->drawRoundRect(12, 32, 296, 24, 6, COLOR_PK_BORDER);
-  sprite->setTextColor(nameQuery.length() > 0 ? COLOR_PK_TEXT : COLOR_PK_SUB);
+  sprite->fillRoundRect(12, 32, 296, 24, 6, theme.bg);
+  sprite->drawRoundRect(12, 32, 296, 24, 6, theme.border);
+  sprite->setTextColor(nameQuery.length() > 0 ? theme.text : theme.sub);
   sprite->drawString(nameQuery.length() > 0 ? nameQuery : "ここに なまえが はいります", 20, 38);
-  sprite->fillRoundRect(12, 56, 120, 16, 6, vowelMode ? COLOR_PK_RED : COLOR_PK_BG);
-  sprite->drawRoundRect(12, 56, 120, 16, 6, COLOR_PK_BORDER);
-  sprite->setTextColor(vowelMode ? COLOR_PK_CARD : COLOR_PK_SUB);
+  sprite->fillRoundRect(12, 56, 120, 16, 6, vowelMode ? theme.accent : theme.bg);
+  sprite->drawRoundRect(12, 56, 120, 16, 6, theme.border);
+  sprite->setTextColor(vowelMode ? theme.invertedText : theme.sub);
   sprite->drawCenterString(vowelMode ? "もじを えらぶ" : "ぎょうを えらぶ", 72, 60);
 
   if (!vowelMode) {
@@ -1256,17 +1269,17 @@ void UIController::drawSearchInputScreen(
           80,
           24,
           rowLabels[i],
-          COLOR_PK_BG,
-          (i >= 10) ? COLOR_PK_SUB : COLOR_PK_TEXT,
+          theme.bg,
+          (i >= 10) ? theme.sub : theme.text,
           pressedKeyIndex == i,
-          COLOR_PK_RED,
-          COLOR_PK_BORDER);
+          theme.accent,
+          theme.border);
     }
     return;
   }
 
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->setTextColor(theme.sub);
   sprite->drawCenterString(selectedRowLabel + "ぎょう", 160, 78);
 
   static constexpr const char* rowKanaTable[10][5] = {
@@ -1325,26 +1338,27 @@ void UIController::drawSearchInputScreen(
         80,
         24,
         label,
-        COLOR_PK_BG,
-        disabled ? COLOR_PK_SUB : COLOR_PK_TEXT,
+        theme.bg,
+        disabled ? theme.sub : theme.text,
         pressedKeyIndex == i,
-        COLOR_PK_RED,
-        COLOR_PK_BORDER);
+        theme.accent,
+        theme.border);
   }
 }
 
 void UIController::drawInfoRow(const char* label, const String& value, int y) {
+  const auto& theme = getThemePalette(currentTheme);
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(COLOR_PK_TEXT);
+  sprite->setTextColor(theme.text);
   sprite->drawString(label, 20, y);
-  sprite->setTextColor(COLOR_PK_SUB);
+  sprite->setTextColor(theme.sub);
   sprite->drawString(value, 92, y);
 }
 
 void UIController::drawTypeBadge(const String& type, int x, int y) {
   const uint16_t bg = typeBadgeColor(type);
   sprite->fillRoundRect(x, y, 68, 20, 5, bg);
-  sprite->setTextColor(COLOR_PK_CARD);
+  sprite->setTextColor(getThemePalette(currentTheme).invertedText);
   sprite->setFont(&fonts::efontJA_12);
   sprite->drawCenterString(type, x + 34, y + 3);
 }
