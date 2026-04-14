@@ -35,4 +35,10 @@ enum TabType {
   TAB_COUNT
 };
 
+enum UIThemeStyle {
+  UI_THEME_CLASSIC = 0,
+  UI_THEME_CYBER,
+  UI_THEME_COUNT
+};
+
 #endif

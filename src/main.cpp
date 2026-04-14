@@ -251,6 +251,7 @@ unsigned long guideCaughtSaveAt = 0;
 bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
+UIThemeStyle uiThemeStyle = UI_THEME_CLASSIC;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
 bool coverProximityReady = false;
@@ -530,6 +531,8 @@ enum PressedControl {
   PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
   PRESS_MENU_PREVIEW_CAPTION,
+  PRESS_MENU_THEME_0,
+  PRESS_MENU_THEME_1,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -587,10 +590,12 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
     if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
     if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
-    if (hitTest(tx, ty, 24, 162, 58, 32, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 94, 162, 58, 32, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 164, 162, 58, 32, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 234, 162, 58, 32, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 24, 152, 128, 28, 6)) return PRESS_MENU_THEME_0;
+    if (hitTest(tx, ty, 164, 152, 128, 28, 6)) return PRESS_MENU_THEME_1;
+    if (hitTest(tx, ty, 24, 202, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
+    if (hitTest(tx, ty, 94, 202, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
+    if (hitTest(tx, ty, 164, 202, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
+    if (hitTest(tx, ty, 234, 202, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
     return PRESS_NONE;
   }
 
@@ -772,6 +777,7 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
   ACTION_TOGGLE_PREVIEW_CAPTION,
+  ACTION_SET_UI_THEME,
   ACTION_SEARCH_TO_MENU,
   ACTION_OPEN_SEARCH_NUMBER,
   ACTION_SEARCH_TOGGLE_MODE,
@@ -1252,6 +1258,21 @@ const char* getQuizVolumeStatusLabel(QuizVolumeSetting setting) {
   return "M";
 }
 
+const char* getUIThemeKey(UIThemeStyle theme) {
+  switch (theme) {
+    case UI_THEME_CYBER: return "cyber";
+    case UI_THEME_CLASSIC:
+    default:
+      return "classic";
+  }
+}
+
+UIThemeStyle parseUIThemeKey(const char* value) {
+  if (value == nullptr) return UI_THEME_CLASSIC;
+  if (strcmp(value, "cyber") == 0) return UI_THEME_CYBER;
+  return UI_THEME_CLASSIC;
+}
+
 QuizVolumeSetting parseQuizVolumeKey(const char* value) {
   if (value == nullptr) return QUIZ_VOLUME_MEDIUM;
   if (strcmp(value, "large") == 0) return QUIZ_VOLUME_LARGE;
@@ -1270,6 +1291,7 @@ bool saveSettings() {
   doc["preview_3d"] = preview3dEnabled;
   doc["preview_caption"] = previewCaptionEnabled;
   doc["guide_hall_of_fame"] = guideHallOfFameEnabled;
+  doc["ui_theme"] = getUIThemeKey(uiThemeStyle);
 
   if (SD.exists(kSettingsPath)) {
     SD.remove(kSettingsPath);
@@ -1335,6 +1357,7 @@ void loadSettings() {
   preview3dEnabled = false;
   previewCaptionEnabled = true;
   guideHallOfFameEnabled = false;
+  uiThemeStyle = UI_THEME_CLASSIC;
 
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
@@ -1349,8 +1372,10 @@ void loadSettings() {
     preview3dEnabled = doc["preview_3d"] | false;
     previewCaptionEnabled = doc["preview_caption"] | true;
     guideHallOfFameEnabled = doc["guide_hall_of_fame"] | false;
+    uiThemeStyle = parseUIThemeKey(doc["ui_theme"] | "classic");
   }
   file.close();
+  ui.setTheme(uiThemeStyle);
   applyQuizVolume();
 }
 
@@ -1500,7 +1525,7 @@ uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
 }
 
 void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
-  target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, COLOR_PK_BG);
+  target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, ui.getBackgroundColor());
   appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
 }
 
@@ -1717,7 +1742,7 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
 }
 
 void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId, uint16_t renderW, uint16_t renderH) {
-  target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, COLOR_PK_BG);
+  target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, ui.getBackgroundColor());
   evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, renderW, renderH, false);
 }
 
@@ -1814,6 +1839,7 @@ void setup() {
   }
 
   loadSettings();
+  ui.setTheme(uiThemeStyle);
   loadGuideCaughtFlags();
   coverProximityReady = initCoverProximitySensor();
   initPortBBackButton();
@@ -2134,6 +2160,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl == PRESS_MENU_PREVIEW_CAPTION) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_CAPTION);
+        } else if (pressedControl == PRESS_MENU_THEME_0 || pressedControl == PRESS_MENU_THEME_1) {
+          pendingAction = makePendingAction(ACTION_SET_UI_THEME, pressedControl - PRESS_MENU_THEME_0);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -2340,6 +2368,11 @@ void loop() {
         break;
       case ACTION_TOGGLE_PREVIEW_CAPTION:
         previewCaptionEnabled = !previewCaptionEnabled;
+        saveSettings();
+        break;
+      case ACTION_SET_UI_THEME:
+        uiThemeStyle = static_cast<UIThemeStyle>(constrain(pendingAction.value, 0, static_cast<int>(UI_THEME_COUNT) - 1));
+        ui.setTheme(uiThemeStyle);
         saveSettings();
         break;
       case ACTION_CLOSE_QUIZ:
@@ -2738,6 +2771,10 @@ void loop() {
           visualControl == PRESS_MENU_3D,
           previewCaptionEnabled,
           visualControl == PRESS_MENU_PREVIEW_CAPTION,
+          static_cast<int>(uiThemeStyle),
+          (visualControl >= PRESS_MENU_THEME_0 && visualControl <= PRESS_MENU_THEME_1)
+              ? (visualControl - PRESS_MENU_THEME_0)
+              : -1,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
