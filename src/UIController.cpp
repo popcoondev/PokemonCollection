@@ -684,6 +684,102 @@ void UIController::drawWakeSplashScreen(uint8_t progressPercent, const char* sta
   }
 }
 
+void UIController::drawLockOnScreen(
+    int phase,
+    int markerCenterX,
+    int zoneCenterX,
+    int zoneWidth,
+    int jitterOffset,
+    uint8_t progressPercent,
+    uint16_t pokemonId,
+    const String& pokemonName,
+    bool actionPressed,
+    bool showDetailHint) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  const uint16_t frameColor = blend565(theme.highlight, theme.surface, 180);
+  for (int y = 0; y < SCREEN_HEIGHT; y += 16) {
+    sprite->drawFastHLine(0, y, SCREEN_WIDTH, blend565(theme.border, theme.bg, 120));
+  }
+  for (int x = 0; x < SCREEN_WIDTH; x += 16) {
+    sprite->drawFastVLine(x, 0, SCREEN_HEIGHT, blend565(theme.border, theme.bg, 80));
+  }
+
+  sprite->fillRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, theme.buttonRadius, blend565(theme.surface, theme.bg, 180));
+  sprite->drawRoundRect(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, theme.buttonRadius, frameColor);
+
+  const int reticleCx = (SCREEN_WIDTH / 2) + jitterOffset;
+  const int reticleCy = 86 - jitterOffset;
+  sprite->drawCircle(reticleCx, reticleCy, 28, theme.highlight);
+  sprite->drawCircle(reticleCx, reticleCy, 18, frameColor);
+  sprite->drawFastHLine(reticleCx - 40, reticleCy, 80, theme.highlight);
+  sprite->drawFastVLine(reticleCx, reticleCy - 40, 80, theme.highlight);
+
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  if (phase == 1) {
+    sprite->drawCenterString("LOCK ON READY", SCREEN_WIDTH / 2, 24);
+  } else if (phase == 2) {
+    sprite->drawCenterString("LOCK ON SEARCH", SCREEN_WIDTH / 2, 24);
+  } else if (phase == 3) {
+    sprite->drawCenterString("GATCHA!", SCREEN_WIDTH / 2, 24);
+  } else {
+    sprite->drawCenterString("LOCK FAILED", SCREEN_WIDTH / 2, 24);
+  }
+
+  if (phase == 3) {
+    drawQuizPokemonImage(pokemonId, 86, 44, 148, 148);
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(theme.sub);
+    char idLabel[12];
+    snprintf(idLabel, sizeof(idLabel), "No.%04d", pokemonId);
+    sprite->drawCenterString(idLabel, SCREEN_WIDTH / 2, 176);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(theme.text);
+    sprite->drawCenterString(pokemonName, SCREEN_WIDTH / 2, 194);
+    if (showDetailHint) {
+      sprite->setFont(&fonts::efontJA_12);
+      sprite->setTextColor(theme.sub);
+      sprite->drawCenterString("タップ / Port.B で ずかんをひらく", SCREEN_WIDTH / 2, 218);
+    }
+  } else if (phase == 4) {
+    for (int i = 0; i < 7; ++i) {
+      const int y = 52 + (i * 20);
+      sprite->fillRect(28, y, SCREEN_WIDTH - 56, 8, (i % 2 == 0) ? theme.accent : theme.highlight);
+    }
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(theme.sub);
+    sprite->drawCenterString("ターゲットを ほそく つかまえられなかった", SCREEN_WIDTH / 2, 196);
+  } else {
+    constexpr int barX = 36;
+    constexpr int barY = 176;
+    constexpr int barW = SCREEN_WIDTH - 72;
+    constexpr int barH = 20;
+    const int zoneX = zoneCenterX - (zoneWidth / 2);
+    sprite->fillRoundRect(barX, barY, barW, barH, 8, theme.surface);
+    sprite->drawRoundRect(barX, barY, barW, barH, 8, theme.border);
+    sprite->fillRoundRect(zoneX, barY + 2, zoneWidth, barH - 4, 6, blend565(theme.highlight, theme.surface, 180));
+    sprite->drawFastVLine(markerCenterX, barY - 8, barH + 16, theme.accent);
+    sprite->fillCircle(markerCenterX, barY + (barH / 2), 4, theme.accent);
+
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(theme.sub);
+    if (phase == 1) {
+      sprite->drawCenterString("Port.B でもういちど おして ロックする", SCREEN_WIDTH / 2, 204);
+    } else {
+      sprite->drawCenterString("ハイライト ゾーンで おす", SCREEN_WIDTH / 2, 204);
+    }
+    char progressLabel[16];
+    snprintf(progressLabel, sizeof(progressLabel), "%d%%", progressPercent);
+    sprite->drawRightString(progressLabel, SCREEN_WIDTH - 24, 154);
+  }
+
+  if (actionPressed) {
+    drawPressedOverlay(12, 12, SCREEN_WIDTH - 24, SCREEN_HEIGHT - 24, theme.buttonRadius);
+  }
+}
+
 void UIController::drawMenuScreen(
     bool pokedexPressed,
     bool quizPressed,
