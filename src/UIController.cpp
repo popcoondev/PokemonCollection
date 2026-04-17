@@ -1481,9 +1481,34 @@ void UIController::drawSearchInputScreen(
   sprite->fillRoundRect(12, 56, 120, 16, 6, vowelMode ? theme.accent : theme.bg);
   sprite->drawRoundRect(12, 56, 120, 16, 6, theme.border);
   sprite->setTextColor(vowelMode ? theme.invertedText : theme.sub);
-  sprite->drawCenterString(vowelMode ? tr("もじを えらぶ", "Pick Char") : tr("ぎょうを えらぶ", "Pick Row"), 72, 60);
+  sprite->drawCenterString(vowelMode ? tr("もじを えらぶ", "Pick Char") : tr("ぎょうを えらぶ", "Pick Set"), 72, 60);
+
+  const bool englishMode = currentLanguage == APP_LANGUAGE_EN;
 
   if (!vowelMode) {
+    if (englishMode) {
+      static constexpr const char* englishRowLabels[12] = {"ABC", "DEF", "GHI", "JKL", "MNO", "PQR", "STU", "VWX", "YZ", "SYM", "", ""};
+      const int keyX[3] = {30, 120, 210};
+      const int keyY[4] = {76, 106, 136, 166};
+      for (int i = 0; i < 12; ++i) {
+        const int col = i % 3;
+        const int row = i / 3;
+        const bool disabled = englishRowLabels[i][0] == '\0';
+        drawActionButton(
+            keyX[col],
+            keyY[row],
+            80,
+            24,
+            englishRowLabels[i],
+            theme.bg,
+            disabled ? theme.sub : theme.text,
+            pressedKeyIndex == i,
+            theme.accent,
+            theme.border);
+      }
+      return;
+    }
+
     static constexpr const char* rowLabels[12] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ", "゛゜", "小"};
     const int keyX[3] = {30, 120, 210};
     const int keyY[4] = {76, 106, 136, 166};
@@ -1507,7 +1532,63 @@ void UIController::drawSearchInputScreen(
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.sub);
-  sprite->drawCenterString(currentLanguage == APP_LANGUAGE_EN ? (selectedRowLabel + " row") : (selectedRowLabel + "ぎょう"), 160, 78);
+  sprite->drawCenterString(currentLanguage == APP_LANGUAGE_EN ? (selectedRowLabel + " set") : (selectedRowLabel + "ぎょう"), 160, 78);
+
+  if (englishMode) {
+    static constexpr const char* englishCharTable[10][12] = {
+        {"A", "B", "C", "", "", "", "", "", "", "", "", ""},
+        {"D", "E", "F", "", "", "", "", "", "", "", "", ""},
+        {"G", "H", "I", "", "", "", "", "", "", "", "", ""},
+        {"J", "K", "L", "", "", "", "", "", "", "", "", ""},
+        {"M", "N", "O", "", "", "", "", "", "", "", "", ""},
+        {"P", "Q", "R", "", "", "", "", "", "", "", "", ""},
+        {"S", "T", "U", "", "", "", "", "", "", "", "", ""},
+        {"V", "W", "X", "", "", "", "", "", "", "", "", ""},
+        {"Y", "Z", "", "", "", "", "", "", "", "", "", ""},
+        {"-", ".", "'", ":", "SP", "F", "M", "", "", "", "", ""},
+    };
+    int rowIndex = -1;
+    if (selectedRowLabel == "ABC") rowIndex = 0;
+    else if (selectedRowLabel == "DEF") rowIndex = 1;
+    else if (selectedRowLabel == "GHI") rowIndex = 2;
+    else if (selectedRowLabel == "JKL") rowIndex = 3;
+    else if (selectedRowLabel == "MNO") rowIndex = 4;
+    else if (selectedRowLabel == "PQR") rowIndex = 5;
+    else if (selectedRowLabel == "STU") rowIndex = 6;
+    else if (selectedRowLabel == "VWX") rowIndex = 7;
+    else if (selectedRowLabel == "YZ") rowIndex = 8;
+    else if (selectedRowLabel == "SYM") rowIndex = 9;
+
+    const int keyX[3] = {30, 120, 210};
+    const int keyY[4] = {76, 106, 136, 166};
+    for (int i = 0; i < 12; ++i) {
+      const int col = i % 3;
+      const int row = i / 3;
+      const char* label = "";
+      bool disabled = true;
+      if (rowIndex >= 0) {
+        label = englishCharTable[rowIndex][i];
+        disabled = label[0] == '\0';
+      }
+      drawActionButton(
+          keyX[col],
+          keyY[row],
+          80,
+          24,
+          label,
+          theme.bg,
+          disabled ? theme.sub : theme.text,
+          pressedKeyIndex == i,
+          theme.accent,
+          theme.border);
+    }
+    sprite->setFont(&fonts::efontJA_10);
+    sprite->setTextColor(theme.sub);
+    if (selectedRowLabel == "SYM") {
+      sprite->drawString("SP=space  F=female  M=male", 48, 184);
+    }
+    return;
+  }
 
   static constexpr const char* rowKanaTable[10][5] = {
       {"ア","イ","ウ","エ","オ"},

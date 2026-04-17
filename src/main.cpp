@@ -56,8 +56,8 @@ constexpr uint32_t kSlideshowSlideDurationMs = 5000;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
-constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside.wav";
-constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
+constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
+constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 constexpr uint8_t kDisplayBrightnessOn = 128;
@@ -166,6 +166,7 @@ struct QuizSoundCache {
   uint32_t sampleRate = 44100;
   bool stereo = false;
   bool ready = false;
+  String path;
 };
 
 struct GuideLocationEntry {
@@ -615,7 +616,34 @@ int getSearchInputKeyIndexAt(int tx, int ty) {
   return -1;
 }
 
+bool isEnglishSearchInputMode() {
+  return appLanguage == APP_LANGUAGE_EN;
+}
+
 String getSearchInputGlyph(int keyIndex) {
+  if (isEnglishSearchInputMode()) {
+    static constexpr const char* kEnglishCharGroups[10][7] = {
+        {"A", "B", "C", "", "", "", ""},
+        {"D", "E", "F", "", "", "", ""},
+        {"G", "H", "I", "", "", "", ""},
+        {"J", "K", "L", "", "", "", ""},
+        {"M", "N", "O", "", "", "", ""},
+        {"P", "Q", "R", "", "", "", ""},
+        {"S", "T", "U", "", "", "", ""},
+        {"V", "W", "X", "", "", "", ""},
+        {"Y", "Z", "", "", "", "", ""},
+        {"-", ".", "'", ":", " ", "\xE2\x99\x80", "\xE2\x99\x82"},
+    };
+    if (searchInputVowelMode
+        && searchInputRowIndex >= 0
+        && searchInputRowIndex < 10
+        && keyIndex >= 0
+        && keyIndex < 7) {
+      return kEnglishCharGroups[searchInputRowIndex][keyIndex];
+    }
+    return "";
+  }
+
   static constexpr const char* kRowKanaTable[10][5] = {
       {"ア","イ","ウ","エ","オ"},
       {"カ","キ","ク","ケ","コ"},
@@ -641,6 +669,14 @@ String getSearchInputGlyph(int keyIndex) {
 }
 
 String getSearchInputRowLabel(int rowIndex) {
+  if (isEnglishSearchInputMode()) {
+    static constexpr const char* kEnglishRowLabels[10] = {"ABC", "DEF", "GHI", "JKL", "MNO", "PQR", "STU", "VWX", "YZ", "SYM"};
+    if (rowIndex < 0 || rowIndex >= 10) {
+      return "";
+    }
+    return kEnglishRowLabels[rowIndex];
+  }
+
   static constexpr const char* kRowLabels[10] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ"};
   if (rowIndex < 0 || rowIndex >= 10) {
     return "";
@@ -1536,6 +1572,41 @@ void applyQuizVolume() {
   M5.Speaker.setVolume(getQuizVolumeValue(quizVolumeSetting));
 }
 
+const char* getQuizSoundLanguageDir(AppLanguage language) {
+  return (language == APP_LANGUAGE_EN) ? kQuizSoundDirEn : kQuizSoundDirJa;
+}
+
+String getQuizSoundFilename(QuizPhase phase) {
+  return (phase == QUIZ_A_SIDE) ? "Eyecatch_Aside.wav" : "Eyecatch_Bside.wav";
+}
+
+String getQuizLegacySoundPath(QuizPhase phase) {
+  return String("/pokemon/quiz/sounds/") + getQuizSoundFilename(phase);
+}
+
+String getQuizSoundPath(QuizPhase phase, AppLanguage language) {
+  return String(getQuizSoundLanguageDir(language)) + "/" + getQuizSoundFilename(phase);
+}
+
+void releaseQuizSoundCache(QuizSoundCache& cache) {
+  if (cache.data != nullptr) {
+    free(cache.data);
+  }
+  cache.data = nullptr;
+  cache.size = 0;
+  cache.pcm16 = nullptr;
+  cache.sampleCount = 0;
+  cache.sampleRate = 44100;
+  cache.stereo = false;
+  cache.ready = false;
+  cache.path = "";
+}
+
+void invalidateQuizSoundCaches() {
+  releaseQuizSoundCache(quizAsideSound);
+  releaseQuizSoundCache(quizBsideSound);
+}
+
 bool saveSettings() {
   JsonDocument doc;
   doc["app_language"] = getAppLanguageKey(appLanguage);
@@ -1616,6 +1687,7 @@ void loadSettings() {
   if (!file) {
     saveSettings();
     ui.setLanguage(appLanguage);
+    invalidateQuizSoundCaches();
     applyQuizVolume();
     return;
   }
@@ -1632,13 +1704,21 @@ void loadSettings() {
   file.close();
   dataMgr.setLanguage(appLanguage);
   ui.setLanguage(appLanguage);
+  invalidateQuizSoundCaches();
   ui.setTheme(uiThemeStyle);
   applyQuizVolume();
 }
 
 bool loadQuizSound(const char* path, QuizSoundCache& cache) {
-  if (cache.ready && cache.data != nullptr && cache.size > 0) {
+  if (cache.ready
+      && cache.data != nullptr
+      && cache.size > 0
+      && cache.path == path) {
     return true;
+  }
+
+  if (cache.data != nullptr) {
+    releaseQuizSoundCache(cache);
   }
 
   struct __attribute__((packed)) RiffHeader {
@@ -1747,13 +1827,17 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
   cache.sampleRate = fmt.sampleRate;
   cache.stereo = fmt.channels > 1;
   cache.ready = true;
+  cache.path = path;
   return true;
 }
 
 void playQuizSound(QuizPhase phase) {
   QuizSoundCache& cache = (phase == QUIZ_A_SIDE) ? quizAsideSound : quizBsideSound;
-  const char* path = (phase == QUIZ_A_SIDE) ? kQuizAsideSoundPath : kQuizBsideSoundPath;
-  if (!loadQuizSound(path, cache)) {
+  String path = getQuizSoundPath(phase, appLanguage);
+  if (!SD.exists(path.c_str())) {
+    path = getQuizLegacySoundPath(phase);
+  }
+  if (!loadQuizSound(path.c_str(), cache)) {
     return;
   }
 
@@ -2676,6 +2760,7 @@ void loop() {
           appLanguage = nextLanguage;
           dataMgr.setLanguage(appLanguage);
           ui.setLanguage(appLanguage);
+          invalidateQuizSoundCaches();
           saveSettings();
         }
         break;
@@ -2727,7 +2812,12 @@ void loop() {
         }
         break;
       case ACTION_SEARCH_INPUT_ROW:
-        if (pendingAction.value == 10) {
+        if (isEnglishSearchInputMode()) {
+          if (pendingAction.value >= 0 && pendingAction.value < 10) {
+            searchInputVowelMode = true;
+            searchInputRowIndex = pendingAction.value;
+          }
+        } else if (pendingAction.value == 10) {
           applySearchDakutenToggle();
           searchNameOffset = 0;
         } else if (pendingAction.value == 11) {
@@ -2739,7 +2829,16 @@ void loop() {
         }
         break;
       case ACTION_SEARCH_INPUT_APPEND: {
-        if (pendingAction.value == 10) {
+        if (isEnglishSearchInputMode()) {
+          const String input = getSearchInputGlyph(pendingAction.value);
+          if (input.length() == 0) {
+            break;
+          }
+          searchNameQuery += input;
+          searchNameOffset = 0;
+          searchInputVowelMode = false;
+          searchInputRowIndex = -1;
+        } else if (pendingAction.value == 10) {
           applySearchDakutenToggle();
           searchNameOffset = 0;
         } else if (pendingAction.value == 11) {
