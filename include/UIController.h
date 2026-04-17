@@ -40,6 +40,19 @@ public:
   void redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName);
   void applyBlackFade(uint8_t alpha);
   void drawWakeSplashScreen(uint8_t progressPercent, const char* statusText);
+  void drawLockOnScreen(
+      int phase,
+      int rarity,
+      const char* rarityLabel,
+      int markerCenterX,
+      int zoneCenterX,
+      int zoneWidth,
+      int jitterOffset,
+      uint8_t progressPercent,
+      uint16_t pokemonId,
+      const String& pokemonName,
+      bool actionPressed,
+      bool showDetailHint);
   void drawMenuScreen(
       bool pokedexPressed,
       bool quizPressed,

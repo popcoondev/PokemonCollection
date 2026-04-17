@@ -23,6 +23,7 @@ TabType currentTab = TAB_APPEARANCE;
 
 enum ScreenMode {
   SCREEN_MENU = 0,
+  SCREEN_LOCKON,
   SCREEN_SETTINGS,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
@@ -75,6 +76,23 @@ constexpr uint32_t kCoverPollIntervalMs = 50;
 constexpr uint32_t kWakeSplashDurationMs = 2000;
 constexpr gpio_num_t kPortBBackButtonPins[] = {GPIO_NUM_8, GPIO_NUM_9};
 constexpr uint32_t kPortBBackButtonDebounceMs = 30;
+constexpr uint32_t kLockOnReadyDurationMs = 400;
+constexpr uint32_t kLockOnConfirmFreezeMs = 140;
+constexpr uint32_t kLockOnSuccessDisplayMs = 4000;
+constexpr uint32_t kLockOnFailDisplayMs = 3000;
+constexpr int kLockOnBarX = 36;
+constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
+constexpr uint16_t kLockOnLegendIds[] = {
+    144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251,
+    377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
+    480, 481, 482, 483, 484, 485, 486, 487, 488, 489,
+    490, 491, 492, 493,
+};
+constexpr uint16_t kLockOnRareIds[] = {
+    3, 6, 9, 113, 131, 132, 133, 134, 135, 136, 137, 141, 142, 143, 149,
+    196, 197, 212, 214, 229, 233, 241, 242, 248, 306, 330, 348, 350, 359,
+    373, 376, 392, 395, 398, 407, 445, 448, 462, 468, 470, 471, 474,
+};
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -84,6 +102,21 @@ enum QuizPhase {
 enum SearchMode {
   SEARCH_MODE_NUMBER = 0,
   SEARCH_MODE_NAME,
+};
+
+enum LockOnPhase {
+  LOCKON_IDLE = 0,
+  LOCKON_READY,
+  LOCKON_SEARCH,
+  LOCKON_LOCKED,
+  LOCKON_RESULT_SUCCESS,
+  LOCKON_RESULT_FAIL,
+};
+
+enum LockOnRarity {
+  LOCKON_RARITY_NORMAL = 0,
+  LOCKON_RARITY_RARE,
+  LOCKON_RARITY_LEGEND,
 };
 
 struct AppearanceImageRequest {
@@ -272,6 +305,20 @@ int searchInputRowIndex = -1;
 unsigned long searchFlashUntil = 0;
 uint16_t slideshowPokemonId = MIN_POKEMON_ID;
 uint32_t slideshowPhaseStartedAt = 0;
+LockOnPhase lockOnPhase = LOCKON_IDLE;
+LockOnRarity lockOnRarity = LOCKON_RARITY_NORMAL;
+uint16_t lockOnPokemonId = MIN_POKEMON_ID;
+uint16_t lockOnLastPokemonId = 0;
+uint32_t lockOnPhaseStartedAt = 0;
+uint32_t lockOnSearchDurationMs = 3000;
+uint16_t lockOnZoneWidth = 48;
+int lockOnZoneCenterX = kLockOnBarX + (kLockOnBarW / 2);
+int lockOnConfirmedMarkerX = kLockOnBarX + (kLockOnBarW / 2);
+bool lockOnPendingSuccess = false;
+uint32_t lockOnLastPulseAt = 0;
+unsigned long vibrationStopAt = 0;
+
+uint16_t getAvailableMaxPokemonId();
 
 bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
   return tx >= (x - pad) && tx <= (x + w + pad)
@@ -317,6 +364,150 @@ bool readPortBBackButtonRawPressed() {
     }
   }
   return false;
+}
+
+void triggerVibration(uint8_t level, uint32_t durationMs, unsigned long now) {
+  M5.Power.setVibration(level);
+  vibrationStopAt = (level == 0 || durationMs == 0) ? 0 : (now + durationMs);
+}
+
+LockOnRarity chooseLockOnRarity() {
+  const uint32_t roll = esp_random() % 100;
+  if (roll < 2) return LOCKON_RARITY_LEGEND;
+  if (roll < 15) return LOCKON_RARITY_RARE;
+  return LOCKON_RARITY_NORMAL;
+}
+
+uint16_t chooseRandomPokemonIdExcluding(uint16_t excludedId) {
+  const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+  if (maxPokemonId <= MIN_POKEMON_ID) {
+    return MIN_POKEMON_ID;
+  }
+
+  for (int attempt = 0; attempt < 64; ++attempt) {
+    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (esp_random() % (maxPokemonId - MIN_POKEMON_ID + 1)));
+    if (candidate == excludedId) continue;
+    if (dataMgr.getPokemonName(candidate).length() == 0) continue;
+    return candidate;
+  }
+
+  return MIN_POKEMON_ID;
+}
+
+uint16_t choosePokemonIdFromTable(const uint16_t* ids, size_t count, uint16_t excludedId) {
+  if (ids == nullptr || count == 0) {
+    return chooseRandomPokemonIdExcluding(excludedId);
+  }
+  for (int attempt = 0; attempt < 64; ++attempt) {
+    const uint16_t candidate = ids[esp_random() % count];
+    if (candidate == excludedId) continue;
+    if (dataMgr.getPokemonName(candidate).length() == 0) continue;
+    return candidate;
+  }
+  return chooseRandomPokemonIdExcluding(excludedId);
+}
+
+uint16_t chooseLockOnPokemonId(LockOnRarity rarity, uint16_t excludedId) {
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      return choosePokemonIdFromTable(kLockOnLegendIds, sizeof(kLockOnLegendIds) / sizeof(kLockOnLegendIds[0]), excludedId);
+    case LOCKON_RARITY_RARE:
+      return choosePokemonIdFromTable(kLockOnRareIds, sizeof(kLockOnRareIds) / sizeof(kLockOnRareIds[0]), excludedId);
+    case LOCKON_RARITY_NORMAL:
+    default:
+      return chooseRandomPokemonIdExcluding(excludedId);
+  }
+}
+
+const char* getLockOnRarityLabel(LockOnRarity rarity) {
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      return "LEGEND";
+    case LOCKON_RARITY_RARE:
+      return "RARE";
+    case LOCKON_RARITY_NORMAL:
+    default:
+      return "NORMAL";
+  }
+}
+
+void playLockOnResultSound(bool success, LockOnRarity rarity) {
+  M5.Speaker.stop();
+  if (!success) {
+    M5.Speaker.tone(420, 90, 0, true);
+    M5.Speaker.tone(280, 180, 0, false);
+    return;
+  }
+
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      M5.Speaker.tone(1320, 70, 0, true);
+      M5.Speaker.tone(1760, 80, 0, false);
+      M5.Speaker.tone(2210, 110, 0, false);
+      M5.Speaker.tone(2640, 220, 0, false);
+      break;
+    case LOCKON_RARITY_RARE:
+      M5.Speaker.tone(1040, 70, 0, true);
+      M5.Speaker.tone(1390, 80, 0, false);
+      M5.Speaker.tone(1760, 180, 0, false);
+      break;
+    case LOCKON_RARITY_NORMAL:
+    default:
+      M5.Speaker.tone(880, 80, 0, true);
+      M5.Speaker.tone(1320, 180, 0, false);
+      break;
+  }
+}
+
+uint32_t getLockOnSearchDurationMs(LockOnRarity rarity) {
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      return 3400;
+    case LOCKON_RARITY_RARE:
+      return 3600;
+    case LOCKON_RARITY_NORMAL:
+    default:
+      return 3800;
+  }
+}
+
+uint16_t getLockOnZoneWidth(LockOnRarity rarity) {
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      return static_cast<uint16_t>(random(24, 37));
+    case LOCKON_RARITY_RARE:
+      return static_cast<uint16_t>(random(28, 43));
+    case LOCKON_RARITY_NORMAL:
+    default:
+      return static_cast<uint16_t>(random(34, 53));
+  }
+}
+
+float getLockOnMarkerRatio(unsigned long elapsedMs, uint32_t durationMs, LockOnRarity rarity) {
+  if (durationMs == 0) {
+    return 0.5f;
+  }
+  const float t = constrain(static_cast<float>(elapsedMs) / static_cast<float>(durationMs), 0.0f, 1.0f);
+  const float baseSweep = (rarity == LOCKON_RARITY_LEGEND) ? 2.25f : (rarity == LOCKON_RARITY_RARE ? 2.1f : 2.0f);
+  const float accelSweep = (rarity == LOCKON_RARITY_LEGEND) ? 1.7f : (rarity == LOCKON_RARITY_RARE ? 1.5f : 1.4f);
+  const float phase = (t * baseSweep) + ((t * t) * accelSweep);
+  const float wrapped = phase - floorf(phase);
+  return (wrapped <= 0.5f) ? (wrapped * 2.0f) : (2.0f - (wrapped * 2.0f));
+}
+
+int chooseLockOnZoneCenterX(uint16_t zoneWidth) {
+  const int half = zoneWidth / 2;
+  const int minCenter = kLockOnBarX + half + 6;
+  const int maxCenter = kLockOnBarX + kLockOnBarW - half - 6;
+  if (maxCenter <= minCenter) {
+    return kLockOnBarX + (kLockOnBarW / 2);
+  }
+  return random(minCenter, maxCenter + 1);
+}
+
+int getLockOnMarkerCenterX(unsigned long elapsedMs, uint32_t durationMs, LockOnRarity rarity) {
+  const float ratio = getLockOnMarkerRatio(elapsedMs, durationMs, rarity);
+  return kLockOnBarX + static_cast<int>(lroundf(ratio * static_cast<float>(kLockOnBarW - 1)));
 }
 
 uint8_t getWakeSplashProgressPercent(unsigned long elapsedMs) {
@@ -537,6 +728,7 @@ enum PressedControl {
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
   PRESS_MENU_VOL_MUTE,
+  PRESS_LOCKON_ACTION,
   PRESS_SEARCH_INPUT_BACK,
   PRESS_SEARCH_INPUT_DELETE,
   PRESS_SEARCH_INPUT_CLEAR,
@@ -584,6 +776,10 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
     if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
     return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_LOCKON) {
+    return PRESS_LOCKON_ACTION;
   }
 
   if (mode == SCREEN_SETTINGS) {
@@ -770,6 +966,8 @@ enum PendingActionType {
   ACTION_GUIDE_DETAIL_NEXT,
   ACTION_OPEN_SEARCH,
   ACTION_OPEN_POKEDEX,
+  ACTION_OPEN_LOCKON,
+  ACTION_CLOSE_LOCKON,
   ACTION_OPEN_QUIZ,
   ACTION_OPEN_SLIDESHOW,
   ACTION_CLOSE_SLIDESHOW,
@@ -800,6 +998,8 @@ enum PendingActionType {
   ACTION_NAV_NEXT,
   ACTION_OPEN_EVOLUTION,
   ACTION_SET_TAB,
+  ACTION_LOCKON_CONFIRM,
+  ACTION_LOCKON_OPEN_DETAIL,
 };
 
 struct PendingAction {
@@ -816,6 +1016,8 @@ PendingAction makePendingAction(PendingActionType type, int value = 0) {
 
 PressedControl getBackPressedControlForScreen(ScreenMode mode) {
   switch (mode) {
+    case SCREEN_LOCKON:
+      return PRESS_LOCKON_ACTION;
     case SCREEN_SETTINGS:
       return PRESS_GUIDE_BACK;
     case SCREEN_GUIDE_MENU:
@@ -849,6 +1051,8 @@ PressedControl getBackPressedControlForScreen(ScreenMode mode) {
 
 PendingAction getBackPendingActionForScreen(ScreenMode mode) {
   switch (mode) {
+    case SCREEN_LOCKON:
+      return {};
     case SCREEN_SETTINGS:
       return makePendingAction(ACTION_CLOSE_SETTINGS);
     case SCREEN_GUIDE_MENU:
@@ -882,7 +1086,7 @@ PendingAction getBackPendingActionForScreen(ScreenMode mode) {
   }
 }
 
-bool pollPortBBackButton(unsigned long now, ScreenMode mode, PressedControl& pressedControl, PendingAction& clickedAction) {
+bool pollPortBBackButton(unsigned long now, ScreenMode mode, LockOnPhase currentLockOnPhase, PressedControl& pressedControl, PendingAction& clickedAction) {
   pressedControl = PRESS_NONE;
   clickedAction = {};
 
@@ -896,12 +1100,29 @@ bool pollPortBBackButton(unsigned long now, ScreenMode mode, PressedControl& pre
       && portBBackButtonStablePressed != rawPressed) {
     portBBackButtonStablePressed = rawPressed;
     if (portBBackButtonStablePressed) {
-      clickedAction = getBackPendingActionForScreen(mode);
+      if (mode == SCREEN_MENU) {
+        clickedAction = makePendingAction(ACTION_OPEN_LOCKON);
+      } else if (mode == SCREEN_LOCKON) {
+        if (currentLockOnPhase == LOCKON_SEARCH) {
+          const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
+          clickedAction = makePendingAction(
+              ACTION_LOCKON_CONFIRM,
+              getLockOnMarkerCenterX(elapsedMs, lockOnSearchDurationMs, lockOnRarity));
+        } else if (currentLockOnPhase == LOCKON_RESULT_SUCCESS) {
+          clickedAction = makePendingAction(ACTION_LOCKON_OPEN_DETAIL);
+        } else if (currentLockOnPhase == LOCKON_RESULT_FAIL) {
+          clickedAction = makePendingAction(ACTION_CLOSE_LOCKON);
+        }
+      } else {
+        clickedAction = getBackPendingActionForScreen(mode);
+      }
     }
   }
 
   if (portBBackButtonStablePressed) {
-    pressedControl = getBackPressedControlForScreen(mode);
+    pressedControl = (mode == SCREEN_MENU || mode == SCREEN_LOCKON)
+        ? PRESS_LOCKON_ACTION
+        : getBackPressedControlForScreen(mode);
   }
 
   return clickedAction.type != ACTION_NONE;
@@ -2014,7 +2235,7 @@ void loop() {
   }
 
   if (!wakeSplashActive) {
-    pollPortBBackButton(now, screenMode, portBPressedControl, portBClickedAction);
+    pollPortBBackButton(now, screenMode, lockOnPhase, portBPressedControl, portBClickedAction);
     if (pendingAction.type == ACTION_NONE && portBClickedAction.type != ACTION_NONE) {
       heldControl = portBPressedControl;
       latchedControl = portBPressedControl;
@@ -2082,6 +2303,16 @@ void loop() {
           pendingAction = makePendingAction(ACTION_SEARCH_OPEN);
         } else if (pressedControl == PRESS_SEARCH_MENU) {
           pendingAction = makePendingAction(ACTION_SEARCH_TO_MENU);
+        }
+      } else if (screenMode == SCREEN_LOCKON) {
+        if (lockOnPhase == LOCKON_SEARCH) {
+          pendingAction = makePendingAction(
+              ACTION_LOCKON_CONFIRM,
+              getLockOnMarkerCenterX(now - lockOnPhaseStartedAt, lockOnSearchDurationMs, lockOnRarity));
+        } else if (lockOnPhase == LOCKON_RESULT_SUCCESS) {
+          pendingAction = makePendingAction(ACTION_LOCKON_OPEN_DETAIL);
+        } else if (lockOnPhase == LOCKON_RESULT_FAIL) {
+          pendingAction = makePendingAction(ACTION_CLOSE_LOCKON);
         }
       } else if (screenMode == SCREEN_PREVIEW) {
         pendingAction = makePendingAction(ACTION_PREVIEW_CLOSE);
@@ -2338,6 +2569,26 @@ void loop() {
         searchInputVowelMode = false;
         searchInputRowIndex = -1;
         break;
+      case ACTION_OPEN_LOCKON:
+        screenMode = SCREEN_LOCKON;
+        lockOnPhase = LOCKON_READY;
+        lockOnPhaseStartedAt = now;
+        lockOnLastPulseAt = now;
+        lockOnRarity = chooseLockOnRarity();
+        lockOnPokemonId = chooseLockOnPokemonId(lockOnRarity, lockOnLastPokemonId);
+        lockOnSearchDurationMs = getLockOnSearchDurationMs(lockOnRarity);
+        lockOnZoneWidth = getLockOnZoneWidth(lockOnRarity);
+        lockOnZoneCenterX = chooseLockOnZoneCenterX(lockOnZoneWidth);
+        M5.Speaker.stop();
+        M5.Speaker.tone(1240, 90);
+        triggerVibration(72, 60, now);
+        break;
+      case ACTION_CLOSE_LOCKON:
+        screenMode = SCREEN_MENU;
+        lockOnPhase = LOCKON_IDLE;
+        M5.Speaker.stop();
+        triggerVibration(0, 0, now);
+        break;
       case ACTION_OPEN_QUIZ:
         screenMode = SCREEN_QUIZ;
         quizPhase = QUIZ_A_SIDE;
@@ -2542,6 +2793,32 @@ void loop() {
       case ACTION_PREVIEW_CLOSE:
         screenMode = SCREEN_DETAIL;
         break;
+      case ACTION_LOCKON_CONFIRM: {
+        if (lockOnPhase != LOCKON_SEARCH) {
+          break;
+        }
+        const int markerX = pendingAction.value;
+        lockOnConfirmedMarkerX = markerX;
+        const int zoneLeft = lockOnZoneCenterX - (static_cast<int>(lockOnZoneWidth) / 2);
+        const int zoneRight = zoneLeft + static_cast<int>(lockOnZoneWidth) - 1;
+        lockOnPendingSuccess = markerX >= zoneLeft && markerX <= zoneRight;
+        lockOnPhase = LOCKON_LOCKED;
+        lockOnPhaseStartedAt = now;
+        M5.Speaker.stop();
+        M5.Speaker.tone(lockOnPendingSuccess ? 1760 : 320, lockOnPendingSuccess ? 100 : 120);
+        triggerVibration(lockOnPendingSuccess ? 180 : 96, lockOnPendingSuccess ? 220 : 120, now);
+        break;
+      }
+      case ACTION_LOCKON_OPEN_DETAIL:
+        if (lockOnPhase == LOCKON_RESULT_SUCCESS) {
+          currentId = lockOnPokemonId;
+          returnId = currentId;
+          detailReturnScreen = SCREEN_MENU;
+          dataMgr.loadPokemonDetail(currentId);
+          screenMode = SCREEN_DETAIL;
+          lockOnPhase = LOCKON_IDLE;
+        }
+        break;
       case ACTION_NAV_PREV: {
         if (detailReturnScreen == SCREEN_SEARCH && searchMode == SEARCH_MODE_NAME) {
           const auto ids = getSearchFilteredIds();
@@ -2628,6 +2905,63 @@ void loop() {
         ensurePreviewPocCacheReady(slideshowPokemonId, getPrimaryTypeOrNormal(dataMgr.getCurrentPokemon()));
       }
       needsRedraw = true;
+    }
+  }
+
+  if (vibrationStopAt != 0 && now >= vibrationStopAt) {
+    M5.Power.setVibration(0);
+    vibrationStopAt = 0;
+  }
+
+  if (!wakeSplashActive && screenMode == SCREEN_LOCKON && pendingAction.type == ACTION_NONE) {
+    const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
+    if (lockOnPhase == LOCKON_READY) {
+      if (elapsedMs >= kLockOnReadyDurationMs) {
+        lockOnPhase = LOCKON_SEARCH;
+        lockOnPhaseStartedAt = now;
+        lockOnLastPulseAt = now;
+      }
+      needsRedraw = true;
+    } else if (lockOnPhase == LOCKON_SEARCH) {
+      const uint32_t pulseIntervalMs = (lockOnRarity == LOCKON_RARITY_LEGEND)
+          ? 110
+          : (lockOnRarity == LOCKON_RARITY_RARE ? 150 : 210);
+      if ((now - lockOnLastPulseAt) >= pulseIntervalMs) {
+        lockOnLastPulseAt = now;
+        const float progress = constrain(static_cast<float>(elapsedMs) / static_cast<float>(lockOnSearchDurationMs), 0.0f, 1.0f);
+        const float frequency = 680.0f + (progress * ((lockOnRarity == LOCKON_RARITY_LEGEND) ? 1200.0f : 720.0f));
+        M5.Speaker.tone(frequency, 45, 0, false);
+        triggerVibration((lockOnRarity == LOCKON_RARITY_LEGEND) ? 48 : 32, 30, now);
+      }
+      if (elapsedMs >= lockOnSearchDurationMs) {
+        lockOnPhase = LOCKON_RESULT_FAIL;
+        lockOnPhaseStartedAt = now;
+        playLockOnResultSound(false, lockOnRarity);
+        triggerVibration(80, 100, now);
+      }
+      needsRedraw = true;
+    } else if (lockOnPhase == LOCKON_LOCKED) {
+      if (elapsedMs >= kLockOnConfirmFreezeMs) {
+        lockOnPhase = lockOnPendingSuccess ? LOCKON_RESULT_SUCCESS : LOCKON_RESULT_FAIL;
+        lockOnPhaseStartedAt = now;
+        if (lockOnPendingSuccess) {
+          lockOnLastPokemonId = lockOnPokemonId;
+        }
+        playLockOnResultSound(lockOnPendingSuccess, lockOnRarity);
+      }
+      needsRedraw = true;
+    } else if (lockOnPhase == LOCKON_RESULT_SUCCESS) {
+      if (elapsedMs >= kLockOnSuccessDisplayMs) {
+        screenMode = SCREEN_MENU;
+        lockOnPhase = LOCKON_IDLE;
+        needsRedraw = true;
+      }
+    } else if (lockOnPhase == LOCKON_RESULT_FAIL) {
+      if (elapsedMs >= kLockOnFailDisplayMs) {
+        screenMode = SCREEN_MENU;
+        lockOnPhase = LOCKON_IDLE;
+        needsRedraw = true;
+      }
     }
   }
 
@@ -2751,6 +3085,30 @@ void loop() {
     if (wakeSplashActive) {
       const uint8_t progressPercent = getWakeSplashProgressPercent(now - wakeSplashStartedAt);
       ui.drawWakeSplashScreen(progressPercent, getWakeSplashStatusText(progressPercent));
+    } else if (screenMode == SCREEN_LOCKON) {
+      const unsigned long phaseElapsedMs = now - lockOnPhaseStartedAt;
+      const int jitterOffset = (lockOnPhase == LOCKON_SEARCH)
+          ? static_cast<int>((phaseElapsedMs / 70) % 3) - 1
+          : 0;
+      const int markerCenterX = (lockOnPhase == LOCKON_SEARCH)
+          ? getLockOnMarkerCenterX(phaseElapsedMs, lockOnSearchDurationMs, lockOnRarity)
+          : lockOnConfirmedMarkerX;
+      const uint8_t progressPercent = (lockOnPhase == LOCKON_SEARCH && lockOnSearchDurationMs > 0)
+          ? static_cast<uint8_t>(constrain((phaseElapsedMs * 100UL) / lockOnSearchDurationMs, 0UL, 100UL))
+          : 0;
+      ui.drawLockOnScreen(
+          static_cast<int>(lockOnPhase),
+          static_cast<int>(lockOnRarity),
+          getLockOnRarityLabel(lockOnRarity),
+          markerCenterX,
+          lockOnZoneCenterX,
+          lockOnZoneWidth,
+          jitterOffset,
+          progressPercent,
+          lockOnPokemonId,
+          dataMgr.getPokemonName(lockOnPokemonId),
+          visualControl == PRESS_LOCKON_ACTION,
+          lockOnPhase == LOCKON_RESULT_SUCCESS);
     } else if (screenMode == SCREEN_MENU) {
       const int batteryLevel = M5.Power.getBatteryLevel();
       const bool batteryCharging =
