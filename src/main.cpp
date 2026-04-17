@@ -1615,6 +1615,7 @@ void loadSettings() {
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
     saveSettings();
+    ui.setLanguage(appLanguage);
     applyQuizVolume();
     return;
   }
@@ -1630,6 +1631,7 @@ void loadSettings() {
   }
   file.close();
   dataMgr.setLanguage(appLanguage);
+  ui.setLanguage(appLanguage);
   ui.setTheme(uiThemeStyle);
   applyQuizVolume();
 }
@@ -2673,6 +2675,7 @@ void loop() {
         if (appLanguage != nextLanguage) {
           appLanguage = nextLanguage;
           dataMgr.setLanguage(appLanguage);
+          ui.setLanguage(appLanguage);
           saveSettings();
         }
         break;

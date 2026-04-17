@@ -251,7 +251,11 @@ String truncateUtf8Label(const String& text, int maxChars) {
 }
 }
 
-UIController::UIController() : sprite(nullptr), wakeSplashSprite(nullptr), currentTheme(UI_THEME_CLASSIC) {}
+UIController::UIController()
+    : sprite(nullptr),
+      wakeSplashSprite(nullptr),
+      currentTheme(UI_THEME_CLASSIC),
+      currentLanguage(APP_LANGUAGE_JA) {}
 
 UIController::~UIController() {
   if (sprite != nullptr) {
@@ -299,8 +303,20 @@ void UIController::setTheme(UIThemeStyle theme) {
   currentTheme = theme;
 }
 
+void UIController::setLanguage(AppLanguage language) {
+  if (language < APP_LANGUAGE_JA || language >= APP_LANGUAGE_COUNT) {
+    currentLanguage = APP_LANGUAGE_JA;
+    return;
+  }
+  currentLanguage = language;
+}
+
 UIThemeStyle UIController::getTheme() const {
   return currentTheme;
+}
+
+AppLanguage UIController::getLanguage() const {
+  return currentLanguage;
 }
 
 uint16_t UIController::getBackgroundColor() const {
@@ -318,6 +334,10 @@ const lgfx::IFont* UIController::getFallbackFont(const lgfx::IFont* primaryFont)
   if (primaryFont == &fonts::efontJA_12) return &fonts::efontCN_12;
   if (primaryFont == &fonts::efontJA_10_b) return &fonts::efontCN_10_b;
   return &fonts::efontCN_10;
+}
+
+const char* UIController::tr(const char* ja, const char* en) const {
+  return currentLanguage == APP_LANGUAGE_EN ? en : ja;
 }
 
 const lgfx::IFont* UIController::selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const {
@@ -443,11 +463,11 @@ void UIController::drawAppearanceTab(const PokemonDetail& pk, bool drawImage) {
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.text);
-  sprite->drawString("高さ", cardX + 10, 145);
+  sprite->drawString(tr("高さ", "Height"), cardX + 10, 145);
   sprite->setTextColor(theme.sub);
   sprite->drawString(pk.height, cardX + 58, 145);
   sprite->setTextColor(theme.text);
-  sprite->drawString("重さ", cardX + 10, 167);
+  sprite->drawString(tr("重さ", "Weight"), cardX + 10, 167);
   sprite->setTextColor(theme.sub);
   sprite->drawString(pk.weight, cardX + 58, 167);
 }
@@ -470,13 +490,13 @@ void UIController::drawBodyTab(const PokemonDetail& pk) {
   sprite->fillRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.surface);
   sprite->drawRoundRect(MARGIN, 60, SCREEN_WIDTH - (MARGIN * 2), 135, 8, theme.border);
 
-  drawInfoRow("分類", pk.category, 74);
-  drawInfoRow("高さ", pk.height, 102);
-  drawInfoRow("重さ", pk.weight, 130);
+  drawInfoRow(tr("分類", "Category"), pk.category, 74);
+  drawInfoRow(tr("高さ", "Height"), pk.height, 102);
+  drawInfoRow(tr("重さ", "Weight"), pk.weight, 130);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.text);
-  sprite->drawString("タイプ", 24, 160);
+  sprite->drawString(tr("タイプ", "Type"), 24, 160);
 
   int typeX = 92;
   for (const auto& type : pk.types) {
@@ -767,7 +787,7 @@ void UIController::drawLockOnScreen(
     if (showDetailHint) {
       sprite->setFont(&fonts::efontJA_12);
       sprite->setTextColor(theme.sub);
-      sprite->drawCenterString("タップ / Port.B で ずかんをひらく", SCREEN_WIDTH / 2, 208);
+      sprite->drawCenterString(tr("タップ / Port.B で ずかんをひらく", "Tap / Port.B: Pokedex"), SCREEN_WIDTH / 2, 208);
     }
   } else if (phase == 5) {
     const uint16_t failColor = lgfx::v1::color565(255, 90, 90);
@@ -789,10 +809,10 @@ void UIController::drawLockOnScreen(
     sprite->drawRoundRect(60, 162, SCREEN_WIDTH - 120, 38, 10, failSoft);
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(failColor);
-    sprite->drawCenterString("にげられた!", SCREEN_WIDTH / 2, 172);
+    sprite->drawCenterString(tr("にげられた!", "Got Away!"), SCREEN_WIDTH / 2, 172);
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(theme.sub);
-    sprite->drawCenterString("タップ / Port.B で もどる", SCREEN_WIDTH / 2, 210);
+    sprite->drawCenterString(tr("タップ / Port.B で もどる", "Tap / Port.B: Back"), SCREEN_WIDTH / 2, 210);
   } else {
     constexpr int barX = 36;
     constexpr int barY = 176;
@@ -817,11 +837,11 @@ void UIController::drawLockOnScreen(
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(theme.sub);
     if (phase == 1) {
-      sprite->drawCenterString("Port.B でもういちど おして ロックする", SCREEN_WIDTH / 2, 204);
+      sprite->drawCenterString(tr("Port.B でもういちど おして ロックする", "Press Port.B again"), SCREEN_WIDTH / 2, 204);
     } else if (phase == 3) {
-      sprite->drawCenterString("そのばで かくてい!", SCREEN_WIDTH / 2, 204);
+      sprite->drawCenterString(tr("そのばで かくてい!", "Locked in!"), SCREEN_WIDTH / 2, 204);
     } else {
-      sprite->drawCenterString("ハイライト ゾーンで おす", SCREEN_WIDTH / 2, 204);
+      sprite->drawCenterString(tr("ハイライト ゾーンで おす", "Press in the zone"), SCREEN_WIDTH / 2, 204);
     }
     char progressLabel[16];
     snprintf(progressLabel, sizeof(progressLabel), "%d%%", progressPercent);
@@ -883,11 +903,11 @@ void UIController::drawMenuScreen(
   constexpr int menuRowY0 = 42;
   constexpr int menuRowGap = 42;
 
-  drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, "ポケモンずかん", theme.accent, theme.invertedText, pokedexPressed, theme.buttonPressedFill, theme.accent);
-  drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "ポケモンクイズ", theme.surface, theme.text, quizPressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, "スライドショー", theme.surface, theme.text, slideshowPressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, "こうりゃく", theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, "せってい", theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, tr("ポケモンずかん", "Pokedex"), theme.accent, theme.invertedText, pokedexPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("ポケモンクイズ", "Pokemon Quiz"), theme.surface, theme.text, quizPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("スライドショー", "Slide Show"), theme.surface, theme.text, slideshowPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, tr("こうりゃく", "Guide"), theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("せってい", "Settings"), theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
 }
 
 void UIController::drawSettingsScreen(
@@ -914,12 +934,12 @@ void UIController::drawSettingsScreen(
   }
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(theme.text);
-  sprite->drawCenterString("せってい", SCREEN_WIDTH / 2, 22);
+  sprite->drawCenterString(tr("せってい", "Settings"), SCREEN_WIDTH / 2, 22);
 
   sprite->setFont(&fonts::efontJA_12);
   if (settingsTabIndex == 0) {
     sprite->setTextColor(theme.sub);
-    sprite->drawString("プレビュー", 24, 72);
+    sprite->drawString(tr("プレビュー", "Preview"), 24, 72);
     drawActionButton(
         202,
         60,
@@ -936,7 +956,7 @@ void UIController::drawSettingsScreen(
         98,
         94,
         30,
-        previewCaptionEnabled ? "文字 ON" : "文字 OFF",
+        previewCaptionEnabled ? tr("文字 ON", "Text ON") : tr("文字 OFF", "Text OFF"),
         previewCaptionEnabled ? theme.accent : theme.surface,
         previewCaptionEnabled ? theme.invertedText : theme.text,
         previewCaptionPressed,
@@ -944,8 +964,8 @@ void UIController::drawSettingsScreen(
         previewCaptionEnabled ? theme.accent : theme.border);
 
     sprite->setTextColor(theme.sub);
-    sprite->drawString("テーマ", 24, 140);
-    static constexpr const char* themeLabels[2] = {"クラシック", "サイバー"};
+    sprite->drawString(tr("テーマ", "Theme"), 24, 140);
+    const char* themeLabels[2] = {tr("クラシック", "Classic"), tr("サイバー", "Cyber")};
     for (int i = 0; i < 2; ++i) {
       const int x = 24 + (i * 140);
       const bool selected = selectedThemeIndex == i;
@@ -964,8 +984,8 @@ void UIController::drawSettingsScreen(
     }
   } else {
     sprite->setTextColor(theme.sub);
-    sprite->drawString("ことば", 24, 72);
-    static constexpr const char* languageLabels[2] = {"日本語", "English"};
+    sprite->drawString(tr("ことば", "Language"), 24, 72);
+    const char* languageLabels[2] = {tr("日本語", "Japanese"), "English"};
     for (int i = 0; i < 2; ++i) {
       const int x = 24 + (i * 140);
       const bool selected = selectedLanguageIndex == i;
@@ -984,8 +1004,13 @@ void UIController::drawSettingsScreen(
     }
 
     sprite->setTextColor(theme.sub);
-    sprite->drawString("おんりょう", 24, 140);
-    static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
+    sprite->drawString(tr("おんりょう", "Volume"), 24, 140);
+    const char* volumeLabels[4] = {
+        tr("大", "High"),
+        tr("中", "Med"),
+        tr("小", "Low"),
+        tr("なし", "Mute"),
+    };
     for (int i = 0; i < 4; ++i) {
       const int x = 24 + (i * 70);
       const bool selected = selectedVolumeIndex == i;
@@ -1007,7 +1032,10 @@ void UIController::drawSettingsScreen(
     }
   }
 
-  static constexpr const char* settingsTabLabels[2] = {"ひょうじ", "ことば/おと"};
+  const char* settingsTabLabels[2] = {
+      tr("ひょうじ", "Display"),
+      tr("ことば/おと", "Lang/Sound"),
+  };
   const int tabW = SCREEN_WIDTH / 2;
   for (int i = 0; i < 2; ++i) {
     const int x = i * tabW;
@@ -1038,10 +1066,10 @@ void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed
   }
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(theme.text);
-  sprite->drawCenterString("こうりゃく", SCREEN_WIDTH / 2, 22);
+  sprite->drawCenterString(tr("こうりゃく", "Guide"), SCREEN_WIDTH / 2, 22);
 
-  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, "ポケモンからみる", theme.accent, theme.invertedText, pokemonPressed, theme.text, theme.accent);
-  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, "場所からみる", theme.surface, theme.text, locationPressed, theme.border, theme.border);
+  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, tr("ポケモンからみる", "By Pokemon"), theme.accent, theme.invertedText, pokemonPressed, theme.text, theme.accent);
+  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, tr("場所からみる", "By Area"), theme.surface, theme.text, locationPressed, theme.border, theme.border);
 }
 
 void UIController::drawGuidePokemonListScreen(
@@ -1106,7 +1134,7 @@ void UIController::drawGuideLocationListScreen(const std::vector<String>& labels
   for (const auto& label : labels) {
     displayLabels.push_back(truncateUtf8Label(label, 9));
   }
-  drawGuidePokemonListScreen("場所からみる", displayLabels, emptyFlags, backPressed, pressedItemIndex, prevPressed, nextPressed);
+  drawGuidePokemonListScreen(tr("場所からみる", "By Area"), displayLabels, emptyFlags, backPressed, pressedItemIndex, prevPressed, nextPressed);
 }
 
 void UIController::drawGuidePokemonDetailScreen(
@@ -1124,7 +1152,13 @@ void UIController::drawGuidePokemonDetailScreen(
     bool prevPressed,
     bool nextPressed) {
   const auto& theme = getThemePalette(currentTheme);
-  static const char* kTabs[5] = {"しんか", "しゅつげん", "わざ", "マシン", "ひでん"};
+  const char* kTabs[5] = {
+      tr("しんか", "Evo"),
+      tr("しゅつげん", "Area"),
+      tr("わざ", "Moves"),
+      tr("マシン", "TM"),
+      tr("ひでん", "HM"),
+  };
 
   sprite->fillScreen(theme.bg);
 
@@ -1157,7 +1191,7 @@ void UIController::drawGuidePokemonDetailScreen(
         152,
         84,
         22,
-        "つかまえた",
+        tr("つかまえた", "Caught"),
         caughtEnabled ? theme.accent : theme.bg,
         caughtEnabled ? theme.invertedText : theme.text,
         caughtPressed,
@@ -1185,7 +1219,7 @@ void UIController::drawGuidePokemonDetailScreen(
   sprite->setFont(&fonts::efontJA_12);
   if (lines.empty()) {
     sprite->setTextColor(theme.sub);
-    sprite->drawCenterString("データなし", SCREEN_WIDTH / 2, 108);
+    sprite->drawCenterString(tr("データなし", "No Data"), SCREEN_WIDTH / 2, 108);
   } else {
     const int lineH = 14;
     const int startIndex = pageIndex * textMaxLines;
@@ -1347,7 +1381,7 @@ void UIController::drawSearchScreen(
   }
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(theme.text);
-  sprite->drawCenterString(nameMode ? "ポケモンずかん" : "No.でえらぶ", SCREEN_WIDTH / 2, 22);
+  sprite->drawCenterString(nameMode ? tr("ポケモンずかん", "Pokedex") : tr("No.でえらぶ", "Pick No."), SCREEN_WIDTH / 2, 22);
 
   if (!nameMode) {
     const int digitX[4] = {60, 110, 160, 210};
@@ -1379,18 +1413,18 @@ void UIController::drawSearchScreen(
 
     sprite->setFont(&fonts::efontJA_16_b);
     sprite->setTextColor(validId ? theme.text : theme.sub);
-    sprite->drawCenterString(validId ? selectedName : "データなし", 160, 156);
+    sprite->drawCenterString(validId ? selectedName : tr("データなし", "No Data"), 160, 156);
 
-    drawActionButton(20, 178, 280, 40, "ひらく", theme.accent, theme.invertedText, openPressed, theme.text, theme.accent);
+    drawActionButton(20, 178, 280, 40, tr("ひらく", "Open"), theme.accent, theme.invertedText, openPressed, theme.text, theme.accent);
     return;
   }
 
   const bool hasKeyword = nameQuery.length() > 0;
-  const String keywordLabel = hasKeyword ? nameQuery : "キーワード";
+  const String keywordLabel = hasKeyword ? nameQuery : String(tr("キーワード", "Keyword"));
   const uint16_t keywordFill = hasKeyword ? theme.accent : theme.bg;
   const uint16_t keywordText = hasKeyword ? theme.invertedText : theme.text;
   drawActionButton(44, 52, 114, 24, keywordLabel.c_str(), keywordFill, keywordText, cancelPressed, theme.border, theme.border);
-  drawActionButton(162, 52, 114, 24, "ばんごう", theme.bg, theme.text, modePressed, theme.border, theme.border);
+  drawActionButton(162, 52, 114, 24, tr("ばんごう", "Number"), theme.bg, theme.text, modePressed, theme.border, theme.border);
 
   drawDetailNavigation(pagePrevPressed, pageNextPressed);
 
@@ -1432,22 +1466,22 @@ void UIController::drawSearchInputScreen(
   sprite->fillRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, theme.surface);
   sprite->drawRoundRect(6, 6, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 12, 12, theme.border);
 
-  drawActionButton(12, 202, 88, 28, "もどる", theme.bg, theme.text, backPressed, theme.border, theme.border);
-  drawActionButton(116, 202, 88, 28, "けす", theme.bg, theme.text, deletePressed, theme.border, theme.border);
-  drawActionButton(220, 202, 88, 28, "クリア", theme.bg, theme.text, clearPressed, theme.border, theme.border);
+  drawActionButton(12, 202, 88, 28, tr("もどる", "Back"), theme.bg, theme.text, backPressed, theme.border, theme.border);
+  drawActionButton(116, 202, 88, 28, tr("けす", "Del"), theme.bg, theme.text, deletePressed, theme.border, theme.border);
+  drawActionButton(220, 202, 88, 28, tr("クリア", "Clear"), theme.bg, theme.text, clearPressed, theme.border, theme.border);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.sub);
-  sprite->drawString("おとを えらぶ", 12, 16);
+  sprite->drawString(tr("おとを えらぶ", "Name Input"), 12, 16);
 
   sprite->fillRoundRect(12, 32, 296, 24, 6, theme.bg);
   sprite->drawRoundRect(12, 32, 296, 24, 6, theme.border);
   sprite->setTextColor(nameQuery.length() > 0 ? theme.text : theme.sub);
-  sprite->drawString(nameQuery.length() > 0 ? nameQuery : "ここに なまえが はいります", 20, 38);
+  sprite->drawString(nameQuery.length() > 0 ? nameQuery : tr("ここに なまえが はいります", "Name appears here"), 20, 38);
   sprite->fillRoundRect(12, 56, 120, 16, 6, vowelMode ? theme.accent : theme.bg);
   sprite->drawRoundRect(12, 56, 120, 16, 6, theme.border);
   sprite->setTextColor(vowelMode ? theme.invertedText : theme.sub);
-  sprite->drawCenterString(vowelMode ? "もじを えらぶ" : "ぎょうを えらぶ", 72, 60);
+  sprite->drawCenterString(vowelMode ? tr("もじを えらぶ", "Pick Char") : tr("ぎょうを えらぶ", "Pick Row"), 72, 60);
 
   if (!vowelMode) {
     static constexpr const char* rowLabels[12] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ", "゛゜", "小"};
@@ -1473,7 +1507,7 @@ void UIController::drawSearchInputScreen(
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.sub);
-  sprite->drawCenterString(selectedRowLabel + "ぎょう", 160, 78);
+  sprite->drawCenterString(currentLanguage == APP_LANGUAGE_EN ? (selectedRowLabel + " row") : (selectedRowLabel + "ぎょう"), 160, 78);
 
   static constexpr const char* rowKanaTable[10][5] = {
       {"ア","イ","ウ","エ","オ"},
@@ -1606,7 +1640,13 @@ void UIController::drawWrappedText(const String& text, int x, int y, int maxWidt
 
 void UIController::drawTabBar(TabType activeTab, int pressedTab) {
   const auto& theme = getThemePalette(currentTheme);
-  const char* labels[] = {"すがた", "せつめい", "からだ", "とくせい", "しんか"};
+  const char* labels[] = {
+      tr("すがた", "Look"),
+      tr("せつめい", "Info"),
+      tr("からだ", "Body"),
+      tr("とくせい", "Ability"),
+      tr("しんか", "Evo"),
+  };
   int tabW = SCREEN_WIDTH / 5;
   for (int i = 0; i < 5; i++) {
     const bool isActive = (i == (int)activeTab);
