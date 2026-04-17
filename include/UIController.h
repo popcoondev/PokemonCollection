@@ -42,6 +42,8 @@ public:
   void drawWakeSplashScreen(uint8_t progressPercent, const char* statusText);
   void drawLockOnScreen(
       int phase,
+      int rarity,
+      const char* rarityLabel,
       int markerCenterX,
       int zoneCenterX,
       int zoneWidth,

@@ -77,6 +77,7 @@ constexpr uint32_t kWakeSplashDurationMs = 2000;
 constexpr gpio_num_t kPortBBackButtonPins[] = {GPIO_NUM_8, GPIO_NUM_9};
 constexpr uint32_t kPortBBackButtonDebounceMs = 30;
 constexpr uint32_t kLockOnReadyDurationMs = 400;
+constexpr uint32_t kLockOnConfirmFreezeMs = 140;
 constexpr uint32_t kLockOnSuccessDisplayMs = 4000;
 constexpr uint32_t kLockOnFailDisplayMs = 3000;
 constexpr int kLockOnBarX = 36;
@@ -107,6 +108,7 @@ enum LockOnPhase {
   LOCKON_IDLE = 0,
   LOCKON_READY,
   LOCKON_SEARCH,
+  LOCKON_LOCKED,
   LOCKON_RESULT_SUCCESS,
   LOCKON_RESULT_FAIL,
 };
@@ -312,6 +314,7 @@ uint32_t lockOnSearchDurationMs = 3000;
 uint16_t lockOnZoneWidth = 48;
 int lockOnZoneCenterX = kLockOnBarX + (kLockOnBarW / 2);
 int lockOnConfirmedMarkerX = kLockOnBarX + (kLockOnBarW / 2);
+bool lockOnPendingSuccess = false;
 uint32_t lockOnLastPulseAt = 0;
 unsigned long vibrationStopAt = 0;
 
@@ -416,12 +419,52 @@ uint16_t chooseLockOnPokemonId(LockOnRarity rarity, uint16_t excludedId) {
   }
 }
 
+const char* getLockOnRarityLabel(LockOnRarity rarity) {
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      return "LEGEND";
+    case LOCKON_RARITY_RARE:
+      return "RARE";
+    case LOCKON_RARITY_NORMAL:
+    default:
+      return "NORMAL";
+  }
+}
+
+void playLockOnResultSound(bool success, LockOnRarity rarity) {
+  M5.Speaker.stop();
+  if (!success) {
+    M5.Speaker.tone(420, 90, 0, true);
+    M5.Speaker.tone(280, 180, 0, false);
+    return;
+  }
+
+  switch (rarity) {
+    case LOCKON_RARITY_LEGEND:
+      M5.Speaker.tone(1320, 70, 0, true);
+      M5.Speaker.tone(1760, 80, 0, false);
+      M5.Speaker.tone(2210, 110, 0, false);
+      M5.Speaker.tone(2640, 220, 0, false);
+      break;
+    case LOCKON_RARITY_RARE:
+      M5.Speaker.tone(1040, 70, 0, true);
+      M5.Speaker.tone(1390, 80, 0, false);
+      M5.Speaker.tone(1760, 180, 0, false);
+      break;
+    case LOCKON_RARITY_NORMAL:
+    default:
+      M5.Speaker.tone(880, 80, 0, true);
+      M5.Speaker.tone(1320, 180, 0, false);
+      break;
+  }
+}
+
 uint32_t getLockOnSearchDurationMs(LockOnRarity rarity) {
   switch (rarity) {
     case LOCKON_RARITY_LEGEND:
-      return 2600;
+      return 3400;
     case LOCKON_RARITY_RARE:
-      return 3200;
+      return 3600;
     case LOCKON_RARITY_NORMAL:
     default:
       return 3800;
@@ -431,12 +474,12 @@ uint32_t getLockOnSearchDurationMs(LockOnRarity rarity) {
 uint16_t getLockOnZoneWidth(LockOnRarity rarity) {
   switch (rarity) {
     case LOCKON_RARITY_LEGEND:
-      return static_cast<uint16_t>(random(12, 21));
+      return static_cast<uint16_t>(random(24, 37));
     case LOCKON_RARITY_RARE:
-      return static_cast<uint16_t>(random(20, 37));
+      return static_cast<uint16_t>(random(28, 43));
     case LOCKON_RARITY_NORMAL:
     default:
-      return static_cast<uint16_t>(random(34, 61));
+      return static_cast<uint16_t>(random(34, 53));
   }
 }
 
@@ -445,8 +488,8 @@ float getLockOnMarkerRatio(unsigned long elapsedMs, uint32_t durationMs, LockOnR
     return 0.5f;
   }
   const float t = constrain(static_cast<float>(elapsedMs) / static_cast<float>(durationMs), 0.0f, 1.0f);
-  const float baseSweep = (rarity == LOCKON_RARITY_LEGEND) ? 2.9f : (rarity == LOCKON_RARITY_RARE ? 2.4f : 2.0f);
-  const float accelSweep = (rarity == LOCKON_RARITY_LEGEND) ? 2.6f : (rarity == LOCKON_RARITY_RARE ? 1.9f : 1.4f);
+  const float baseSweep = (rarity == LOCKON_RARITY_LEGEND) ? 2.25f : (rarity == LOCKON_RARITY_RARE ? 2.1f : 2.0f);
+  const float accelSweep = (rarity == LOCKON_RARITY_LEGEND) ? 1.7f : (rarity == LOCKON_RARITY_RARE ? 1.5f : 1.4f);
   const float phase = (t * baseSweep) + ((t * t) * accelSweep);
   const float wrapped = phase - floorf(phase);
   return (wrapped <= 0.5f) ? (wrapped * 2.0f) : (2.0f - (wrapped * 2.0f));
@@ -464,7 +507,7 @@ int chooseLockOnZoneCenterX(uint16_t zoneWidth) {
 
 int getLockOnMarkerCenterX(unsigned long elapsedMs, uint32_t durationMs, LockOnRarity rarity) {
   const float ratio = getLockOnMarkerRatio(elapsedMs, durationMs, rarity);
-  return kLockOnBarX + static_cast<int>(ratio * static_cast<float>(kLockOnBarW));
+  return kLockOnBarX + static_cast<int>(lroundf(ratio * static_cast<float>(kLockOnBarW - 1)));
 }
 
 uint8_t getWakeSplashProgressPercent(unsigned long elapsedMs) {
@@ -2756,19 +2799,14 @@ void loop() {
         }
         const int markerX = pendingAction.value;
         lockOnConfirmedMarkerX = markerX;
-        const int delta = abs(markerX - lockOnZoneCenterX);
-        const bool success = delta <= (static_cast<int>(lockOnZoneWidth) / 2);
-        lockOnPhase = success ? LOCKON_RESULT_SUCCESS : LOCKON_RESULT_FAIL;
+        const int zoneLeft = lockOnZoneCenterX - (static_cast<int>(lockOnZoneWidth) / 2);
+        const int zoneRight = zoneLeft + static_cast<int>(lockOnZoneWidth) - 1;
+        lockOnPendingSuccess = markerX >= zoneLeft && markerX <= zoneRight;
+        lockOnPhase = LOCKON_LOCKED;
         lockOnPhaseStartedAt = now;
         M5.Speaker.stop();
-        if (success) {
-          lockOnLastPokemonId = lockOnPokemonId;
-          M5.Speaker.tone(1760, 120);
-          triggerVibration(180, 220, now);
-        } else {
-          M5.Speaker.tone(320, 180);
-          triggerVibration(96, 120, now);
-        }
+        M5.Speaker.tone(lockOnPendingSuccess ? 1760 : 320, lockOnPendingSuccess ? 100 : 120);
+        triggerVibration(lockOnPendingSuccess ? 180 : 96, lockOnPendingSuccess ? 220 : 120, now);
         break;
       }
       case ACTION_LOCKON_OPEN_DETAIL:
@@ -2898,9 +2936,18 @@ void loop() {
       if (elapsedMs >= lockOnSearchDurationMs) {
         lockOnPhase = LOCKON_RESULT_FAIL;
         lockOnPhaseStartedAt = now;
-        M5.Speaker.stop();
-        M5.Speaker.tone(280, 180);
+        playLockOnResultSound(false, lockOnRarity);
         triggerVibration(80, 100, now);
+      }
+      needsRedraw = true;
+    } else if (lockOnPhase == LOCKON_LOCKED) {
+      if (elapsedMs >= kLockOnConfirmFreezeMs) {
+        lockOnPhase = lockOnPendingSuccess ? LOCKON_RESULT_SUCCESS : LOCKON_RESULT_FAIL;
+        lockOnPhaseStartedAt = now;
+        if (lockOnPendingSuccess) {
+          lockOnLastPokemonId = lockOnPokemonId;
+        }
+        playLockOnResultSound(lockOnPendingSuccess, lockOnRarity);
       }
       needsRedraw = true;
     } else if (lockOnPhase == LOCKON_RESULT_SUCCESS) {
@@ -3051,6 +3098,8 @@ void loop() {
           : 0;
       ui.drawLockOnScreen(
           static_cast<int>(lockOnPhase),
+          static_cast<int>(lockOnRarity),
+          getLockOnRarityLabel(lockOnRarity),
           markerCenterX,
           lockOnZoneCenterX,
           lockOnZoneWidth,

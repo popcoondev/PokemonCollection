@@ -686,6 +686,8 @@ void UIController::drawWakeSplashScreen(uint8_t progressPercent, const char* sta
 
 void UIController::drawLockOnScreen(
     int phase,
+    int rarity,
+    const char* rarityLabel,
     int markerCenterX,
     int zoneCenterX,
     int zoneWidth,
@@ -723,13 +725,37 @@ void UIController::drawLockOnScreen(
   } else if (phase == 2) {
     sprite->drawCenterString("LOCK ON SEARCH", SCREEN_WIDTH / 2, 24);
   } else if (phase == 3) {
+    sprite->drawCenterString("LOCKED!", SCREEN_WIDTH / 2, 24);
+  } else if (phase == 4) {
     sprite->drawCenterString("GATCHA!", SCREEN_WIDTH / 2, 24);
   } else {
     sprite->drawCenterString("LOCK FAILED", SCREEN_WIDTH / 2, 24);
   }
 
-  if (phase == 3) {
+  if (phase == 4) {
     drawQuizPokemonImage(pokemonId, 86, 44, 148, 148);
+    if (rarityLabel != nullptr && rarityLabel[0] != '\0') {
+      const bool isLegend = rarity >= 2;
+      const bool isRare = rarity == 1;
+      const int badgeW = isLegend ? 124 : (isRare ? 108 : 92);
+      const int badgeH = isLegend ? 24 : (isRare ? 20 : 18);
+      const int badgeX = (SCREEN_WIDTH - badgeW) / 2;
+      const int badgeY = 152;
+      const uint16_t rarityFill = isLegend
+          ? lgfx::v1::color565(255, 170, 40)
+          : (isRare ? lgfx::v1::color565(90, 230, 255) : blend565(theme.accent, theme.surface, 150));
+      const uint16_t rarityBorder = isLegend
+          ? lgfx::v1::color565(255, 235, 150)
+          : (isRare ? lgfx::v1::color565(180, 250, 255) : blend565(theme.highlight, theme.border, 150));
+      const uint16_t rarityText = isLegend
+          ? lgfx::v1::color565(40, 16, 0)
+          : (isRare ? lgfx::v1::color565(0, 46, 58) : theme.text);
+      sprite->fillRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityFill);
+      sprite->drawRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityBorder);
+      sprite->setFont(isLegend ? &fonts::efontJA_16_b : (isRare ? &fonts::efontJA_12_b : &fonts::efontJA_10));
+      sprite->setTextColor(rarityText);
+      sprite->drawCenterString(rarityLabel, SCREEN_WIDTH / 2, badgeY + (isLegend ? 4 : 5));
+    }
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(theme.sub);
     char idLabel[12];
@@ -741,25 +767,50 @@ void UIController::drawLockOnScreen(
     if (showDetailHint) {
       sprite->setFont(&fonts::efontJA_12);
       sprite->setTextColor(theme.sub);
-      sprite->drawCenterString("タップ / Port.B で ずかんをひらく", SCREEN_WIDTH / 2, 218);
+      sprite->drawCenterString("タップ / Port.B で ずかんをひらく", SCREEN_WIDTH / 2, 208);
     }
-  } else if (phase == 4) {
-    for (int i = 0; i < 7; ++i) {
-      const int y = 52 + (i * 20);
-      sprite->fillRect(28, y, SCREEN_WIDTH - 56, 8, (i % 2 == 0) ? theme.accent : theme.highlight);
-    }
+  } else if (phase == 5) {
+    const uint16_t failColor = lgfx::v1::color565(255, 90, 90);
+    const uint16_t failSoft = blend565(failColor, theme.surface, 140);
+    const int failCx = SCREEN_WIDTH / 2;
+    const int failCy = 102;
+    sprite->drawCircle(failCx, failCy, 34, failSoft);
+    sprite->drawCircle(failCx, failCy, 35, failColor);
+    sprite->drawLine(failCx - 16, failCy - 16, failCx + 16, failCy + 16, failColor);
+    sprite->drawLine(failCx - 16, failCy + 16, failCx + 16, failCy - 16, failColor);
+    sprite->drawLine(failCx - 16, failCy - 15, failCx + 16, failCy + 17, failColor);
+    sprite->drawLine(failCx - 16, failCy + 15, failCx + 16, failCy - 17, failColor);
+    sprite->drawFastHLine(failCx - 46, failCy, 18, failSoft);
+    sprite->drawFastHLine(failCx + 28, failCy, 18, failSoft);
+    sprite->drawFastVLine(failCx, failCy - 46, 18, failSoft);
+    sprite->drawFastVLine(failCx, failCy + 28, 18, failSoft);
+
+    sprite->fillRoundRect(60, 162, SCREEN_WIDTH - 120, 38, 10, blend565(theme.surface, theme.bg, 200));
+    sprite->drawRoundRect(60, 162, SCREEN_WIDTH - 120, 38, 10, failSoft);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(failColor);
+    sprite->drawCenterString("にげられた!", SCREEN_WIDTH / 2, 172);
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(theme.sub);
-    sprite->drawCenterString("ターゲットを ほそく つかまえられなかった", SCREEN_WIDTH / 2, 196);
+    sprite->drawCenterString("タップ / Port.B で もどる", SCREEN_WIDTH / 2, 210);
   } else {
     constexpr int barX = 36;
     constexpr int barY = 176;
     constexpr int barW = SCREEN_WIDTH - 72;
     constexpr int barH = 20;
     const int zoneX = zoneCenterX - (zoneWidth / 2);
+    const bool isLegend = rarity >= 2;
+    const bool isRare = rarity == 1;
+    const uint16_t zoneFill = isLegend
+        ? lgfx::v1::color565(255, 190, 70)
+        : (isRare ? lgfx::v1::color565(80, 230, 255) : blend565(theme.highlight, theme.surface, 180));
+    const uint16_t zoneBorder = isLegend
+        ? lgfx::v1::color565(255, 235, 150)
+        : (isRare ? lgfx::v1::color565(180, 250, 255) : theme.highlight);
     sprite->fillRoundRect(barX, barY, barW, barH, 8, theme.surface);
     sprite->drawRoundRect(barX, barY, barW, barH, 8, theme.border);
-    sprite->fillRoundRect(zoneX, barY + 2, zoneWidth, barH - 4, 6, blend565(theme.highlight, theme.surface, 180));
+    sprite->fillRoundRect(zoneX, barY + 2, zoneWidth, barH - 4, 6, zoneFill);
+    sprite->drawRoundRect(zoneX, barY + 2, zoneWidth, barH - 4, 6, zoneBorder);
     sprite->drawFastVLine(markerCenterX, barY - 8, barH + 16, theme.accent);
     sprite->fillCircle(markerCenterX, barY + (barH / 2), 4, theme.accent);
 
@@ -767,6 +818,8 @@ void UIController::drawLockOnScreen(
     sprite->setTextColor(theme.sub);
     if (phase == 1) {
       sprite->drawCenterString("Port.B でもういちど おして ロックする", SCREEN_WIDTH / 2, 204);
+    } else if (phase == 3) {
+      sprite->drawCenterString("そのばで かくてい!", SCREEN_WIDTH / 2, 204);
     } else {
       sprite->drawCenterString("ハイライト ゾーンで おす", SCREEN_WIDTH / 2, 204);
     }
