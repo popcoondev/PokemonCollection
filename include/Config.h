@@ -41,4 +41,10 @@ enum UIThemeStyle {
   UI_THEME_COUNT
 };
 
+enum AppLanguage {
+  APP_LANGUAGE_JA = 0,
+  APP_LANGUAGE_EN,
+  APP_LANGUAGE_COUNT
+};
+
 #endif

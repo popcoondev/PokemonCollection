@@ -56,8 +56,8 @@ constexpr uint32_t kSlideshowSlideDurationMs = 5000;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
-constexpr const char* kQuizAsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Aside.wav";
-constexpr const char* kQuizBsideSoundPath = "/pokemon/quiz/sounds/Eyecatch_Bside.wav";
+constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
+constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 constexpr uint8_t kDisplayBrightnessOn = 128;
@@ -166,6 +166,7 @@ struct QuizSoundCache {
   uint32_t sampleRate = 44100;
   bool stereo = false;
   bool ready = false;
+  String path;
 };
 
 struct GuideLocationEntry {
@@ -269,6 +270,7 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
@@ -285,6 +287,7 @@ bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
 UIThemeStyle uiThemeStyle = UI_THEME_CLASSIC;
+int settingsTabIndex = 0;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
 bool coverProximityReady = false;
@@ -613,7 +616,34 @@ int getSearchInputKeyIndexAt(int tx, int ty) {
   return -1;
 }
 
+bool isEnglishSearchInputMode() {
+  return appLanguage == APP_LANGUAGE_EN;
+}
+
 String getSearchInputGlyph(int keyIndex) {
+  if (isEnglishSearchInputMode()) {
+    static constexpr const char* kEnglishCharGroups[10][7] = {
+        {"A", "B", "C", "", "", "", ""},
+        {"D", "E", "F", "", "", "", ""},
+        {"G", "H", "I", "", "", "", ""},
+        {"J", "K", "L", "", "", "", ""},
+        {"M", "N", "O", "", "", "", ""},
+        {"P", "Q", "R", "", "", "", ""},
+        {"S", "T", "U", "", "", "", ""},
+        {"V", "W", "X", "", "", "", ""},
+        {"Y", "Z", "", "", "", "", ""},
+        {"-", ".", "'", ":", " ", "\xE2\x99\x80", "\xE2\x99\x82"},
+    };
+    if (searchInputVowelMode
+        && searchInputRowIndex >= 0
+        && searchInputRowIndex < 10
+        && keyIndex >= 0
+        && keyIndex < 7) {
+      return kEnglishCharGroups[searchInputRowIndex][keyIndex];
+    }
+    return "";
+  }
+
   static constexpr const char* kRowKanaTable[10][5] = {
       {"ア","イ","ウ","エ","オ"},
       {"カ","キ","ク","ケ","コ"},
@@ -639,6 +669,14 @@ String getSearchInputGlyph(int keyIndex) {
 }
 
 String getSearchInputRowLabel(int rowIndex) {
+  if (isEnglishSearchInputMode()) {
+    static constexpr const char* kEnglishRowLabels[10] = {"ABC", "DEF", "GHI", "JKL", "MNO", "PQR", "STU", "VWX", "YZ", "SYM"};
+    if (rowIndex < 0 || rowIndex >= 10) {
+      return "";
+    }
+    return kEnglishRowLabels[rowIndex];
+  }
+
   static constexpr const char* kRowLabels[10] = {"ア", "カ", "サ", "タ", "ナ", "ハ", "マ", "ヤ", "ラ", "ワ"};
   if (rowIndex < 0 || rowIndex >= 10) {
     return "";
@@ -722,8 +760,12 @@ enum PressedControl {
   PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
   PRESS_MENU_PREVIEW_CAPTION,
+  PRESS_MENU_SETTINGS_TAB_0,
+  PRESS_MENU_SETTINGS_TAB_1,
   PRESS_MENU_THEME_0,
   PRESS_MENU_THEME_1,
+  PRESS_MENU_LANG_JA,
+  PRESS_MENU_LANG_EN,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -784,14 +826,21 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_SETTINGS) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
-    if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
-    if (hitTest(tx, ty, 24, 152, 128, 28, 6)) return PRESS_MENU_THEME_0;
-    if (hitTest(tx, ty, 164, 152, 128, 28, 6)) return PRESS_MENU_THEME_1;
-    if (hitTest(tx, ty, 24, 202, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 94, 202, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 164, 202, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 234, 202, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 0, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_0;
+    if (hitTest(tx, ty, SCREEN_WIDTH / 2, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_1;
+    if (settingsTabIndex == 0) {
+      if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
+      if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
+      if (hitTest(tx, ty, 24, 152, 128, 30, 6)) return PRESS_MENU_THEME_0;
+      if (hitTest(tx, ty, 164, 152, 128, 30, 6)) return PRESS_MENU_THEME_1;
+    } else {
+      if (hitTest(tx, ty, 24, 84, 128, 30, 6)) return PRESS_MENU_LANG_JA;
+      if (hitTest(tx, ty, 164, 84, 128, 30, 6)) return PRESS_MENU_LANG_EN;
+      if (hitTest(tx, ty, 24, 152, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
+      if (hitTest(tx, ty, 94, 152, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
+      if (hitTest(tx, ty, 164, 152, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
+      if (hitTest(tx, ty, 234, 152, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
+    }
     return PRESS_NONE;
   }
 
@@ -975,7 +1024,9 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
   ACTION_TOGGLE_PREVIEW_CAPTION,
+  ACTION_SET_SETTINGS_TAB,
   ACTION_SET_UI_THEME,
+  ACTION_SET_APP_LANGUAGE,
   ACTION_SEARCH_TO_MENU,
   ACTION_OPEN_SEARCH_NUMBER,
   ACTION_SEARCH_TOGGLE_MODE,
@@ -1494,6 +1545,21 @@ UIThemeStyle parseUIThemeKey(const char* value) {
   return UI_THEME_CLASSIC;
 }
 
+const char* getAppLanguageKey(AppLanguage language) {
+  switch (language) {
+    case APP_LANGUAGE_EN: return "en";
+    case APP_LANGUAGE_JA:
+    default:
+      return "ja";
+  }
+}
+
+AppLanguage parseAppLanguageKey(const char* value) {
+  if (value == nullptr) return APP_LANGUAGE_JA;
+  if (strcmp(value, "en") == 0) return APP_LANGUAGE_EN;
+  return APP_LANGUAGE_JA;
+}
+
 QuizVolumeSetting parseQuizVolumeKey(const char* value) {
   if (value == nullptr) return QUIZ_VOLUME_MEDIUM;
   if (strcmp(value, "large") == 0) return QUIZ_VOLUME_LARGE;
@@ -1506,8 +1572,44 @@ void applyQuizVolume() {
   M5.Speaker.setVolume(getQuizVolumeValue(quizVolumeSetting));
 }
 
+const char* getQuizSoundLanguageDir(AppLanguage language) {
+  return (language == APP_LANGUAGE_EN) ? kQuizSoundDirEn : kQuizSoundDirJa;
+}
+
+String getQuizSoundFilename(QuizPhase phase) {
+  return (phase == QUIZ_A_SIDE) ? "Eyecatch_Aside.wav" : "Eyecatch_Bside.wav";
+}
+
+String getQuizLegacySoundPath(QuizPhase phase) {
+  return String("/pokemon/quiz/sounds/") + getQuizSoundFilename(phase);
+}
+
+String getQuizSoundPath(QuizPhase phase, AppLanguage language) {
+  return String(getQuizSoundLanguageDir(language)) + "/" + getQuizSoundFilename(phase);
+}
+
+void releaseQuizSoundCache(QuizSoundCache& cache) {
+  if (cache.data != nullptr) {
+    free(cache.data);
+  }
+  cache.data = nullptr;
+  cache.size = 0;
+  cache.pcm16 = nullptr;
+  cache.sampleCount = 0;
+  cache.sampleRate = 44100;
+  cache.stereo = false;
+  cache.ready = false;
+  cache.path = "";
+}
+
+void invalidateQuizSoundCaches() {
+  releaseQuizSoundCache(quizAsideSound);
+  releaseQuizSoundCache(quizBsideSound);
+}
+
 bool saveSettings() {
   JsonDocument doc;
+  doc["app_language"] = getAppLanguageKey(appLanguage);
   doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
   doc["preview_3d"] = preview3dEnabled;
   doc["preview_caption"] = previewCaptionEnabled;
@@ -1574,6 +1676,7 @@ bool saveGuideCaughtFlags() {
 }
 
 void loadSettings() {
+  appLanguage = APP_LANGUAGE_JA;
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
   preview3dEnabled = false;
   previewCaptionEnabled = true;
@@ -1583,12 +1686,15 @@ void loadSettings() {
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
     saveSettings();
+    ui.setLanguage(appLanguage);
+    invalidateQuizSoundCaches();
     applyQuizVolume();
     return;
   }
 
   JsonDocument doc;
   if (deserializeJson(doc, file) == DeserializationError::Ok) {
+    appLanguage = parseAppLanguageKey(doc["app_language"] | "ja");
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
     preview3dEnabled = doc["preview_3d"] | false;
     previewCaptionEnabled = doc["preview_caption"] | true;
@@ -1596,13 +1702,23 @@ void loadSettings() {
     uiThemeStyle = parseUIThemeKey(doc["ui_theme"] | "classic");
   }
   file.close();
+  dataMgr.setLanguage(appLanguage);
+  ui.setLanguage(appLanguage);
+  invalidateQuizSoundCaches();
   ui.setTheme(uiThemeStyle);
   applyQuizVolume();
 }
 
 bool loadQuizSound(const char* path, QuizSoundCache& cache) {
-  if (cache.ready && cache.data != nullptr && cache.size > 0) {
+  if (cache.ready
+      && cache.data != nullptr
+      && cache.size > 0
+      && cache.path == path) {
     return true;
+  }
+
+  if (cache.data != nullptr) {
+    releaseQuizSoundCache(cache);
   }
 
   struct __attribute__((packed)) RiffHeader {
@@ -1711,13 +1827,17 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
   cache.sampleRate = fmt.sampleRate;
   cache.stereo = fmt.channels > 1;
   cache.ready = true;
+  cache.path = path;
   return true;
 }
 
 void playQuizSound(QuizPhase phase) {
   QuizSoundCache& cache = (phase == QUIZ_A_SIDE) ? quizAsideSound : quizBsideSound;
-  const char* path = (phase == QUIZ_A_SIDE) ? kQuizAsideSoundPath : kQuizBsideSoundPath;
-  if (!loadQuizSound(path, cache)) {
+  String path = getQuizSoundPath(phase, appLanguage);
+  if (!SD.exists(path.c_str())) {
+    path = getQuizLegacySoundPath(phase);
+  }
+  if (!loadQuizSound(path.c_str(), cache)) {
     return;
   }
 
@@ -2387,12 +2507,16 @@ void loop() {
       } else if (screenMode == SCREEN_SETTINGS) {
         if (pressedControl == PRESS_GUIDE_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
+        } else if (pressedControl == PRESS_MENU_SETTINGS_TAB_0 || pressedControl == PRESS_MENU_SETTINGS_TAB_1) {
+          pendingAction = makePendingAction(ACTION_SET_SETTINGS_TAB, pressedControl - PRESS_MENU_SETTINGS_TAB_0);
         } else if (pressedControl == PRESS_MENU_3D) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl == PRESS_MENU_PREVIEW_CAPTION) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_CAPTION);
         } else if (pressedControl == PRESS_MENU_THEME_0 || pressedControl == PRESS_MENU_THEME_1) {
           pendingAction = makePendingAction(ACTION_SET_UI_THEME, pressedControl - PRESS_MENU_THEME_0);
+        } else if (pressedControl == PRESS_MENU_LANG_JA || pressedControl == PRESS_MENU_LANG_EN) {
+          pendingAction = makePendingAction(ACTION_SET_APP_LANGUAGE, pressedControl - PRESS_MENU_LANG_JA);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -2450,6 +2574,7 @@ void loop() {
         break;
       case ACTION_OPEN_SETTINGS:
         screenMode = SCREEN_SETTINGS;
+        settingsTabIndex = 0;
         break;
       case ACTION_CLOSE_SETTINGS:
         screenMode = SCREEN_MENU;
@@ -2621,11 +2746,25 @@ void loop() {
         previewCaptionEnabled = !previewCaptionEnabled;
         saveSettings();
         break;
+      case ACTION_SET_SETTINGS_TAB:
+        settingsTabIndex = constrain(pendingAction.value, 0, 1);
+        break;
       case ACTION_SET_UI_THEME:
         uiThemeStyle = static_cast<UIThemeStyle>(constrain(pendingAction.value, 0, static_cast<int>(UI_THEME_COUNT) - 1));
         ui.setTheme(uiThemeStyle);
         saveSettings();
         break;
+      case ACTION_SET_APP_LANGUAGE: {
+        const AppLanguage nextLanguage = static_cast<AppLanguage>(constrain(pendingAction.value, 0, static_cast<int>(APP_LANGUAGE_COUNT) - 1));
+        if (appLanguage != nextLanguage) {
+          appLanguage = nextLanguage;
+          dataMgr.setLanguage(appLanguage);
+          ui.setLanguage(appLanguage);
+          invalidateQuizSoundCaches();
+          saveSettings();
+        }
+        break;
+      }
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
         screenMode = SCREEN_MENU;
@@ -2673,7 +2812,12 @@ void loop() {
         }
         break;
       case ACTION_SEARCH_INPUT_ROW:
-        if (pendingAction.value == 10) {
+        if (isEnglishSearchInputMode()) {
+          if (pendingAction.value >= 0 && pendingAction.value < 10) {
+            searchInputVowelMode = true;
+            searchInputRowIndex = pendingAction.value;
+          }
+        } else if (pendingAction.value == 10) {
           applySearchDakutenToggle();
           searchNameOffset = 0;
         } else if (pendingAction.value == 11) {
@@ -2685,7 +2829,16 @@ void loop() {
         }
         break;
       case ACTION_SEARCH_INPUT_APPEND: {
-        if (pendingAction.value == 10) {
+        if (isEnglishSearchInputMode()) {
+          const String input = getSearchInputGlyph(pendingAction.value);
+          if (input.length() == 0) {
+            break;
+          }
+          searchNameQuery += input;
+          searchNameOffset = 0;
+          searchInputVowelMode = false;
+          searchInputRowIndex = -1;
+        } else if (pendingAction.value == 10) {
           applySearchDakutenToggle();
           searchNameOffset = 0;
         } else if (pendingAction.value == 11) {
@@ -3125,6 +3278,10 @@ void loop() {
     } else if (screenMode == SCREEN_SETTINGS) {
       ui.drawSettingsScreen(
           visualControl == PRESS_GUIDE_BACK,
+          settingsTabIndex,
+          (visualControl >= PRESS_MENU_SETTINGS_TAB_0 && visualControl <= PRESS_MENU_SETTINGS_TAB_1)
+              ? (visualControl - PRESS_MENU_SETTINGS_TAB_0)
+              : -1,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           previewCaptionEnabled,
@@ -3132,6 +3289,10 @@ void loop() {
           static_cast<int>(uiThemeStyle),
           (visualControl >= PRESS_MENU_THEME_0 && visualControl <= PRESS_MENU_THEME_1)
               ? (visualControl - PRESS_MENU_THEME_0)
+              : -1,
+          static_cast<int>(appLanguage),
+          (visualControl >= PRESS_MENU_LANG_JA && visualControl <= PRESS_MENU_LANG_EN)
+              ? (visualControl - PRESS_MENU_LANG_JA)
               : -1,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)

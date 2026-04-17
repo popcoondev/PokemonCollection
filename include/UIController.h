@@ -13,7 +13,9 @@ public:
   ~UIController();
   bool begin();
   void setTheme(UIThemeStyle theme);
+  void setLanguage(AppLanguage language);
   UIThemeStyle getTheme() const;
+  AppLanguage getLanguage() const;
   uint16_t getBackgroundColor() const;
   void drawBase();
   void drawHeader(const PokemonDetail& pk, bool searchPressed);
@@ -64,12 +66,16 @@ public:
       bool batteryCharging);
   void drawSettingsScreen(
       bool backPressed,
+      int settingsTabIndex,
+      int pressedSettingsTabIndex,
       bool preview3dEnabled,
       bool preview3dPressed,
       bool previewCaptionEnabled,
       bool previewCaptionPressed,
       int selectedThemeIndex,
       int pressedThemeIndex,
+      int selectedLanguageIndex,
+      int pressedLanguageIndex,
       int selectedVolumeIndex,
       int pressedVolumeIndex);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);
@@ -136,6 +142,7 @@ private:
   LGFX_Sprite* wakeSplashSprite;
   ImageLoader imageLoader;
   UIThemeStyle currentTheme;
+  AppLanguage currentLanguage;
   void drawPressedOverlay(int x, int y, int w, int h, int radius = 0);
   void drawActionButton(
       int x,
@@ -149,6 +156,7 @@ private:
       uint16_t pressedFillColor,
       uint16_t borderColor);
   const lgfx::IFont* getFallbackFont(const lgfx::IFont* primaryFont) const;
+  const char* tr(const char* ja, const char* en) const;
   const lgfx::IFont* selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const;
   size_t readUtf8Glyph(const String& text, size_t index, uint16_t& codepoint, String& glyph) const;
   void drawInfoRow(const char* label, const String& value, int y);

@@ -2,18 +2,45 @@
 #include <algorithm>
 #include <SD.h>
 
+namespace {
+const char* getPokemonIndexPath(AppLanguage language) {
+  return (language == APP_LANGUAGE_EN) ? "/pokemon/index_en.json" : "/pokemon/index.json";
+}
+}
+
 DataManager::DataManager() {
   currentPokemon = {};
   pokemonNames.resize(MIN_POKEMON_ID + 1);
   maxPokemonId = MIN_POKEMON_ID;
+  currentPokemonId = MIN_POKEMON_ID;
+  currentLanguage = APP_LANGUAGE_JA;
 }
 
 bool DataManager::begin() {
   return SD.exists("/pokemon") && loadPokemonIndex();
 }
 
+bool DataManager::setLanguage(AppLanguage language) {
+  if (language < APP_LANGUAGE_JA || language >= APP_LANGUAGE_COUNT) {
+    language = APP_LANGUAGE_JA;
+  }
+  if (currentLanguage == language && !pokemonNames.empty()) {
+    return true;
+  }
+  const AppLanguage previousLanguage = currentLanguage;
+  currentLanguage = language;
+  if (!loadPokemonIndex()) {
+    currentLanguage = previousLanguage;
+    return false;
+  }
+  if (currentPokemonId >= MIN_POKEMON_ID) {
+    return loadPokemonDetail(currentPokemonId);
+  }
+  return true;
+}
+
 bool DataManager::loadPokemonIndex() {
-  File file = SD.open("/pokemon/index.json");
+  File file = SD.open(getPokemonIndexPath(currentLanguage));
   if (!file) return false;
 
   JsonDocument doc;
@@ -61,6 +88,7 @@ bool DataManager::loadPokemonIndex() {
 }
 
 bool DataManager::loadPokemonDetail(uint16_t id) {
+  currentPokemonId = id;
   char filename[64];
   snprintf(filename, sizeof(filename), "/pokemon/details/%04d.json", id);
   File file = SD.open(filename);
@@ -71,7 +99,10 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
   if (error) return false;
 
   currentPokemon.id = doc["id"];
-  currentPokemon.name = doc["name"].as<String>();
+  currentPokemon.name = getPokemonName(id);
+  if (currentPokemon.name.length() == 0) {
+    currentPokemon.name = doc["name"].as<String>();
+  }
   currentPokemon.category = doc["category"].as<String>();
   currentPokemon.height = doc["height"].as<String>();
   currentPokemon.weight = doc["weight"].as<String>();
@@ -87,7 +118,12 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
 
   currentPokemon.evolutions.clear();
   for (JsonObject evo : doc["evolutions"].as<JsonArray>()) {
-    currentPokemon.evolutions.push_back({static_cast<uint16_t>(evo["id"] | 0), evo["n"].as<String>()});
+    const uint16_t evolutionId = static_cast<uint16_t>(evo["id"] | 0);
+    String evolutionName = getPokemonName(evolutionId);
+    if (evolutionName.length() == 0) {
+      evolutionName = evo["n"].as<String>();
+    }
+    currentPokemon.evolutions.push_back({evolutionId, evolutionName});
   }
 
   file.close();
@@ -106,14 +142,21 @@ std::vector<uint16_t> DataManager::findPokemonIdsByName(const String& query, siz
     return results;
   }
 
+  String normalizedQuery = query;
+  normalizedQuery.toLowerCase();
+
   size_t skipped = 0;
   for (uint16_t id = MIN_POKEMON_ID; id <= maxPokemonId; ++id) {
     const String& name = pokemonNames[id];
     if (name.length() == 0) {
       continue;
     }
-    if (query.length() > 0 && name.indexOf(query) < 0) {
-      continue;
+    if (normalizedQuery.length() > 0) {
+      String normalizedName = name;
+      normalizedName.toLowerCase();
+      if (normalizedName.indexOf(normalizedQuery) < 0) {
+        continue;
+      }
     }
     if (skipped < offset) {
       ++skipped;
