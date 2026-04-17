@@ -31,6 +31,8 @@ class DataManager {
 public:
   DataManager();
   bool begin();
+  bool setLanguage(AppLanguage language);
+  AppLanguage getLanguage() const { return currentLanguage; }
   bool loadPokemonDetail(uint16_t id);
   const PokemonDetail& getCurrentPokemon() const { return currentPokemon; }
   uint16_t getMaxPokemonId() const { return maxPokemonId; }
@@ -43,6 +45,8 @@ private:
   std::vector<String> pokemonNames;
   std::vector<uint16_t> pokemonIdsSortedByName;
   uint16_t maxPokemonId = MIN_POKEMON_ID;
+  AppLanguage currentLanguage = APP_LANGUAGE_JA;
+  uint16_t currentPokemonId = MIN_POKEMON_ID;
 };
 
 #endif

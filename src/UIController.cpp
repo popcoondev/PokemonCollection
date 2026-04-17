@@ -892,12 +892,16 @@ void UIController::drawMenuScreen(
 
 void UIController::drawSettingsScreen(
     bool backPressed,
+    int settingsTabIndex,
+    int pressedSettingsTabIndex,
     bool preview3dEnabled,
     bool preview3dPressed,
     bool previewCaptionEnabled,
     bool previewCaptionPressed,
     int selectedThemeIndex,
     int pressedThemeIndex,
+    int selectedLanguageIndex,
+    int pressedLanguageIndex,
     int selectedVolumeIndex,
     int pressedVolumeIndex) {
   const auto& theme = getThemePalette(currentTheme);
@@ -913,74 +917,114 @@ void UIController::drawSettingsScreen(
   sprite->drawCenterString("せってい", SCREEN_WIDTH / 2, 22);
 
   sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(theme.sub);
-  sprite->drawString("プレビュー", 24, 72);
-  drawActionButton(
-      202,
-      60,
-      94,
-      30,
-      preview3dEnabled ? "3D ON" : "3D OFF",
-      preview3dEnabled ? theme.accent : theme.surface,
-      preview3dEnabled ? theme.invertedText : theme.text,
-      preview3dPressed,
-      theme.buttonPressedFill,
-      preview3dEnabled ? theme.accent : theme.border);
-  drawActionButton(
-      202,
-      98,
-      94,
-      30,
-      previewCaptionEnabled ? "文字 ON" : "文字 OFF",
-      previewCaptionEnabled ? theme.accent : theme.surface,
-      previewCaptionEnabled ? theme.invertedText : theme.text,
-      previewCaptionPressed,
-      theme.buttonPressedFill,
-      previewCaptionEnabled ? theme.accent : theme.border);
-
-  sprite->setTextColor(theme.sub);
-  sprite->drawString("テーマ", 24, 140);
-  static constexpr const char* themeLabels[2] = {"クラシック", "サイバー"};
-  for (int i = 0; i < 2; ++i) {
-    const int x = 24 + (i * 140);
-    const bool selected = selectedThemeIndex == i;
-    const bool pressed = pressedThemeIndex == i;
+  if (settingsTabIndex == 0) {
+    sprite->setTextColor(theme.sub);
+    sprite->drawString("プレビュー", 24, 72);
     drawActionButton(
-        x,
-        152,
-        128,
-        28,
-        themeLabels[i],
-        selected ? theme.highlight : theme.surface,
-        selected ? theme.invertedText : theme.text,
-        pressed,
-        theme.buttonPressedFill,
-        selected ? theme.highlight : theme.border);
-  }
-
-  sprite->setTextColor(theme.sub);
-  sprite->drawString("おんりょう", 24, 190);
-  static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
-  for (int i = 0; i < 4; ++i) {
-    const int x = 24 + (i * 70);
-    const bool selected = selectedVolumeIndex == i;
-    const bool pressed = pressedVolumeIndex == i;
-    const uint16_t fill = selected ? theme.highlight : theme.surface;
-    const uint16_t text = selected ? theme.invertedText : theme.text;
-    const uint16_t border = selected ? theme.highlight : theme.border;
-    drawActionButton(
-        x,
         202,
-        58,
-        28,
-        volumeLabels[i],
-        fill,
-        text,
-        pressed,
+        60,
+        94,
+        30,
+        preview3dEnabled ? "3D ON" : "3D OFF",
+        preview3dEnabled ? theme.accent : theme.surface,
+        preview3dEnabled ? theme.invertedText : theme.text,
+        preview3dPressed,
         theme.buttonPressedFill,
-        border);
+        preview3dEnabled ? theme.accent : theme.border);
+    drawActionButton(
+        202,
+        98,
+        94,
+        30,
+        previewCaptionEnabled ? "文字 ON" : "文字 OFF",
+        previewCaptionEnabled ? theme.accent : theme.surface,
+        previewCaptionEnabled ? theme.invertedText : theme.text,
+        previewCaptionPressed,
+        theme.buttonPressedFill,
+        previewCaptionEnabled ? theme.accent : theme.border);
+
+    sprite->setTextColor(theme.sub);
+    sprite->drawString("テーマ", 24, 140);
+    static constexpr const char* themeLabels[2] = {"クラシック", "サイバー"};
+    for (int i = 0; i < 2; ++i) {
+      const int x = 24 + (i * 140);
+      const bool selected = selectedThemeIndex == i;
+      const bool pressed = pressedThemeIndex == i;
+      drawActionButton(
+          x,
+          152,
+          128,
+          30,
+          themeLabels[i],
+          selected ? theme.highlight : theme.surface,
+          selected ? theme.invertedText : theme.text,
+          pressed,
+          theme.buttonPressedFill,
+          selected ? theme.highlight : theme.border);
+    }
+  } else {
+    sprite->setTextColor(theme.sub);
+    sprite->drawString("ことば", 24, 72);
+    static constexpr const char* languageLabels[2] = {"日本語", "English"};
+    for (int i = 0; i < 2; ++i) {
+      const int x = 24 + (i * 140);
+      const bool selected = selectedLanguageIndex == i;
+      const bool pressed = pressedLanguageIndex == i;
+      drawActionButton(
+          x,
+          84,
+          128,
+          30,
+          languageLabels[i],
+          selected ? theme.highlight : theme.surface,
+          selected ? theme.invertedText : theme.text,
+          pressed,
+          theme.buttonPressedFill,
+          selected ? theme.highlight : theme.border);
+    }
+
+    sprite->setTextColor(theme.sub);
+    sprite->drawString("おんりょう", 24, 140);
+    static constexpr const char* volumeLabels[4] = {"大", "中", "小", "なし"};
+    for (int i = 0; i < 4; ++i) {
+      const int x = 24 + (i * 70);
+      const bool selected = selectedVolumeIndex == i;
+      const bool pressed = pressedVolumeIndex == i;
+      const uint16_t fill = selected ? theme.highlight : theme.surface;
+      const uint16_t text = selected ? theme.invertedText : theme.text;
+      const uint16_t border = selected ? theme.highlight : theme.border;
+      drawActionButton(
+          x,
+          152,
+          58,
+          28,
+          volumeLabels[i],
+          fill,
+          text,
+          pressed,
+          theme.buttonPressedFill,
+          border);
+    }
   }
 
+  static constexpr const char* settingsTabLabels[2] = {"ひょうじ", "ことば/おと"};
+  const int tabW = SCREEN_WIDTH / 2;
+  for (int i = 0; i < 2; ++i) {
+    const int x = i * tabW;
+    const bool isActive = settingsTabIndex == i;
+    const bool isPressed = pressedSettingsTabIndex == i;
+    uint16_t bg = isActive ? theme.accent : theme.surface;
+    uint16_t fg = isActive ? theme.invertedText : theme.text;
+    if (isPressed) {
+      bg = theme.buttonPressedFill;
+      fg = theme.invertedText;
+    }
+    sprite->fillRect(x, TAB_BAR_Y, tabW, TAB_BAR_H, bg);
+    sprite->drawRect(x, TAB_BAR_Y, tabW, TAB_BAR_H, theme.border);
+    sprite->setTextColor(fg);
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->drawCenterString(settingsTabLabels[i], x + (tabW / 2), TAB_BAR_Y + 12);
+  }
 }
 
 void UIController::drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed) {

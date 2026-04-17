@@ -64,12 +64,16 @@ public:
       bool batteryCharging);
   void drawSettingsScreen(
       bool backPressed,
+      int settingsTabIndex,
+      int pressedSettingsTabIndex,
       bool preview3dEnabled,
       bool preview3dPressed,
       bool previewCaptionEnabled,
       bool previewCaptionPressed,
       int selectedThemeIndex,
       int pressedThemeIndex,
+      int selectedLanguageIndex,
+      int pressedLanguageIndex,
       int selectedVolumeIndex,
       int pressedVolumeIndex);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);

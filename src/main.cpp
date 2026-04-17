@@ -269,6 +269,7 @@ uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
@@ -285,6 +286,7 @@ bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
 UIThemeStyle uiThemeStyle = UI_THEME_CLASSIC;
+int settingsTabIndex = 0;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
 bool coverProximityReady = false;
@@ -722,8 +724,12 @@ enum PressedControl {
   PRESS_MENU_SETTINGS,
   PRESS_MENU_3D,
   PRESS_MENU_PREVIEW_CAPTION,
+  PRESS_MENU_SETTINGS_TAB_0,
+  PRESS_MENU_SETTINGS_TAB_1,
   PRESS_MENU_THEME_0,
   PRESS_MENU_THEME_1,
+  PRESS_MENU_LANG_JA,
+  PRESS_MENU_LANG_EN,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -784,14 +790,21 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_SETTINGS) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
-    if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
-    if (hitTest(tx, ty, 24, 152, 128, 28, 6)) return PRESS_MENU_THEME_0;
-    if (hitTest(tx, ty, 164, 152, 128, 28, 6)) return PRESS_MENU_THEME_1;
-    if (hitTest(tx, ty, 24, 202, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
-    if (hitTest(tx, ty, 94, 202, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
-    if (hitTest(tx, ty, 164, 202, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
-    if (hitTest(tx, ty, 234, 202, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
+    if (hitTest(tx, ty, 0, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_0;
+    if (hitTest(tx, ty, SCREEN_WIDTH / 2, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_1;
+    if (settingsTabIndex == 0) {
+      if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
+      if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
+      if (hitTest(tx, ty, 24, 152, 128, 30, 6)) return PRESS_MENU_THEME_0;
+      if (hitTest(tx, ty, 164, 152, 128, 30, 6)) return PRESS_MENU_THEME_1;
+    } else {
+      if (hitTest(tx, ty, 24, 84, 128, 30, 6)) return PRESS_MENU_LANG_JA;
+      if (hitTest(tx, ty, 164, 84, 128, 30, 6)) return PRESS_MENU_LANG_EN;
+      if (hitTest(tx, ty, 24, 152, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
+      if (hitTest(tx, ty, 94, 152, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
+      if (hitTest(tx, ty, 164, 152, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
+      if (hitTest(tx, ty, 234, 152, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
+    }
     return PRESS_NONE;
   }
 
@@ -975,7 +988,9 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
   ACTION_TOGGLE_PREVIEW_CAPTION,
+  ACTION_SET_SETTINGS_TAB,
   ACTION_SET_UI_THEME,
+  ACTION_SET_APP_LANGUAGE,
   ACTION_SEARCH_TO_MENU,
   ACTION_OPEN_SEARCH_NUMBER,
   ACTION_SEARCH_TOGGLE_MODE,
@@ -1494,6 +1509,21 @@ UIThemeStyle parseUIThemeKey(const char* value) {
   return UI_THEME_CLASSIC;
 }
 
+const char* getAppLanguageKey(AppLanguage language) {
+  switch (language) {
+    case APP_LANGUAGE_EN: return "en";
+    case APP_LANGUAGE_JA:
+    default:
+      return "ja";
+  }
+}
+
+AppLanguage parseAppLanguageKey(const char* value) {
+  if (value == nullptr) return APP_LANGUAGE_JA;
+  if (strcmp(value, "en") == 0) return APP_LANGUAGE_EN;
+  return APP_LANGUAGE_JA;
+}
+
 QuizVolumeSetting parseQuizVolumeKey(const char* value) {
   if (value == nullptr) return QUIZ_VOLUME_MEDIUM;
   if (strcmp(value, "large") == 0) return QUIZ_VOLUME_LARGE;
@@ -1508,6 +1538,7 @@ void applyQuizVolume() {
 
 bool saveSettings() {
   JsonDocument doc;
+  doc["app_language"] = getAppLanguageKey(appLanguage);
   doc["quiz_volume"] = getQuizVolumeKey(quizVolumeSetting);
   doc["preview_3d"] = preview3dEnabled;
   doc["preview_caption"] = previewCaptionEnabled;
@@ -1574,6 +1605,7 @@ bool saveGuideCaughtFlags() {
 }
 
 void loadSettings() {
+  appLanguage = APP_LANGUAGE_JA;
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
   preview3dEnabled = false;
   previewCaptionEnabled = true;
@@ -1589,6 +1621,7 @@ void loadSettings() {
 
   JsonDocument doc;
   if (deserializeJson(doc, file) == DeserializationError::Ok) {
+    appLanguage = parseAppLanguageKey(doc["app_language"] | "ja");
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
     preview3dEnabled = doc["preview_3d"] | false;
     previewCaptionEnabled = doc["preview_caption"] | true;
@@ -1596,6 +1629,7 @@ void loadSettings() {
     uiThemeStyle = parseUIThemeKey(doc["ui_theme"] | "classic");
   }
   file.close();
+  dataMgr.setLanguage(appLanguage);
   ui.setTheme(uiThemeStyle);
   applyQuizVolume();
 }
@@ -2387,12 +2421,16 @@ void loop() {
       } else if (screenMode == SCREEN_SETTINGS) {
         if (pressedControl == PRESS_GUIDE_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_SETTINGS);
+        } else if (pressedControl == PRESS_MENU_SETTINGS_TAB_0 || pressedControl == PRESS_MENU_SETTINGS_TAB_1) {
+          pendingAction = makePendingAction(ACTION_SET_SETTINGS_TAB, pressedControl - PRESS_MENU_SETTINGS_TAB_0);
         } else if (pressedControl == PRESS_MENU_3D) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_3D);
         } else if (pressedControl == PRESS_MENU_PREVIEW_CAPTION) {
           pendingAction = makePendingAction(ACTION_TOGGLE_PREVIEW_CAPTION);
         } else if (pressedControl == PRESS_MENU_THEME_0 || pressedControl == PRESS_MENU_THEME_1) {
           pendingAction = makePendingAction(ACTION_SET_UI_THEME, pressedControl - PRESS_MENU_THEME_0);
+        } else if (pressedControl == PRESS_MENU_LANG_JA || pressedControl == PRESS_MENU_LANG_EN) {
+          pendingAction = makePendingAction(ACTION_SET_APP_LANGUAGE, pressedControl - PRESS_MENU_LANG_JA);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -2450,6 +2488,7 @@ void loop() {
         break;
       case ACTION_OPEN_SETTINGS:
         screenMode = SCREEN_SETTINGS;
+        settingsTabIndex = 0;
         break;
       case ACTION_CLOSE_SETTINGS:
         screenMode = SCREEN_MENU;
@@ -2621,11 +2660,23 @@ void loop() {
         previewCaptionEnabled = !previewCaptionEnabled;
         saveSettings();
         break;
+      case ACTION_SET_SETTINGS_TAB:
+        settingsTabIndex = constrain(pendingAction.value, 0, 1);
+        break;
       case ACTION_SET_UI_THEME:
         uiThemeStyle = static_cast<UIThemeStyle>(constrain(pendingAction.value, 0, static_cast<int>(UI_THEME_COUNT) - 1));
         ui.setTheme(uiThemeStyle);
         saveSettings();
         break;
+      case ACTION_SET_APP_LANGUAGE: {
+        const AppLanguage nextLanguage = static_cast<AppLanguage>(constrain(pendingAction.value, 0, static_cast<int>(APP_LANGUAGE_COUNT) - 1));
+        if (appLanguage != nextLanguage) {
+          appLanguage = nextLanguage;
+          dataMgr.setLanguage(appLanguage);
+          saveSettings();
+        }
+        break;
+      }
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
         screenMode = SCREEN_MENU;
@@ -3125,6 +3176,10 @@ void loop() {
     } else if (screenMode == SCREEN_SETTINGS) {
       ui.drawSettingsScreen(
           visualControl == PRESS_GUIDE_BACK,
+          settingsTabIndex,
+          (visualControl >= PRESS_MENU_SETTINGS_TAB_0 && visualControl <= PRESS_MENU_SETTINGS_TAB_1)
+              ? (visualControl - PRESS_MENU_SETTINGS_TAB_0)
+              : -1,
           preview3dEnabled,
           visualControl == PRESS_MENU_3D,
           previewCaptionEnabled,
@@ -3132,6 +3187,10 @@ void loop() {
           static_cast<int>(uiThemeStyle),
           (visualControl >= PRESS_MENU_THEME_0 && visualControl <= PRESS_MENU_THEME_1)
               ? (visualControl - PRESS_MENU_THEME_0)
+              : -1,
+          static_cast<int>(appLanguage),
+          (visualControl >= PRESS_MENU_LANG_JA && visualControl <= PRESS_MENU_LANG_EN)
+              ? (visualControl - PRESS_MENU_LANG_JA)
               : -1,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
