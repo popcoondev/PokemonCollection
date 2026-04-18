@@ -300,6 +300,8 @@ uint16_t coverLastProximityValue = 0;
 bool portBBackButtonStablePressed = false;
 bool portBBackButtonLastRawPressed = false;
 unsigned long portBBackButtonLastChangeAt = 0;
+bool portBBackButtonCapturedMarkerValid = false;
+int portBBackButtonCapturedMarkerX = kLockOnBarX + (kLockOnBarW / 2);
 SearchMode searchMode = SEARCH_MODE_NUMBER;
 size_t searchNameOffset = 0;
 String searchNameQuery = "";
@@ -1145,6 +1147,18 @@ bool pollPortBBackButton(unsigned long now, ScreenMode mode, LockOnPhase current
   if (rawPressed != portBBackButtonLastRawPressed) {
     portBBackButtonLastRawPressed = rawPressed;
     portBBackButtonLastChangeAt = now;
+    if (rawPressed) {
+      if (mode == SCREEN_LOCKON && currentLockOnPhase == LOCKON_SEARCH) {
+        const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
+        portBBackButtonCapturedMarkerX =
+            getLockOnMarkerCenterX(elapsedMs, lockOnSearchDurationMs, lockOnRarity);
+        portBBackButtonCapturedMarkerValid = true;
+      } else {
+        portBBackButtonCapturedMarkerValid = false;
+      }
+    } else {
+      portBBackButtonCapturedMarkerValid = false;
+    }
   }
 
   if ((now - portBBackButtonLastChangeAt) >= kPortBBackButtonDebounceMs
@@ -1155,10 +1169,11 @@ bool pollPortBBackButton(unsigned long now, ScreenMode mode, LockOnPhase current
         clickedAction = makePendingAction(ACTION_OPEN_LOCKON);
       } else if (mode == SCREEN_LOCKON) {
         if (currentLockOnPhase == LOCKON_SEARCH) {
-          const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
           clickedAction = makePendingAction(
               ACTION_LOCKON_CONFIRM,
-              getLockOnMarkerCenterX(elapsedMs, lockOnSearchDurationMs, lockOnRarity));
+              portBBackButtonCapturedMarkerValid
+                  ? portBBackButtonCapturedMarkerX
+                  : getLockOnMarkerCenterX(now - lockOnPhaseStartedAt, lockOnSearchDurationMs, lockOnRarity));
         } else if (currentLockOnPhase == LOCKON_RESULT_SUCCESS) {
           clickedAction = makePendingAction(ACTION_LOCKON_OPEN_DETAIL);
         } else if (currentLockOnPhase == LOCKON_RESULT_FAIL) {
