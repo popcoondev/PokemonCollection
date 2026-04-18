@@ -991,7 +991,13 @@ void UIController::drawMenuScreen(
   drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("じっせき", "Achievements"), theme.surface, theme.text, achievementsPressed, theme.buttonPressedFill, theme.border);
 }
 
-void UIController::drawAchievementsMenuScreen(bool lockOnPressed, bool backPressed) {
+void UIController::drawAchievementsMenuScreen(
+    size_t pokedexViewedCount,
+    uint32_t quizViewedCount,
+    size_t guideCaughtCount,
+    size_t slideshowViewedCount,
+    bool lockOnPressed,
+    bool backPressed) {
   const auto& theme = getThemePalette(currentTheme);
   sprite->fillScreen(theme.bg);
 
@@ -1004,7 +1010,14 @@ void UIController::drawAchievementsMenuScreen(bool lockOnPressed, bool backPress
   sprite->setTextColor(theme.text);
   sprite->drawCenterString(tr("じっせき", "Achievements"), SCREEN_WIDTH / 2, 22);
 
-  drawActionButton(32, 72, SCREEN_WIDTH - 64, 42, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(theme.text);
+  sprite->drawString(String("ずかんでひらいたポケモン数 : ") + static_cast<unsigned>(pokedexViewedCount) + "ひき", 20, 56);
+  sprite->drawString(String("ポケモンクイズをやった数 : ") + static_cast<unsigned>(quizViewedCount) + "かい", 20, 78);
+  sprite->drawString(String("こうりゃくでつかまえた数 : ") + static_cast<unsigned>(guideCaughtCount) + "ひき", 20, 100);
+  sprite->drawString(String("スライドショーをみた数 : ") + static_cast<unsigned>(slideshowViewedCount) + "ひき", 20, 122);
+
+  drawActionButton(32, 160, SCREEN_WIDTH - 64, 42, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
 }
 
 void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool backPressed) {

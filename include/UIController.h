@@ -68,7 +68,13 @@ public:
       const char* volumeLabel,
       int batteryLevel,
       bool batteryCharging);
-  void drawAchievementsMenuScreen(bool lockOnPressed, bool backPressed);
+  void drawAchievementsMenuScreen(
+      size_t pokedexViewedCount,
+      uint32_t quizViewedCount,
+      size_t guideCaughtCount,
+      size_t slideshowViewedCount,
+      bool lockOnPressed,
+      bool backPressed);
   void drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool backPressed);
   void drawLockOnAchievementsListScreen(
       const std::vector<String>& labels,

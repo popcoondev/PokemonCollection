@@ -64,6 +64,7 @@ constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 constexpr const char* kLockOnAchievementsPath = "/pokemon/achievements/lockon.json";
+constexpr const char* kAchievementStatsPath = "/pokemon/achievements/stats.json";
 constexpr const char* kLockOnSecretIdsPath = "/pokemon/lockon/secret_ids.json";
 constexpr uint8_t kDisplayBrightnessOn = 128;
 constexpr uint8_t kLtr553Address = 0x23;
@@ -287,6 +288,8 @@ AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 std::vector<uint16_t> lockOnSecretIds;
 std::vector<uint8_t> lockOnAchievementHighestRarity;
+std::vector<bool> pokedexAchievementViewed;
+std::vector<bool> slideshowAchievementViewed;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
 int guidePokemonTab = 0;
@@ -300,6 +303,9 @@ bool guideCaughtDirty = false;
 unsigned long guideCaughtSaveAt = 0;
 bool lockOnAchievementsDirty = false;
 unsigned long lockOnAchievementsSaveAt = 0;
+bool achievementStatsDirty = false;
+unsigned long achievementStatsSaveAt = 0;
+uint32_t quizQuestionsViewedCount = 0;
 bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
@@ -666,6 +672,116 @@ size_t getLockOnAchievementCaughtCount() {
   return count;
 }
 
+void ensureAchievementStatsStorageReady() {
+  const size_t requiredSize = static_cast<size_t>(getAvailableMaxPokemonId()) + 1;
+  if (pokedexAchievementViewed.size() != requiredSize) {
+    pokedexAchievementViewed.assign(requiredSize, false);
+  }
+  if (slideshowAchievementViewed.size() != requiredSize) {
+    slideshowAchievementViewed.assign(requiredSize, false);
+  }
+}
+
+size_t countTrueFlags(const std::vector<bool>& flags) {
+  size_t count = 0;
+  for (bool flag : flags) {
+    if (flag) count += 1;
+  }
+  return count;
+}
+
+size_t getGuideCaughtCount() {
+  size_t count = 0;
+  for (int id = 1; id <= 386 && id < static_cast<int>(guideCaughtFlags.size()); ++id) {
+    if (guideCaughtFlags[id]) count += 1;
+  }
+  return count;
+}
+
+bool saveAchievementStats() {
+  ensureAchievementStatsStorageReady();
+  SD.mkdir("/pokemon");
+  SD.mkdir("/pokemon/achievements");
+  JsonDocument doc;
+  doc["quiz_questions_viewed"] = quizQuestionsViewedCount;
+
+  JsonArray pokedexArr = doc["pokedex_viewed"].to<JsonArray>();
+  for (size_t id = 1; id < pokedexAchievementViewed.size(); ++id) {
+    if (pokedexAchievementViewed[id]) pokedexArr.add(static_cast<uint16_t>(id));
+  }
+
+  JsonArray slideshowArr = doc["slideshow_viewed"].to<JsonArray>();
+  for (size_t id = 1; id < slideshowAchievementViewed.size(); ++id) {
+    if (slideshowAchievementViewed[id]) slideshowArr.add(static_cast<uint16_t>(id));
+  }
+
+  if (SD.exists(kAchievementStatsPath)) {
+    SD.remove(kAchievementStatsPath);
+  }
+  File file = SD.open(kAchievementStatsPath, FILE_WRITE);
+  if (!file) return false;
+  const bool ok = serializeJson(doc, file) > 0;
+  file.close();
+  return ok;
+}
+
+bool loadAchievementStats() {
+  ensureAchievementStatsStorageReady();
+  quizQuestionsViewedCount = 0;
+  File file = SD.open(kAchievementStatsPath, FILE_READ);
+  if (!file) return true;
+
+  JsonDocument doc;
+  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+    file.close();
+    return false;
+  }
+  file.close();
+
+  quizQuestionsViewedCount = doc["quiz_questions_viewed"] | 0;
+  JsonArray pokedexArr = doc["pokedex_viewed"].as<JsonArray>();
+  if (!pokedexArr.isNull()) {
+    for (JsonVariant v : pokedexArr) {
+      const uint16_t id = v.as<uint16_t>();
+      if (id < pokedexAchievementViewed.size()) pokedexAchievementViewed[id] = true;
+    }
+  }
+  JsonArray slideshowArr = doc["slideshow_viewed"].as<JsonArray>();
+  if (!slideshowArr.isNull()) {
+    for (JsonVariant v : slideshowArr) {
+      const uint16_t id = v.as<uint16_t>();
+      if (id < slideshowAchievementViewed.size()) slideshowAchievementViewed[id] = true;
+    }
+  }
+  return true;
+}
+
+void recordPokedexAchievementView(uint16_t pokemonId, unsigned long now) {
+  ensureAchievementStatsStorageReady();
+  if (pokemonId >= pokedexAchievementViewed.size()) return;
+  if (!pokedexAchievementViewed[pokemonId]) {
+    pokedexAchievementViewed[pokemonId] = true;
+    achievementStatsDirty = true;
+    achievementStatsSaveAt = now + 500;
+  }
+}
+
+void recordSlideshowAchievementView(uint16_t pokemonId, unsigned long now) {
+  ensureAchievementStatsStorageReady();
+  if (pokemonId >= slideshowAchievementViewed.size()) return;
+  if (!slideshowAchievementViewed[pokemonId]) {
+    slideshowAchievementViewed[pokemonId] = true;
+    achievementStatsDirty = true;
+    achievementStatsSaveAt = now + 500;
+  }
+}
+
+void recordQuizQuestionViewed(unsigned long now) {
+  quizQuestionsViewedCount += 1;
+  achievementStatsDirty = true;
+  achievementStatsSaveAt = now + 500;
+}
+
 void ensureLockOnAchievementsStorageReady() {
   const size_t requiredSize = static_cast<size_t>(getAvailableMaxPokemonId()) + 1;
   if (lockOnAchievementHighestRarity.size() != requiredSize) {
@@ -675,6 +791,8 @@ void ensureLockOnAchievementsStorageReady() {
 
 bool saveLockOnAchievements() {
   ensureLockOnAchievementsStorageReady();
+  SD.mkdir("/pokemon");
+  SD.mkdir("/pokemon/achievements");
   JsonDocument doc;
   JsonArray arr = doc["entries"].to<JsonArray>();
   for (size_t id = 1; id < lockOnAchievementHighestRarity.size(); ++id) {
@@ -1138,7 +1256,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_ACHIEVEMENTS_MENU) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 8)) return PRESS_ACHIEVEMENT_LOCKON;
+    if (hitTest(tx, ty, 32, 160, SCREEN_WIDTH - 64, 42, 8)) return PRESS_ACHIEVEMENT_LOCKON;
     return PRESS_NONE;
   }
 
@@ -2186,6 +2304,9 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
 }
 
 void playQuizSound(QuizPhase phase) {
+  if (phase == QUIZ_A_SIDE) {
+    recordQuizQuestionViewed(millis());
+  }
   QuizSoundCache& cache = (phase == QUIZ_A_SIDE) ? quizAsideSound : quizBsideSound;
   String path = getQuizSoundPath(phase, appLanguage);
   if (!SD.exists(path.c_str())) {
@@ -2544,6 +2665,7 @@ void setup() {
   ui.setTheme(uiThemeStyle);
   loadGuideCaughtFlags();
   loadLockOnAchievements();
+  loadAchievementStats();
   coverProximityReady = initCoverProximitySensor();
   initPortBBackButton();
   wakeSplashActive = true;
@@ -2718,6 +2840,10 @@ void loop() {
     if (lockOnAchievementsDirty && now >= lockOnAchievementsSaveAt) {
       saveLockOnAchievements();
       lockOnAchievementsDirty = false;
+    }
+    if (achievementStatsDirty && now >= achievementStatsSaveAt) {
+      saveAchievementStats();
+      achievementStatsDirty = false;
     }
     if (settingsDirty && now >= settingsSaveAt) {
       saveSettings();
@@ -3477,6 +3603,7 @@ void loop() {
   }
 
   if (!wakeSplashActive && screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
+    recordSlideshowAchievementView(slideshowPokemonId, now);
     const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
     if (elapsed >= kSlideshowSlideDurationMs) {
       const uint16_t maxPokemonId = getAvailableMaxPokemonId();
@@ -3697,6 +3824,10 @@ void loop() {
     ui.drawBase();
     const auto& pk = dataMgr.getCurrentPokemon();
 
+    if (screenMode == SCREEN_DETAIL) {
+      recordPokedexAchievementView(currentId, now);
+    }
+
     if (wakeSplashActive) {
       const uint8_t progressPercent = getWakeSplashProgressPercent(now - wakeSplashStartedAt);
       ui.drawWakeSplashScreen(progressPercent, getWakeSplashStatusText(progressPercent));
@@ -3776,6 +3907,10 @@ void loop() {
           visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_ACHIEVEMENTS_MENU) {
       ui.drawAchievementsMenuScreen(
+          countTrueFlags(pokedexAchievementViewed),
+          quizQuestionsViewedCount,
+          getGuideCaughtCount(),
+          countTrueFlags(slideshowAchievementViewed),
           visualControl == PRESS_ACHIEVEMENT_LOCKON,
           visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON) {
@@ -4055,6 +4190,11 @@ void loop() {
   if (lockOnAchievementsDirty && millis() >= lockOnAchievementsSaveAt) {
     saveLockOnAchievements();
     lockOnAchievementsDirty = false;
+  }
+
+  if (achievementStatsDirty && millis() >= achievementStatsSaveAt) {
+    saveAchievementStats();
+    achievementStatsDirty = false;
   }
 
   if (settingsDirty && millis() >= settingsSaveAt) {
