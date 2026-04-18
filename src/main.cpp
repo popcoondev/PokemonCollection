@@ -60,6 +60,7 @@ constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
 constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
+constexpr const char* kLockOnSecretIdsPath = "/pokemon/lockon/secret_ids.json";
 constexpr uint8_t kDisplayBrightnessOn = 128;
 constexpr uint8_t kLtr553Address = 0x23;
 constexpr uint8_t kLtr553RegPsContr = 0x81;
@@ -82,16 +83,21 @@ constexpr uint32_t kLockOnSuccessDisplayMs = 4000;
 constexpr uint32_t kLockOnFailDisplayMs = 3000;
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
-constexpr uint16_t kLockOnLegendIds[] = {
-    144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251,
-    377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-    480, 481, 482, 483, 484, 485, 486, 487, 488, 489,
-    490, 491, 492, 493,
-};
 constexpr uint16_t kLockOnRareIds[] = {
-    3, 6, 9, 113, 131, 132, 133, 134, 135, 136, 137, 141, 142, 143, 149,
-    196, 197, 212, 214, 229, 233, 241, 242, 248, 306, 330, 348, 350, 359,
-    373, 376, 392, 395, 398, 407, 445, 448, 462, 468, 470, 471, 474,
+    113, 131, 132, 133, 134, 135, 136, 137, 141, 142, 143,
+    196, 197, 212, 214, 229, 233, 241, 242, 248, 306, 330,
+};
+constexpr uint16_t kLockOnEpicIds[] = {
+    3, 6, 9, 149, 348, 350, 359, 373, 376, 392, 395,
+    398, 407, 445, 448, 462, 468, 470, 471, 474,
+};
+constexpr uint16_t kLockOnLegendIds[] = {
+    144, 145, 146, 243, 244, 245, 249, 250, 251,
+    377, 378, 379, 380, 381, 480, 481, 482, 485, 486, 488,
+};
+constexpr uint16_t kLockOnMythicIds[] = {
+    150, 151, 382, 383, 384, 385, 386,
+    483, 484, 487, 489, 490, 491, 492, 493,
 };
 
 enum QuizPhase {
@@ -116,7 +122,10 @@ enum LockOnPhase {
 enum LockOnRarity {
   LOCKON_RARITY_NORMAL = 0,
   LOCKON_RARITY_RARE,
+  LOCKON_RARITY_EPIC,
   LOCKON_RARITY_LEGEND,
+  LOCKON_RARITY_MYTHIC,
+  LOCKON_RARITY_SECRET,
 };
 
 struct AppearanceImageRequest {
@@ -272,6 +281,7 @@ QuizSoundCache quizBsideSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
+std::vector<uint16_t> lockOnSecretIds;
 GuidePokemonDetailEntry guidePokemonDetail;
 uint16_t guidePokemonSelectedId = 0;
 int guidePokemonTab = 0;
@@ -378,9 +388,35 @@ void triggerVibration(uint8_t level, uint32_t durationMs, unsigned long now) {
 
 LockOnRarity chooseLockOnRarity() {
   const uint32_t roll = esp_random() % 100;
-  if (roll < 2) return LOCKON_RARITY_LEGEND;
-  if (roll < 15) return LOCKON_RARITY_RARE;
+  if (roll < 1) return LOCKON_RARITY_SECRET;
+  if (roll < 2) return LOCKON_RARITY_MYTHIC;
+  if (roll < 5) return LOCKON_RARITY_LEGEND;
+  if (roll < 12) return LOCKON_RARITY_EPIC;
+  if (roll < 28) return LOCKON_RARITY_RARE;
   return LOCKON_RARITY_NORMAL;
+}
+
+bool isPokemonIdInTable(uint16_t pokemonId, const uint16_t* ids, size_t count) {
+  if (ids == nullptr) return false;
+  for (size_t i = 0; i < count; ++i) {
+    if (ids[i] == pokemonId) return true;
+  }
+  return false;
+}
+
+bool isPokemonIdInVector(uint16_t pokemonId, const std::vector<uint16_t>& ids) {
+  for (uint16_t id : ids) {
+    if (id == pokemonId) return true;
+  }
+  return false;
+}
+
+bool isLockOnSpecialPokemonId(uint16_t pokemonId) {
+  return isPokemonIdInTable(pokemonId, kLockOnRareIds, sizeof(kLockOnRareIds) / sizeof(kLockOnRareIds[0]))
+      || isPokemonIdInTable(pokemonId, kLockOnEpicIds, sizeof(kLockOnEpicIds) / sizeof(kLockOnEpicIds[0]))
+      || isPokemonIdInTable(pokemonId, kLockOnLegendIds, sizeof(kLockOnLegendIds) / sizeof(kLockOnLegendIds[0]))
+      || isPokemonIdInTable(pokemonId, kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]))
+      || isPokemonIdInVector(pokemonId, lockOnSecretIds);
 }
 
 uint16_t chooseRandomPokemonIdExcluding(uint16_t excludedId) {
@@ -399,6 +435,23 @@ uint16_t chooseRandomPokemonIdExcluding(uint16_t excludedId) {
   return MIN_POKEMON_ID;
 }
 
+uint16_t chooseRandomNormalPokemonId(uint16_t excludedId) {
+  const uint16_t maxPokemonId = getAvailableMaxPokemonId();
+  if (maxPokemonId <= MIN_POKEMON_ID) {
+    return MIN_POKEMON_ID;
+  }
+
+  for (int attempt = 0; attempt < 128; ++attempt) {
+    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (esp_random() % (maxPokemonId - MIN_POKEMON_ID + 1)));
+    if (candidate == excludedId) continue;
+    if (isLockOnSpecialPokemonId(candidate)) continue;
+    if (dataMgr.getPokemonName(candidate).length() == 0) continue;
+    return candidate;
+  }
+
+  return chooseRandomPokemonIdExcluding(excludedId);
+}
+
 uint16_t choosePokemonIdFromTable(const uint16_t* ids, size_t count, uint16_t excludedId) {
   if (ids == nullptr || count == 0) {
     return chooseRandomPokemonIdExcluding(excludedId);
@@ -412,22 +465,50 @@ uint16_t choosePokemonIdFromTable(const uint16_t* ids, size_t count, uint16_t ex
   return chooseRandomPokemonIdExcluding(excludedId);
 }
 
+uint16_t choosePokemonIdFromVector(const std::vector<uint16_t>& ids, uint16_t excludedId) {
+  if (ids.empty()) {
+    return chooseRandomPokemonIdExcluding(excludedId);
+  }
+  for (int attempt = 0; attempt < 64; ++attempt) {
+    const uint16_t candidate = ids[esp_random() % ids.size()];
+    if (candidate == excludedId) continue;
+    if (dataMgr.getPokemonName(candidate).length() == 0) continue;
+    return candidate;
+  }
+  return chooseRandomPokemonIdExcluding(excludedId);
+}
+
 uint16_t chooseLockOnPokemonId(LockOnRarity rarity, uint16_t excludedId) {
   switch (rarity) {
+    case LOCKON_RARITY_SECRET:
+      if (!lockOnSecretIds.empty()) {
+        return choosePokemonIdFromVector(lockOnSecretIds, excludedId);
+      }
+      return choosePokemonIdFromTable(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
+    case LOCKON_RARITY_MYTHIC:
+      return choosePokemonIdFromTable(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
     case LOCKON_RARITY_LEGEND:
       return choosePokemonIdFromTable(kLockOnLegendIds, sizeof(kLockOnLegendIds) / sizeof(kLockOnLegendIds[0]), excludedId);
+    case LOCKON_RARITY_EPIC:
+      return choosePokemonIdFromTable(kLockOnEpicIds, sizeof(kLockOnEpicIds) / sizeof(kLockOnEpicIds[0]), excludedId);
     case LOCKON_RARITY_RARE:
       return choosePokemonIdFromTable(kLockOnRareIds, sizeof(kLockOnRareIds) / sizeof(kLockOnRareIds[0]), excludedId);
     case LOCKON_RARITY_NORMAL:
     default:
-      return chooseRandomPokemonIdExcluding(excludedId);
+      return chooseRandomNormalPokemonId(excludedId);
   }
 }
 
 const char* getLockOnRarityLabel(LockOnRarity rarity) {
   switch (rarity) {
+    case LOCKON_RARITY_SECRET:
+      return "SECRET";
+    case LOCKON_RARITY_MYTHIC:
+      return "MYTHIC";
     case LOCKON_RARITY_LEGEND:
       return "LEGEND";
+    case LOCKON_RARITY_EPIC:
+      return "EPIC";
     case LOCKON_RARITY_RARE:
       return "RARE";
     case LOCKON_RARITY_NORMAL:
@@ -445,11 +526,30 @@ void playLockOnResultSound(bool success, LockOnRarity rarity) {
   }
 
   switch (rarity) {
+    case LOCKON_RARITY_SECRET:
+      M5.Speaker.tone(1200, 40, 0, true);
+      M5.Speaker.tone(1700, 50, 0, false);
+      M5.Speaker.tone(2100, 60, 0, false);
+      M5.Speaker.tone(2600, 70, 0, false);
+      M5.Speaker.tone(3200, 220, 0, false);
+      break;
+    case LOCKON_RARITY_MYTHIC:
+      M5.Speaker.tone(1100, 50, 0, true);
+      M5.Speaker.tone(1480, 60, 0, false);
+      M5.Speaker.tone(1860, 70, 0, false);
+      M5.Speaker.tone(2340, 180, 0, false);
+      break;
     case LOCKON_RARITY_LEGEND:
       M5.Speaker.tone(1320, 70, 0, true);
       M5.Speaker.tone(1760, 80, 0, false);
       M5.Speaker.tone(2210, 110, 0, false);
       M5.Speaker.tone(2640, 220, 0, false);
+      break;
+    case LOCKON_RARITY_EPIC:
+      M5.Speaker.tone(980, 60, 0, true);
+      M5.Speaker.tone(1320, 70, 0, false);
+      M5.Speaker.tone(1640, 80, 0, false);
+      M5.Speaker.tone(1980, 150, 0, false);
       break;
     case LOCKON_RARITY_RARE:
       M5.Speaker.tone(1040, 70, 0, true);
@@ -465,27 +565,13 @@ void playLockOnResultSound(bool success, LockOnRarity rarity) {
 }
 
 uint32_t getLockOnSearchDurationMs(LockOnRarity rarity) {
-  switch (rarity) {
-    case LOCKON_RARITY_LEGEND:
-      return 3400;
-    case LOCKON_RARITY_RARE:
-      return 3600;
-    case LOCKON_RARITY_NORMAL:
-    default:
-      return 3800;
-  }
+  (void)rarity;
+  return 3800;
 }
 
 uint16_t getLockOnZoneWidth(LockOnRarity rarity) {
-  switch (rarity) {
-    case LOCKON_RARITY_LEGEND:
-      return static_cast<uint16_t>(random(24, 37));
-    case LOCKON_RARITY_RARE:
-      return static_cast<uint16_t>(random(28, 43));
-    case LOCKON_RARITY_NORMAL:
-    default:
-      return static_cast<uint16_t>(random(34, 53));
-  }
+  (void)rarity;
+  return static_cast<uint16_t>(random(30, 47));
 }
 
 float getLockOnMarkerRatio(unsigned long elapsedMs, uint32_t durationMs, LockOnRarity rarity) {
@@ -493,8 +579,9 @@ float getLockOnMarkerRatio(unsigned long elapsedMs, uint32_t durationMs, LockOnR
     return 0.5f;
   }
   const float t = constrain(static_cast<float>(elapsedMs) / static_cast<float>(durationMs), 0.0f, 1.0f);
-  const float baseSweep = (rarity == LOCKON_RARITY_LEGEND) ? 2.25f : (rarity == LOCKON_RARITY_RARE ? 2.1f : 2.0f);
-  const float accelSweep = (rarity == LOCKON_RARITY_LEGEND) ? 1.7f : (rarity == LOCKON_RARITY_RARE ? 1.5f : 1.4f);
+  (void)rarity;
+  const float baseSweep = 2.0f;
+  const float accelSweep = 1.4f;
   const float phase = (t * baseSweep) + ((t * t) * accelSweep);
   const float wrapped = phase - floorf(phase);
   return (wrapped <= 0.5f) ? (wrapped * 2.0f) : (2.0f - (wrapped * 2.0f));
@@ -1690,6 +1777,41 @@ bool saveGuideCaughtFlags() {
   return ok;
 }
 
+bool loadLockOnSecretIds() {
+  lockOnSecretIds.clear();
+
+  File file = SD.open(kLockOnSecretIdsPath, FILE_READ);
+  if (!file) {
+    return false;
+  }
+
+  JsonDocument doc;
+  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+    file.close();
+    return false;
+  }
+  file.close();
+
+  JsonArray ids = doc["ids"].as<JsonArray>();
+  if (ids.isNull() && doc.is<JsonArray>()) {
+    ids = doc.as<JsonArray>();
+  }
+  if (ids.isNull()) {
+    return false;
+  }
+
+  for (JsonVariant v : ids) {
+    const int id = v.as<int>();
+    if (id >= MIN_POKEMON_ID && id <= getAvailableMaxPokemonId()) {
+      if (!isPokemonIdInVector(static_cast<uint16_t>(id), lockOnSecretIds)) {
+        lockOnSecretIds.push_back(static_cast<uint16_t>(id));
+      }
+    }
+  }
+
+  return !lockOnSecretIds.empty();
+}
+
 void loadSettings() {
   appLanguage = APP_LANGUAGE_JA;
   quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
@@ -2193,6 +2315,7 @@ void setup() {
     M5.Display.print("SD Error");
     while(1) delay(100);
   }
+  loadLockOnSecretIds();
   loadGuideLocations();
 
   if (!ui.begin()) {
@@ -3096,15 +3219,45 @@ void loop() {
       }
       needsRedraw = true;
     } else if (lockOnPhase == LOCKON_SEARCH) {
-      const uint32_t pulseIntervalMs = (lockOnRarity == LOCKON_RARITY_LEGEND)
-          ? 110
-          : (lockOnRarity == LOCKON_RARITY_RARE ? 150 : 210);
+      uint32_t pulseIntervalMs = 210;
+      float rarityFrequencyBoost = 720.0f;
+      uint8_t vibrationLevel = 32;
+      switch (lockOnRarity) {
+        case LOCKON_RARITY_SECRET:
+          pulseIntervalMs = 70;
+          rarityFrequencyBoost = 1560.0f;
+          vibrationLevel = 68;
+          break;
+        case LOCKON_RARITY_MYTHIC:
+          pulseIntervalMs = 90;
+          rarityFrequencyBoost = 1380.0f;
+          vibrationLevel = 58;
+          break;
+        case LOCKON_RARITY_LEGEND:
+          pulseIntervalMs = 110;
+          rarityFrequencyBoost = 1200.0f;
+          vibrationLevel = 48;
+          break;
+        case LOCKON_RARITY_EPIC:
+          pulseIntervalMs = 130;
+          rarityFrequencyBoost = 980.0f;
+          vibrationLevel = 42;
+          break;
+        case LOCKON_RARITY_RARE:
+          pulseIntervalMs = 150;
+          rarityFrequencyBoost = 840.0f;
+          vibrationLevel = 36;
+          break;
+        case LOCKON_RARITY_NORMAL:
+        default:
+          break;
+      }
       if ((now - lockOnLastPulseAt) >= pulseIntervalMs) {
         lockOnLastPulseAt = now;
         const float progress = constrain(static_cast<float>(elapsedMs) / static_cast<float>(lockOnSearchDurationMs), 0.0f, 1.0f);
-        const float frequency = 680.0f + (progress * ((lockOnRarity == LOCKON_RARITY_LEGEND) ? 1200.0f : 720.0f));
+        const float frequency = 680.0f + (progress * rarityFrequencyBoost);
         M5.Speaker.tone(frequency, 45, 0, false);
-        triggerVibration((lockOnRarity == LOCKON_RARITY_LEGEND) ? 48 : 32, 30, now);
+        triggerVibration(vibrationLevel, 30, now);
       }
       if (elapsedMs >= lockOnSearchDurationMs) {
         lockOnPhase = LOCKON_RESULT_FAIL;

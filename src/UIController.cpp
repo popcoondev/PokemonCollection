@@ -750,6 +750,46 @@ void UIController::drawLockOnScreen(
     bool actionPressed,
     bool showDetailHint) {
   const auto& theme = getThemePalette(currentTheme);
+  const auto getRarityColors = [rarity]() {
+    struct RarityColors {
+      uint16_t fill;
+      uint16_t border;
+      uint16_t text;
+    };
+    switch (rarity) {
+      case 5:
+        return RarityColors{
+            lgfx::v1::color565(18, 18, 18),
+            lgfx::v1::color565(178, 70, 255),
+            lgfx::v1::color565(255, 255, 255)};
+      case 4:
+        return RarityColors{
+            lgfx::v1::color565(230, 70, 70),
+            lgfx::v1::color565(255, 190, 190),
+            lgfx::v1::color565(60, 0, 0)};
+      case 3:
+        return RarityColors{
+            lgfx::v1::color565(255, 170, 40),
+            lgfx::v1::color565(255, 235, 150),
+            lgfx::v1::color565(40, 16, 0)};
+      case 2:
+        return RarityColors{
+            lgfx::v1::color565(168, 95, 255),
+            lgfx::v1::color565(224, 190, 255),
+            lgfx::v1::color565(28, 0, 56)};
+      case 1:
+        return RarityColors{
+            lgfx::v1::color565(90, 230, 255),
+            lgfx::v1::color565(180, 250, 255),
+            lgfx::v1::color565(0, 46, 58)};
+      case 0:
+      default:
+        return RarityColors{
+            lgfx::v1::color565(255, 158, 64),
+            lgfx::v1::color565(255, 224, 160),
+            lgfx::v1::color565(84, 34, 0)};
+    }
+  };
   sprite->fillScreen(theme.bg);
 
   const uint16_t frameColor = blend565(theme.highlight, theme.surface, 180);
@@ -787,26 +827,19 @@ void UIController::drawLockOnScreen(
   if (phase == 4) {
     drawQuizPokemonImage(pokemonId, 86, 44, 148, 148);
     if (rarityLabel != nullptr && rarityLabel[0] != '\0') {
-      const bool isLegend = rarity >= 2;
-      const bool isRare = rarity == 1;
-      const int badgeW = isLegend ? 124 : (isRare ? 108 : 92);
-      const int badgeH = isLegend ? 24 : (isRare ? 20 : 18);
+      const auto rarityColors = getRarityColors();
+      const bool isLargeBadge = rarity >= 3;
+      const bool isMidBadge = rarity >= 1;
+      sprite->setFont(isLargeBadge ? &fonts::efontJA_16_b : (isMidBadge ? &fonts::efontJA_12_b : &fonts::efontJA_10));
+      const int badgeTextW = sprite->textWidth(rarityLabel);
+      const int badgeW = max(isLargeBadge ? 124 : (isMidBadge ? 108 : 92), badgeTextW + 28);
+      const int badgeH = isLargeBadge ? 24 : (isMidBadge ? 20 : 18);
       const int badgeX = (SCREEN_WIDTH - badgeW) / 2;
       const int badgeY = 152;
-      const uint16_t rarityFill = isLegend
-          ? lgfx::v1::color565(255, 170, 40)
-          : (isRare ? lgfx::v1::color565(90, 230, 255) : lgfx::v1::color565(255, 158, 64));
-      const uint16_t rarityBorder = isLegend
-          ? lgfx::v1::color565(255, 235, 150)
-          : (isRare ? lgfx::v1::color565(180, 250, 255) : lgfx::v1::color565(255, 224, 160));
-      const uint16_t rarityText = isLegend
-          ? lgfx::v1::color565(40, 16, 0)
-          : (isRare ? lgfx::v1::color565(0, 46, 58) : lgfx::v1::color565(84, 34, 0));
-      sprite->fillRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityFill);
-      sprite->drawRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityBorder);
-      sprite->setFont(isLegend ? &fonts::efontJA_16_b : (isRare ? &fonts::efontJA_12_b : &fonts::efontJA_10));
-      sprite->setTextColor(rarityText);
-      sprite->drawCenterString(rarityLabel, SCREEN_WIDTH / 2, badgeY + (isLegend ? 4 : 5));
+      sprite->fillRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityColors.fill);
+      sprite->drawRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityColors.border);
+      sprite->setTextColor(rarityColors.text);
+      sprite->drawCenterString(rarityLabel, SCREEN_WIDTH / 2, badgeY + (isLargeBadge ? 4 : 5));
     }
     sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(theme.sub);
@@ -851,14 +884,9 @@ void UIController::drawLockOnScreen(
     constexpr int barW = SCREEN_WIDTH - 72;
     constexpr int barH = 20;
     const int zoneX = zoneCenterX - (zoneWidth / 2);
-    const bool isLegend = rarity >= 2;
-    const bool isRare = rarity == 1;
-    const uint16_t zoneFill = isLegend
-        ? lgfx::v1::color565(255, 190, 70)
-        : (isRare ? lgfx::v1::color565(80, 230, 255) : blend565(theme.highlight, theme.surface, 180));
-    const uint16_t zoneBorder = isLegend
-        ? lgfx::v1::color565(255, 235, 150)
-        : (isRare ? lgfx::v1::color565(180, 250, 255) : theme.highlight);
+    const auto rarityColors = getRarityColors();
+    const uint16_t zoneFill = rarityColors.fill;
+    const uint16_t zoneBorder = rarityColors.border;
     sprite->fillRoundRect(barX, barY, barW, barH, 8, theme.surface);
     sprite->drawRoundRect(barX, barY, barW, barH, 8, theme.border);
     sprite->fillRoundRect(zoneX, barY + 2, zoneWidth, barH - 4, 6, zoneFill);
