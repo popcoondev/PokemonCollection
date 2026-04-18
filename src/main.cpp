@@ -1865,6 +1865,12 @@ uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
   return nextId;
 }
 
+void resetQuizState(QuizPhase& quizPhase, uint32_t& quizPhaseStartedAt, uint16_t& quizPokemonId, uint32_t now) {
+  quizPhase = QUIZ_A_SIDE;
+  quizPhaseStartedAt = now;
+  quizPokemonId = chooseNextQuizPokemonId(0);
+}
+
 void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, ui.getBackgroundColor());
   appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
@@ -2716,9 +2722,7 @@ void loop() {
         break;
       case ACTION_OPEN_QUIZ:
         screenMode = SCREEN_QUIZ;
-        quizPhase = QUIZ_A_SIDE;
-        quizPhaseStartedAt = millis();
-        quizPokemonId = chooseNextQuizPokemonId(0);
+        resetQuizState(quizPhase, quizPhaseStartedAt, quizPokemonId, now);
         playQuizSound(quizPhase);
         break;
       case ACTION_OPEN_SLIDESHOW:
@@ -2767,6 +2771,7 @@ void loop() {
       }
       case ACTION_CLOSE_QUIZ:
         M5.Speaker.stop();
+        resetQuizState(quizPhase, quizPhaseStartedAt, quizPokemonId, now);
         screenMode = SCREEN_MENU;
         break;
       case ACTION_SET_QUIZ_VOLUME:
