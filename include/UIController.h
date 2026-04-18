@@ -157,6 +157,13 @@ private:
       uint16_t borderColor);
   const lgfx::IFont* getFallbackFont(const lgfx::IFont* primaryFont) const;
   const char* tr(const char* ja, const char* en) const;
+  void drawOutlinedCenterString(
+      const String& text,
+      int centerX,
+      int y,
+      uint16_t fillColor,
+      uint16_t outlineColor,
+      int outlineOffset = 2);
   const lgfx::IFont* selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const;
   size_t readUtf8Glyph(const String& text, size_t index, uint16_t& codepoint, String& glyph) const;
   void drawInfoRow(const char* label, const String& value, int y);
