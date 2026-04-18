@@ -63,10 +63,19 @@ public:
       bool quizPressed,
       bool slideshowPressed,
       bool guidePressed,
+      bool achievementsPressed,
       bool settingsPressed,
       const char* volumeLabel,
       int batteryLevel,
       bool batteryCharging);
+  void drawAchievementsMenuScreen(bool lockOnPressed, bool backPressed);
+  void drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool backPressed);
+  void drawLockOnAchievementsListScreen(
+      const std::vector<String>& labels,
+      const std::vector<bool>& headerFlags,
+      bool backPressed,
+      bool prevPressed,
+      bool nextPressed);
   void drawSettingsScreen(
       bool backPressed,
       int settingsTabIndex,
