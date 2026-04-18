@@ -1323,7 +1323,12 @@ void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const Str
       : (currentLanguage == APP_LANGUAGE_EN ? "?" : "？？？？");
   const uint16_t fillColor = lgfx::v1::color565(255, 222, 80);
   const uint16_t outlineColor = lgfx::v1::color565(40, 90, 255);
-  drawOutlinedCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14, fillColor, outlineColor, 2);
+  if (currentLanguage == APP_LANGUAGE_EN) {
+    drawOutlinedCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14, fillColor, outlineColor, 2);
+  } else {
+    sprite->setTextColor(fillColor);
+    sprite->drawCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14);
+  }
 }
 
 void UIController::drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int w, int h) {
