@@ -740,6 +740,9 @@ void UIController::drawLockOnScreen(
     int phase,
     int rarity,
     const char* rarityLabel,
+    bool feverActive,
+    uint16_t feverSecondsRemaining,
+    uint8_t capturesUntilFever,
     int markerCenterX,
     int zoneCenterX,
     int zoneWidth,
@@ -822,6 +825,22 @@ void UIController::drawLockOnScreen(
     sprite->drawCenterString("GATCHA!", SCREEN_WIDTH / 2, 24);
   } else {
     sprite->drawCenterString("LOCK FAILED", SCREEN_WIDTH / 2, 24);
+  }
+
+  if (feverActive) {
+    sprite->setFont(&fonts::efontJA_12_b);
+    sprite->setTextColor(lgfx::v1::color565(255, 90, 90));
+    sprite->drawString("FEVER!", 18, 24);
+    char feverTimer[20];
+    snprintf(feverTimer, sizeof(feverTimer), "%u:%02u", feverSecondsRemaining / 60, feverSecondsRemaining % 60);
+    sprite->setTextColor(lgfx::v1::color565(255, 220, 120));
+    sprite->drawRightString(feverTimer, SCREEN_WIDTH - 18, 24);
+  } else {
+    sprite->setFont(&fonts::efontJA_10);
+    sprite->setTextColor(theme.sub);
+    char feverReady[24];
+    snprintf(feverReady, sizeof(feverReady), "NEXT FEVER %u", capturesUntilFever);
+    sprite->drawRightString(feverReady, SCREEN_WIDTH - 18, 26);
   }
 
   if (phase == 4) {

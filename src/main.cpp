@@ -331,6 +331,9 @@ int lockOnZoneCenterX = kLockOnBarX + (kLockOnBarW / 2);
 int lockOnConfirmedMarkerX = kLockOnBarX + (kLockOnBarW / 2);
 bool lockOnPendingSuccess = false;
 uint32_t lockOnLastPulseAt = 0;
+uint32_t lockOnCapturedCount = 0;
+uint32_t lockOnNextFeverCaptureCount = 10;
+uint32_t lockOnFeverEndsAt = 0;
 unsigned long vibrationStopAt = 0;
 
 uint16_t getAvailableMaxPokemonId();
@@ -386,8 +389,37 @@ void triggerVibration(uint8_t level, uint32_t durationMs, unsigned long now) {
   vibrationStopAt = (level == 0 || durationMs == 0) ? 0 : (now + durationMs);
 }
 
-LockOnRarity chooseLockOnRarity() {
+bool isLockOnFeverActive(unsigned long now) {
+  return lockOnFeverEndsAt > now;
+}
+
+uint32_t getLockOnFeverRemainingMs(unsigned long now) {
+  return isLockOnFeverActive(now) ? (lockOnFeverEndsAt - now) : 0;
+}
+
+void startLockOnFever(unsigned long now) {
+  lockOnFeverEndsAt = now + static_cast<uint32_t>(random(60000UL, 120001UL));
+}
+
+void recordLockOnCapture(unsigned long now) {
+  if (isLockOnFeverActive(now)) {
+    return;
+  }
+  lockOnCapturedCount += 1;
+  while (lockOnCapturedCount >= lockOnNextFeverCaptureCount) {
+    startLockOnFever(now);
+    lockOnNextFeverCaptureCount += 10;
+  }
+}
+
+LockOnRarity chooseLockOnRarity(bool feverActive) {
   const uint32_t roll = esp_random() % 100;
+  if (feverActive) {
+    if (roll < 9) return LOCKON_RARITY_SECRET;
+    if (roll < 34) return LOCKON_RARITY_MYTHIC;
+    if (roll < 99) return LOCKON_RARITY_LEGEND;
+    return LOCKON_RARITY_EPIC;
+  }
   if (roll < 1) return LOCKON_RARITY_SECRET;
   if (roll < 2) return LOCKON_RARITY_MYTHIC;
   if (roll < 5) return LOCKON_RARITY_LEGEND;
@@ -465,6 +497,20 @@ uint16_t choosePokemonIdFromTable(const uint16_t* ids, size_t count, uint16_t ex
   return chooseRandomPokemonIdExcluding(excludedId);
 }
 
+uint16_t choosePokemonIdFromTableExcludingSecret(const uint16_t* ids, size_t count, uint16_t excludedId) {
+  if (ids == nullptr || count == 0) {
+    return chooseRandomPokemonIdExcluding(excludedId);
+  }
+  for (int attempt = 0; attempt < 64; ++attempt) {
+    const uint16_t candidate = ids[esp_random() % count];
+    if (candidate == excludedId) continue;
+    if (isPokemonIdInVector(candidate, lockOnSecretIds)) continue;
+    if (dataMgr.getPokemonName(candidate).length() == 0) continue;
+    return candidate;
+  }
+  return chooseRandomPokemonIdExcluding(excludedId);
+}
+
 uint16_t choosePokemonIdFromVector(const std::vector<uint16_t>& ids, uint16_t excludedId) {
   if (ids.empty()) {
     return chooseRandomPokemonIdExcluding(excludedId);
@@ -484,15 +530,15 @@ uint16_t chooseLockOnPokemonId(LockOnRarity rarity, uint16_t excludedId) {
       if (!lockOnSecretIds.empty()) {
         return choosePokemonIdFromVector(lockOnSecretIds, excludedId);
       }
-      return choosePokemonIdFromTable(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
+      return choosePokemonIdFromTableExcludingSecret(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
     case LOCKON_RARITY_MYTHIC:
-      return choosePokemonIdFromTable(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
+      return choosePokemonIdFromTableExcludingSecret(kLockOnMythicIds, sizeof(kLockOnMythicIds) / sizeof(kLockOnMythicIds[0]), excludedId);
     case LOCKON_RARITY_LEGEND:
-      return choosePokemonIdFromTable(kLockOnLegendIds, sizeof(kLockOnLegendIds) / sizeof(kLockOnLegendIds[0]), excludedId);
+      return choosePokemonIdFromTableExcludingSecret(kLockOnLegendIds, sizeof(kLockOnLegendIds) / sizeof(kLockOnLegendIds[0]), excludedId);
     case LOCKON_RARITY_EPIC:
-      return choosePokemonIdFromTable(kLockOnEpicIds, sizeof(kLockOnEpicIds) / sizeof(kLockOnEpicIds[0]), excludedId);
+      return choosePokemonIdFromTableExcludingSecret(kLockOnEpicIds, sizeof(kLockOnEpicIds) / sizeof(kLockOnEpicIds[0]), excludedId);
     case LOCKON_RARITY_RARE:
-      return choosePokemonIdFromTable(kLockOnRareIds, sizeof(kLockOnRareIds) / sizeof(kLockOnRareIds[0]), excludedId);
+      return choosePokemonIdFromTableExcludingSecret(kLockOnRareIds, sizeof(kLockOnRareIds) / sizeof(kLockOnRareIds[0]), excludedId);
     case LOCKON_RARITY_NORMAL:
     default:
       return chooseRandomNormalPokemonId(excludedId);
@@ -2485,6 +2531,13 @@ void loop() {
     }
   }
 
+  if (lockOnFeverEndsAt != 0 && !isLockOnFeverActive(now)) {
+    lockOnFeverEndsAt = 0;
+    if (screenMode == SCREEN_LOCKON) {
+      needsRedraw = true;
+    }
+  }
+
   if (coverDisplaySleeping) {
     if (guideCaughtDirty && now >= guideCaughtSaveAt) {
       saveGuideCaughtFlags();
@@ -2843,7 +2896,7 @@ void loop() {
         lockOnPhase = LOCKON_READY;
         lockOnPhaseStartedAt = now;
         lockOnLastPulseAt = now;
-        lockOnRarity = chooseLockOnRarity();
+        lockOnRarity = chooseLockOnRarity(isLockOnFeverActive(now));
         lockOnPokemonId = chooseLockOnPokemonId(lockOnRarity, lockOnLastPokemonId);
         lockOnSearchDurationMs = getLockOnSearchDurationMs(lockOnRarity);
         lockOnZoneWidth = getLockOnZoneWidth(lockOnRarity);
@@ -3271,6 +3324,7 @@ void loop() {
         lockOnPhase = lockOnPendingSuccess ? LOCKON_RESULT_SUCCESS : LOCKON_RESULT_FAIL;
         lockOnPhaseStartedAt = now;
         if (lockOnPendingSuccess) {
+          recordLockOnCapture(now);
           lockOnLastPokemonId = lockOnPokemonId;
         }
         playLockOnResultSound(lockOnPendingSuccess, lockOnRarity);
@@ -3413,6 +3467,11 @@ void loop() {
       ui.drawWakeSplashScreen(progressPercent, getWakeSplashStatusText(progressPercent));
     } else if (screenMode == SCREEN_LOCKON) {
       const unsigned long phaseElapsedMs = now - lockOnPhaseStartedAt;
+      const bool feverActive = isLockOnFeverActive(now);
+      const uint16_t feverSecondsRemaining = static_cast<uint16_t>((getLockOnFeverRemainingMs(now) + 999UL) / 1000UL);
+      const uint8_t capturesUntilFever = (lockOnCapturedCount >= lockOnNextFeverCaptureCount)
+          ? 0
+          : static_cast<uint8_t>(min<uint32_t>(lockOnNextFeverCaptureCount - lockOnCapturedCount, 255));
       const int jitterOffset = (lockOnPhase == LOCKON_SEARCH)
           ? static_cast<int>((phaseElapsedMs / 70) % 3) - 1
           : 0;
@@ -3426,6 +3485,9 @@ void loop() {
           static_cast<int>(lockOnPhase),
           static_cast<int>(lockOnRarity),
           getLockOnRarityLabel(lockOnRarity),
+          feverActive,
+          feverSecondsRemaining,
+          capturesUntilFever,
           markerCenterX,
           lockOnZoneCenterX,
           lockOnZoneWidth,
