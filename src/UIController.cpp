@@ -795,13 +795,13 @@ void UIController::drawLockOnScreen(
       const int badgeY = 152;
       const uint16_t rarityFill = isLegend
           ? lgfx::v1::color565(255, 170, 40)
-          : (isRare ? lgfx::v1::color565(90, 230, 255) : blend565(theme.accent, theme.surface, 150));
+          : (isRare ? lgfx::v1::color565(90, 230, 255) : lgfx::v1::color565(255, 158, 64));
       const uint16_t rarityBorder = isLegend
           ? lgfx::v1::color565(255, 235, 150)
-          : (isRare ? lgfx::v1::color565(180, 250, 255) : blend565(theme.highlight, theme.border, 150));
+          : (isRare ? lgfx::v1::color565(180, 250, 255) : lgfx::v1::color565(255, 224, 160));
       const uint16_t rarityText = isLegend
           ? lgfx::v1::color565(40, 16, 0)
-          : (isRare ? lgfx::v1::color565(0, 46, 58) : theme.text);
+          : (isRare ? lgfx::v1::color565(0, 46, 58) : lgfx::v1::color565(84, 34, 0));
       sprite->fillRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityFill);
       sprite->drawRoundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2, rarityBorder);
       sprite->setFont(isLegend ? &fonts::efontJA_16_b : (isRare ? &fonts::efontJA_12_b : &fonts::efontJA_10));
