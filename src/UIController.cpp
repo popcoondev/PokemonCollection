@@ -1020,7 +1020,7 @@ void UIController::drawAchievementsMenuScreen(
   drawActionButton(32, 160, SCREEN_WIDTH - 64, 42, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
 }
 
-void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool backPressed) {
+void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool badgesPressed, bool backPressed) {
   const auto& theme = getThemePalette(currentTheme);
   sprite->fillScreen(theme.bg);
 
@@ -1037,9 +1037,10 @@ void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool 
   sprite->setTextColor(theme.text);
   char countLabel[48];
   snprintf(countLabel, sizeof(countLabel), "つかまえたかず : %uひき", static_cast<unsigned>(caughtCount));
-  sprite->drawCenterString(countLabel, SCREEN_WIDTH / 2, 84);
+  sprite->drawCenterString(countLabel, SCREEN_WIDTH / 2, 72);
 
-  drawActionButton(32, 126, SCREEN_WIDTH - 64, 42, tr("つかまえたリスト", "Caught List"), theme.accent, theme.invertedText, listPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(32, 114, SCREEN_WIDTH - 64, 38, tr("つかまえたリスト", "Caught List"), theme.accent, theme.invertedText, listPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(32, 162, SCREEN_WIDTH - 64, 38, tr("かくとくバッジ", "Badges"), theme.surface, theme.text, badgesPressed, theme.buttonPressedFill, theme.border);
 }
 
 void UIController::drawLockOnAchievementsListScreen(
@@ -1082,6 +1083,71 @@ void UIController::drawLockOnAchievementsListScreen(
       sprite->setTextColor(theme.text);
       sprite->drawString(truncateUtf8Label(labels[i], 24), itemX + 8, y + 5);
     }
+  }
+}
+
+void UIController::drawLockOnAchievementBadgesScreen(
+    const std::vector<String>& titles,
+    const std::vector<String>& descriptions,
+    const std::vector<bool>& unlockedFlags,
+    size_t unlockedCount,
+    size_t totalCount,
+    bool backPressed,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("かくとくバッジ", "Badges"), SCREEN_WIDTH / 2, 18);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(theme.sub);
+  char progressLabel[32];
+  snprintf(progressLabel, sizeof(progressLabel), "%u / %u", static_cast<unsigned>(unlockedCount), static_cast<unsigned>(totalCount));
+  sprite->drawRightString(progressLabel, SCREEN_WIDTH - 18, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  constexpr int itemX = 18;
+  constexpr int itemYStart = 46;
+  constexpr int itemW = SCREEN_WIDTH - 36;
+  constexpr int itemH = 52;
+  constexpr int itemGapY = 6;
+  for (int i = 0; i < static_cast<int>(titles.size()); ++i) {
+    const int y = itemYStart + (i * (itemH + itemGapY));
+    const bool unlocked = i < static_cast<int>(unlockedFlags.size()) && unlockedFlags[i];
+    const uint16_t fill = unlocked ? blend565(theme.accent, theme.surface, 120) : theme.surface;
+    const uint16_t border = unlocked ? theme.accent : theme.border;
+    const uint16_t titleColor = unlocked ? theme.invertedText : theme.text;
+    const uint16_t descColor = unlocked ? blend565(theme.invertedText, theme.accent, 80) : theme.sub;
+
+    sprite->fillRoundRect(itemX, y, itemW, itemH, 10, fill);
+    sprite->drawRoundRect(itemX, y, itemW, itemH, 10, border);
+
+    if (unlocked) {
+      sprite->fillRoundRect(itemX + itemW - 54, y + 8, 40, 16, 8, theme.invertedText);
+      sprite->setFont(&fonts::efontJA_10);
+      sprite->setTextColor(theme.accent);
+      sprite->drawCenterString("GET", itemX + itemW - 34, y + 12);
+    } else {
+      sprite->drawRoundRect(itemX + itemW - 54, y + 8, 40, 16, 8, theme.border);
+      sprite->setFont(&fonts::efontJA_10);
+      sprite->setTextColor(theme.sub);
+      sprite->drawCenterString("LOCK", itemX + itemW - 34, y + 12);
+    }
+
+    sprite->setFont(&fonts::efontJA_12_b);
+    sprite->setTextColor(titleColor);
+    sprite->drawString(titles[i], itemX + 10, y + 8);
+
+    sprite->setFont(&fonts::efontJA_10);
+    sprite->setTextColor(descColor);
+    sprite->drawString(descriptions[i], itemX + 10, y + 30);
   }
 }
 

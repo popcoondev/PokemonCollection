@@ -28,6 +28,7 @@ enum ScreenMode {
   SCREEN_ACHIEVEMENTS_MENU,
   SCREEN_ACHIEVEMENTS_LOCKON,
   SCREEN_ACHIEVEMENTS_LOCKON_LIST,
+  SCREEN_ACHIEVEMENTS_LOCKON_BADGES,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
   SCREEN_GUIDE_LOCATION_LIST,
@@ -131,6 +132,39 @@ enum LockOnRarity {
   LOCKON_RARITY_LEGEND,
   LOCKON_RARITY_MYTHIC,
   LOCKON_RARITY_SECRET,
+};
+
+enum LockOnBadgeId {
+  LOCKON_BADGE_FIRST_LOCK = 0,
+  LOCKON_BADGE_NO_MISS,
+  LOCKON_BADGE_LOCK_MASTER,
+  LOCKON_BADGE_PERFECT_CHASER,
+  LOCKON_BADGE_LOCK_HUNTER,
+  LOCKON_BADGE_LOCK_COLLECTOR,
+  LOCKON_BADGE_RARE_LOCKER,
+  LOCKON_BADGE_EPIC_HUNTER,
+  LOCKON_BADGE_LEGEND_BREAKER,
+  LOCKON_BADGE_MYTHIC_SEEKER,
+  LOCKON_BADGE_SECRET_HOLDER,
+  LOCKON_BADGE_FEVER_STAR,
+  LOCKON_BADGE_FEVER_MASTER,
+  LOCKON_BADGE_FLUSTERED,
+  LOCKON_BADGE_WHIFF_MASTER,
+  LOCKON_BADGE_CAUTIOUS,
+  LOCKON_BADGE_COUNT,
+};
+
+struct LockOnBadgeDefinition {
+  const char* titleJa;
+  const char* titleEn;
+  const char* descJa;
+  const char* descEn;
+};
+
+struct LockOnBadgeRow {
+  String title;
+  String description;
+  bool unlocked = false;
 };
 
 struct AppearanceImageRequest {
@@ -306,6 +340,21 @@ unsigned long lockOnAchievementsSaveAt = 0;
 bool achievementStatsDirty = false;
 unsigned long achievementStatsSaveAt = 0;
 uint32_t quizQuestionsViewedCount = 0;
+uint32_t lockOnTotalSuccessCount = 0;
+uint32_t lockOnTotalFailCount = 0;
+uint32_t lockOnCurrentSuccessStreak = 0;
+uint32_t lockOnMaxSuccessStreak = 0;
+uint32_t lockOnCurrentFailStreak = 0;
+uint32_t lockOnMaxFailStreak = 0;
+uint32_t lockOnRarityCaptureCounts[LOCKON_RARITY_SECRET + 1] = {};
+uint32_t lockOnTotalFeverSuccessCount = 0;
+uint32_t lockOnCurrentFeverSuccessCount = 0;
+uint32_t lockOnMaxFeverSuccessCount = 0;
+uint32_t lockOnCurrentNormalCaptureStreak = 0;
+uint32_t lockOnMaxNormalCaptureStreak = 0;
+uint32_t lockOnCurrentOutsideMissStreak = 0;
+uint32_t lockOnMaxOutsideMissStreak = 0;
+bool lockOnBadgeFeverSessionActive = false;
 bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
@@ -348,6 +397,7 @@ uint32_t lockOnCapturedCount = 0;
 uint32_t lockOnNextFeverCaptureCount = 10;
 uint32_t lockOnFeverEndsAt = 0;
 size_t lockOnAchievementsListOffset = 0;
+size_t lockOnBadgeListOffset = 0;
 unsigned long vibrationStopAt = 0;
 
 uint16_t getAvailableMaxPokemonId();
@@ -690,6 +740,163 @@ size_t countTrueFlags(const std::vector<bool>& flags) {
   return count;
 }
 
+const char* trApp(const char* ja, const char* en) {
+  return (appLanguage == APP_LANGUAGE_EN) ? en : ja;
+}
+
+const LockOnBadgeDefinition kLockOnBadgeDefinitions[LOCKON_BADGE_COUNT] = {
+    {"はじめてのロック", "First Lock", "ロックオンに1回成功", "Succeed once in Lock-On"},
+    {"ミスしらず", "No Miss", "1回も失敗せずに5回成功", "Get 5 successes without a miss"},
+    {"ロックマスター", "Lock Master", "連続で10回ロックオン成功", "Get 10 consecutive Lock-On wins"},
+    {"パーフェクトチェイサー", "Perfect Chaser", "連続で25回ロックオン成功", "Get 25 consecutive Lock-On wins"},
+    {"ロックハンター", "Lock Hunter", "ロックオンに30回成功", "Get 30 Lock-On wins"},
+    {"ロックコレクター", "Lock Collector", "ロックオンに100回成功", "Get 100 Lock-On wins"},
+    {"レアロッカー", "Rare Locker", "RAREを20ひき獲得", "Catch 20 RARE Pokemon"},
+    {"エピックハンター", "Epic Hunter", "EPICを12ひき獲得", "Catch 12 EPIC Pokemon"},
+    {"レジェンドブレイカー", "Legend Breaker", "LEGENDを8ひき獲得", "Catch 8 LEGEND Pokemon"},
+    {"ミシックシーカー", "Mythic Seeker", "MYTHICを5ひき獲得", "Catch 5 MYTHIC Pokemon"},
+    {"シークレットホルダー", "Secret Holder", "SECRETを2ひき獲得", "Catch 2 SECRET Pokemon"},
+    {"フィーバースター", "Fever Star", "フィーバータイム中に5回成功", "Get 5 FEVER successes"},
+    {"フィーバーマスター", "Fever Master", "1回のフィーバーで10回成功", "Get 10 wins in one FEVER"},
+    {"あわてんぼう", "Flustered", "ハイライトの外で5回れんぞく失敗", "Miss outside the zone 5 times in a row"},
+    {"からぶりめいじん", "Whiff Master", "ロックオンに20回失敗", "Fail Lock-On 20 times"},
+    {"びびりや", "Cautious", "10回連続でNORMALだけ獲得", "Catch only NORMAL 10 times in a row"},
+};
+
+void markAchievementStatsDirty(unsigned long now) {
+  achievementStatsDirty = true;
+  achievementStatsSaveAt = now + 500;
+}
+
+void resetLockOnBadgeSessionState() {
+  lockOnBadgeFeverSessionActive = false;
+  lockOnCurrentFeverSuccessCount = 0;
+}
+
+void updateLockOnBadgeFeverState(unsigned long now) {
+  const bool feverActive = isLockOnFeverActive(now);
+  if (feverActive && !lockOnBadgeFeverSessionActive) {
+    lockOnBadgeFeverSessionActive = true;
+    lockOnCurrentFeverSuccessCount = 0;
+  } else if (!feverActive && lockOnBadgeFeverSessionActive) {
+    lockOnBadgeFeverSessionActive = false;
+    lockOnCurrentFeverSuccessCount = 0;
+  }
+}
+
+void recordLockOnBadgeSuccess(LockOnRarity rarity, bool feverActive, unsigned long now) {
+  lockOnTotalSuccessCount += 1;
+  lockOnCurrentSuccessStreak += 1;
+  lockOnMaxSuccessStreak = max(lockOnMaxSuccessStreak, lockOnCurrentSuccessStreak);
+  lockOnCurrentFailStreak = 0;
+  lockOnCurrentOutsideMissStreak = 0;
+  if (rarity >= LOCKON_RARITY_NORMAL && rarity <= LOCKON_RARITY_SECRET) {
+    lockOnRarityCaptureCounts[rarity] += 1;
+  }
+  if (rarity == LOCKON_RARITY_NORMAL) {
+    lockOnCurrentNormalCaptureStreak += 1;
+    lockOnMaxNormalCaptureStreak = max(lockOnMaxNormalCaptureStreak, lockOnCurrentNormalCaptureStreak);
+  } else {
+    lockOnCurrentNormalCaptureStreak = 0;
+  }
+  if (feverActive) {
+    lockOnTotalFeverSuccessCount += 1;
+    if (!lockOnBadgeFeverSessionActive) {
+      lockOnBadgeFeverSessionActive = true;
+      lockOnCurrentFeverSuccessCount = 0;
+    }
+    lockOnCurrentFeverSuccessCount += 1;
+    lockOnMaxFeverSuccessCount = max(lockOnMaxFeverSuccessCount, lockOnCurrentFeverSuccessCount);
+  }
+  markAchievementStatsDirty(now);
+}
+
+void recordLockOnBadgeFailure(bool outsideZoneMiss, unsigned long now) {
+  lockOnTotalFailCount += 1;
+  lockOnCurrentSuccessStreak = 0;
+  lockOnCurrentFailStreak += 1;
+  lockOnMaxFailStreak = max(lockOnMaxFailStreak, lockOnCurrentFailStreak);
+  lockOnCurrentNormalCaptureStreak = 0;
+  if (outsideZoneMiss) {
+    lockOnCurrentOutsideMissStreak += 1;
+    lockOnMaxOutsideMissStreak = max(lockOnMaxOutsideMissStreak, lockOnCurrentOutsideMissStreak);
+  } else {
+    lockOnCurrentOutsideMissStreak = 0;
+  }
+  markAchievementStatsDirty(now);
+}
+
+bool isLockOnBadgeUnlocked(LockOnBadgeId badgeId) {
+  switch (badgeId) {
+    case LOCKON_BADGE_FIRST_LOCK:
+      return lockOnTotalSuccessCount >= 1;
+    case LOCKON_BADGE_NO_MISS:
+      return lockOnMaxSuccessStreak >= 5;
+    case LOCKON_BADGE_LOCK_MASTER:
+      return lockOnMaxSuccessStreak >= 10;
+    case LOCKON_BADGE_PERFECT_CHASER:
+      return lockOnMaxSuccessStreak >= 25;
+    case LOCKON_BADGE_LOCK_HUNTER:
+      return lockOnTotalSuccessCount >= 30;
+    case LOCKON_BADGE_LOCK_COLLECTOR:
+      return lockOnTotalSuccessCount >= 100;
+    case LOCKON_BADGE_RARE_LOCKER:
+      return lockOnRarityCaptureCounts[LOCKON_RARITY_RARE] >= 20;
+    case LOCKON_BADGE_EPIC_HUNTER:
+      return lockOnRarityCaptureCounts[LOCKON_RARITY_EPIC] >= 12;
+    case LOCKON_BADGE_LEGEND_BREAKER:
+      return lockOnRarityCaptureCounts[LOCKON_RARITY_LEGEND] >= 8;
+    case LOCKON_BADGE_MYTHIC_SEEKER:
+      return lockOnRarityCaptureCounts[LOCKON_RARITY_MYTHIC] >= 5;
+    case LOCKON_BADGE_SECRET_HOLDER:
+      return lockOnRarityCaptureCounts[LOCKON_RARITY_SECRET] >= 2;
+    case LOCKON_BADGE_FEVER_STAR:
+      return lockOnTotalFeverSuccessCount >= 5;
+    case LOCKON_BADGE_FEVER_MASTER:
+      return lockOnMaxFeverSuccessCount >= 10;
+    case LOCKON_BADGE_FLUSTERED:
+      return lockOnMaxOutsideMissStreak >= 5;
+    case LOCKON_BADGE_WHIFF_MASTER:
+      return lockOnTotalFailCount >= 20;
+    case LOCKON_BADGE_CAUTIOUS:
+      return lockOnMaxNormalCaptureStreak >= 10;
+    case LOCKON_BADGE_COUNT:
+    default:
+      return false;
+  }
+}
+
+size_t getUnlockedLockOnBadgeCount() {
+  size_t count = 0;
+  for (int badgeId = 0; badgeId < LOCKON_BADGE_COUNT; ++badgeId) {
+    if (isLockOnBadgeUnlocked(static_cast<LockOnBadgeId>(badgeId))) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+std::vector<LockOnBadgeRow> buildLockOnBadgeRows() {
+  std::vector<LockOnBadgeRow> rows;
+  rows.reserve(LOCKON_BADGE_COUNT);
+  for (int badgeId = 0; badgeId < LOCKON_BADGE_COUNT; ++badgeId) {
+    const auto& def = kLockOnBadgeDefinitions[badgeId];
+    LockOnBadgeRow row;
+    row.title = trApp(def.titleJa, def.titleEn);
+    row.description = trApp(def.descJa, def.descEn);
+    row.unlocked = isLockOnBadgeUnlocked(static_cast<LockOnBadgeId>(badgeId));
+    rows.push_back(row);
+  }
+  return rows;
+}
+
+std::vector<LockOnBadgeRow> getLockOnBadgePageRows(size_t offset, size_t pageSize) {
+  const auto rows = buildLockOnBadgeRows();
+  if (offset >= rows.size()) return {};
+  const size_t end = std::min(rows.size(), offset + pageSize);
+  return std::vector<LockOnBadgeRow>(rows.begin() + offset, rows.begin() + end);
+}
+
 size_t getGuideCaughtCount() {
   size_t count = 0;
   for (int id = 1; id <= 386 && id < static_cast<int>(guideCaughtFlags.size()); ++id) {
@@ -704,6 +911,23 @@ bool saveAchievementStats() {
   SD.mkdir("/pokemon/achievements");
   JsonDocument doc;
   doc["quiz_questions_viewed"] = quizQuestionsViewedCount;
+  JsonObject lockOnStats = doc["lockon"].to<JsonObject>();
+  lockOnStats["total_successes"] = lockOnTotalSuccessCount;
+  lockOnStats["total_fails"] = lockOnTotalFailCount;
+  lockOnStats["current_success_streak"] = lockOnCurrentSuccessStreak;
+  lockOnStats["max_success_streak"] = lockOnMaxSuccessStreak;
+  lockOnStats["current_fail_streak"] = lockOnCurrentFailStreak;
+  lockOnStats["max_fail_streak"] = lockOnMaxFailStreak;
+  lockOnStats["total_fever_successes"] = lockOnTotalFeverSuccessCount;
+  lockOnStats["max_fever_successes"] = lockOnMaxFeverSuccessCount;
+  lockOnStats["current_normal_streak"] = lockOnCurrentNormalCaptureStreak;
+  lockOnStats["max_normal_streak"] = lockOnMaxNormalCaptureStreak;
+  lockOnStats["current_outside_miss_streak"] = lockOnCurrentOutsideMissStreak;
+  lockOnStats["max_outside_miss_streak"] = lockOnMaxOutsideMissStreak;
+  JsonArray rarityCounts = lockOnStats["rarity_counts"].to<JsonArray>();
+  for (int rarity = LOCKON_RARITY_NORMAL; rarity <= LOCKON_RARITY_SECRET; ++rarity) {
+    rarityCounts.add(lockOnRarityCaptureCounts[rarity]);
+  }
 
   JsonArray pokedexArr = doc["pokedex_viewed"].to<JsonArray>();
   for (size_t id = 1; id < pokedexAchievementViewed.size(); ++id) {
@@ -728,6 +952,23 @@ bool saveAchievementStats() {
 bool loadAchievementStats() {
   ensureAchievementStatsStorageReady();
   quizQuestionsViewedCount = 0;
+  lockOnTotalSuccessCount = 0;
+  lockOnTotalFailCount = 0;
+  lockOnCurrentSuccessStreak = 0;
+  lockOnMaxSuccessStreak = 0;
+  lockOnCurrentFailStreak = 0;
+  lockOnMaxFailStreak = 0;
+  for (uint32_t& count : lockOnRarityCaptureCounts) {
+    count = 0;
+  }
+  lockOnTotalFeverSuccessCount = 0;
+  lockOnCurrentFeverSuccessCount = 0;
+  lockOnMaxFeverSuccessCount = 0;
+  lockOnCurrentNormalCaptureStreak = 0;
+  lockOnMaxNormalCaptureStreak = 0;
+  lockOnCurrentOutsideMissStreak = 0;
+  lockOnMaxOutsideMissStreak = 0;
+  resetLockOnBadgeSessionState();
   File file = SD.open(kAchievementStatsPath, FILE_READ);
   if (!file) return true;
 
@@ -739,6 +980,30 @@ bool loadAchievementStats() {
   file.close();
 
   quizQuestionsViewedCount = doc["quiz_questions_viewed"] | 0;
+  JsonObject lockOnStats = doc["lockon"].as<JsonObject>();
+  if (!lockOnStats.isNull()) {
+    lockOnTotalSuccessCount = lockOnStats["total_successes"] | 0;
+    lockOnTotalFailCount = lockOnStats["total_fails"] | 0;
+    lockOnCurrentSuccessStreak = lockOnStats["current_success_streak"] | 0;
+    lockOnMaxSuccessStreak = lockOnStats["max_success_streak"] | 0;
+    lockOnCurrentFailStreak = lockOnStats["current_fail_streak"] | 0;
+    lockOnMaxFailStreak = lockOnStats["max_fail_streak"] | 0;
+    lockOnTotalFeverSuccessCount = lockOnStats["total_fever_successes"] | 0;
+    lockOnMaxFeverSuccessCount = lockOnStats["max_fever_successes"] | 0;
+    lockOnCurrentNormalCaptureStreak = lockOnStats["current_normal_streak"] | 0;
+    lockOnMaxNormalCaptureStreak = lockOnStats["max_normal_streak"] | 0;
+    lockOnCurrentOutsideMissStreak = lockOnStats["current_outside_miss_streak"] | 0;
+    lockOnMaxOutsideMissStreak = lockOnStats["max_outside_miss_streak"] | 0;
+    JsonArray rarityCounts = lockOnStats["rarity_counts"].as<JsonArray>();
+    if (!rarityCounts.isNull()) {
+      int rarity = LOCKON_RARITY_NORMAL;
+      for (JsonVariant v : rarityCounts) {
+        if (rarity > LOCKON_RARITY_SECRET) break;
+        lockOnRarityCaptureCounts[rarity] = v.as<uint32_t>();
+        rarity += 1;
+      }
+    }
+  }
   JsonArray pokedexArr = doc["pokedex_viewed"].as<JsonArray>();
   if (!pokedexArr.isNull()) {
     for (JsonVariant v : pokedexArr) {
@@ -761,8 +1026,7 @@ void recordPokedexAchievementView(uint16_t pokemonId, unsigned long now) {
   if (pokemonId >= pokedexAchievementViewed.size()) return;
   if (!pokedexAchievementViewed[pokemonId]) {
     pokedexAchievementViewed[pokemonId] = true;
-    achievementStatsDirty = true;
-    achievementStatsSaveAt = now + 500;
+    markAchievementStatsDirty(now);
   }
 }
 
@@ -771,15 +1035,13 @@ void recordSlideshowAchievementView(uint16_t pokemonId, unsigned long now) {
   if (pokemonId >= slideshowAchievementViewed.size()) return;
   if (!slideshowAchievementViewed[pokemonId]) {
     slideshowAchievementViewed[pokemonId] = true;
-    achievementStatsDirty = true;
-    achievementStatsSaveAt = now + 500;
+    markAchievementStatsDirty(now);
   }
 }
 
 void recordQuizQuestionViewed(unsigned long now) {
   quizQuestionsViewedCount += 1;
-  achievementStatsDirty = true;
-  achievementStatsSaveAt = now + 500;
+  markAchievementStatsDirty(now);
 }
 
 void ensureLockOnAchievementsStorageReady() {
@@ -1164,6 +1426,7 @@ enum PressedControl {
   PRESS_GUIDE_LOCATION,
   PRESS_ACHIEVEMENT_LOCKON,
   PRESS_ACHIEVEMENT_LIST,
+  PRESS_ACHIEVEMENT_BADGES,
   PRESS_GUIDE_HALL_OF_FAME,
   PRESS_GUIDE_LIST_BACK,
   PRESS_GUIDE_LIST_ITEM_0,
@@ -1262,11 +1525,19 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 8)) return PRESS_ACHIEVEMENT_LIST;
+    if (hitTest(tx, ty, 32, 114, SCREEN_WIDTH - 64, 38, 8)) return PRESS_ACHIEVEMENT_LIST;
+    if (hitTest(tx, ty, 32, 162, SCREEN_WIDTH - 64, 38, 8)) return PRESS_ACHIEVEMENT_BADGES;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON_LIST) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_ACHIEVEMENTS_LOCKON_BADGES) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
@@ -1410,6 +1681,9 @@ enum PendingActionType {
   ACTION_OPEN_ACHIEVEMENTS_LOCKON_LIST,
   ACTION_CLOSE_ACHIEVEMENTS_LOCKON_LIST,
   ACTION_ACHIEVEMENTS_LOCKON_LIST_PAGE,
+  ACTION_OPEN_ACHIEVEMENTS_LOCKON_BADGES,
+  ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES,
+  ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE,
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
@@ -1488,6 +1762,7 @@ PressedControl getBackPressedControlForScreen(ScreenMode mode) {
     case SCREEN_ACHIEVEMENTS_LOCKON:
       return PRESS_GUIDE_BACK;
     case SCREEN_ACHIEVEMENTS_LOCKON_LIST:
+    case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
       return PRESS_GUIDE_LIST_BACK;
     case SCREEN_GUIDE_MENU:
       return PRESS_GUIDE_BACK;
@@ -1530,6 +1805,8 @@ PendingAction getBackPendingActionForScreen(ScreenMode mode) {
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON);
     case SCREEN_ACHIEVEMENTS_LOCKON_LIST:
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_LIST);
+    case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
+      return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES);
     case SCREEN_GUIDE_MENU:
       return makePendingAction(ACTION_CLOSE_GUIDE_MENU);
     case SCREEN_GUIDE_POKEMON_LIST:
@@ -2767,6 +3044,7 @@ void loop() {
   PressedControl portBPressedControl = PRESS_NONE;
   PendingAction portBClickedAction;
   const unsigned long now = millis();
+  updateLockOnBadgeFeverState(now);
 
   if (coverProximityReady && (now - coverLastPollAt) >= kCoverPollIntervalMs) {
     coverLastPollAt = now;
@@ -2958,6 +3236,8 @@ void loop() {
           pendingAction = makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON);
         } else if (pressedControl == PRESS_ACHIEVEMENT_LIST) {
           pendingAction = makePendingAction(ACTION_OPEN_ACHIEVEMENTS_LOCKON_LIST);
+        } else if (pressedControl == PRESS_ACHIEVEMENT_BADGES) {
+          pendingAction = makePendingAction(ACTION_OPEN_ACHIEVEMENTS_LOCKON_BADGES);
         }
       } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON_LIST) {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
@@ -2966,6 +3246,14 @@ void loop() {
           pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_LIST_PAGE, -8);
         } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
           pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_LIST_PAGE, 8);
+        }
+      } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON_BADGES) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE, -3);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE, 3);
         }
       } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
@@ -3120,6 +3408,30 @@ void loop() {
         } else if (pendingAction.value > 0) {
           lockOnAchievementsListOffset =
               (lockOnAchievementsListOffset >= maxOffset) ? 0 : (lockOnAchievementsListOffset + pageSize);
+        }
+        break;
+      }
+      case ACTION_OPEN_ACHIEVEMENTS_LOCKON_BADGES:
+        screenMode = SCREEN_ACHIEVEMENTS_LOCKON_BADGES;
+        lockOnBadgeListOffset = 0;
+        break;
+      case ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES:
+        screenMode = SCREEN_ACHIEVEMENTS_LOCKON;
+        break;
+      case ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE: {
+        const size_t totalCount = buildLockOnBadgeRows().size();
+        const size_t pageSize = 3;
+        const size_t maxOffset = (totalCount > pageSize) ? (((totalCount - 1) / pageSize) * pageSize) : 0;
+        if (totalCount == 0) {
+          lockOnBadgeListOffset = 0;
+          break;
+        }
+        if (pendingAction.value < 0) {
+          lockOnBadgeListOffset =
+              (lockOnBadgeListOffset == 0) ? maxOffset : (lockOnBadgeListOffset - pageSize);
+        } else if (pendingAction.value > 0) {
+          lockOnBadgeListOffset =
+              (lockOnBadgeListOffset >= maxOffset) ? 0 : (lockOnBadgeListOffset + pageSize);
         }
         break;
       }
@@ -3676,6 +3988,7 @@ void loop() {
       if (elapsedMs >= lockOnSearchDurationMs) {
         lockOnPhase = LOCKON_RESULT_FAIL;
         lockOnPhaseStartedAt = now;
+        recordLockOnBadgeFailure(false, now);
         playLockOnResultSound(false, lockOnRarity);
         triggerVibration(80, 100, now);
       }
@@ -3687,7 +4000,14 @@ void loop() {
         if (lockOnPendingSuccess) {
           recordLockOnAchievement(lockOnPokemonId, lockOnRarity, now);
           recordLockOnCapture(now);
+          recordLockOnBadgeSuccess(lockOnRarity, isLockOnFeverActive(now), now);
           lockOnLastPokemonId = lockOnPokemonId;
+        } else {
+          const int zoneLeft = lockOnZoneCenterX - (lockOnZoneWidth / 2);
+          const int zoneRight = zoneLeft + lockOnZoneWidth - 1;
+          const bool outsideZoneMiss =
+              lockOnConfirmedMarkerX < zoneLeft || lockOnConfirmedMarkerX > zoneRight;
+          recordLockOnBadgeFailure(outsideZoneMiss, now);
         }
         playLockOnResultSound(lockOnPendingSuccess, lockOnRarity);
       }
@@ -3917,6 +4237,7 @@ void loop() {
       ui.drawLockOnAchievementsSummaryScreen(
           getLockOnAchievementCaughtCount(),
           visualControl == PRESS_ACHIEVEMENT_LIST,
+          visualControl == PRESS_ACHIEVEMENT_BADGES,
           visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON_LIST) {
       const auto rows = getLockOnAchievementPageRows(lockOnAchievementsListOffset, 8);
@@ -3931,6 +4252,28 @@ void loop() {
       ui.drawLockOnAchievementsListScreen(
           labels,
           headerFlags,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
+    } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON_BADGES) {
+      const auto rows = getLockOnBadgePageRows(lockOnBadgeListOffset, 3);
+      std::vector<String> titles;
+      std::vector<String> descriptions;
+      std::vector<bool> unlockedFlags;
+      titles.reserve(rows.size());
+      descriptions.reserve(rows.size());
+      unlockedFlags.reserve(rows.size());
+      for (const auto& row : rows) {
+        titles.push_back(row.title);
+        descriptions.push_back(row.description);
+        unlockedFlags.push_back(row.unlocked);
+      }
+      ui.drawLockOnAchievementBadgesScreen(
+          titles,
+          descriptions,
+          unlockedFlags,
+          getUnlockedLockOnBadgeCount(),
+          LOCKON_BADGE_COUNT,
           visualControl == PRESS_GUIDE_LIST_BACK,
           visualControl == PRESS_GUIDE_LIST_PREV,
           visualControl == PRESS_GUIDE_LIST_NEXT);
