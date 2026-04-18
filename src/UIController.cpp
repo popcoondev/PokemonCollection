@@ -12,7 +12,9 @@ constexpr int kEvolutionImageOffsetX = 17;
 constexpr int kEvolutionImageOffsetY = 6;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
-constexpr const char* kQuizBackgroundPath = "/pokemon/quiz/backgrounds/quiz_bg.png";
+constexpr const char* kQuizBackgroundLegacyPath = "/pokemon/quiz/backgrounds/quiz_bg.png";
+constexpr const char* kQuizBackgroundDirJa = "/pokemon/quiz/backgrounds/ja";
+constexpr const char* kQuizBackgroundDirEn = "/pokemon/quiz/backgrounds/en";
 constexpr const char* kWakeSplashPath = "/pokemon/splash/wake_splash.png";
 constexpr uint16_t kWakeSplashAccentColor = 0x67BF;
 
@@ -249,6 +251,11 @@ String truncateUtf8Label(const String& text, int maxChars) {
 
   return out;
 }
+
+String getQuizBackgroundPath(AppLanguage language) {
+  const char* dir = (language == APP_LANGUAGE_EN) ? kQuizBackgroundDirEn : kQuizBackgroundDirJa;
+  return String(dir) + "/quiz_bg.png";
+}
 }
 
 UIController::UIController()
@@ -338,6 +345,31 @@ const lgfx::IFont* UIController::getFallbackFont(const lgfx::IFont* primaryFont)
 
 const char* UIController::tr(const char* ja, const char* en) const {
   return currentLanguage == APP_LANGUAGE_EN ? en : ja;
+}
+
+void UIController::drawOutlinedCenterString(
+    const String& text,
+    int centerX,
+    int y,
+    uint16_t fillColor,
+    uint16_t outlineColor,
+    int outlineOffset) {
+  const int offsets[8][2] = {
+      {-outlineOffset, 0},
+      {outlineOffset, 0},
+      {0, -outlineOffset},
+      {0, outlineOffset},
+      {-outlineOffset, -outlineOffset},
+      {-outlineOffset, outlineOffset},
+      {outlineOffset, -outlineOffset},
+      {outlineOffset, outlineOffset},
+  };
+  sprite->setTextColor(outlineColor);
+  for (const auto& offset : offsets) {
+    sprite->drawCenterString(text, centerX + offset[0], y + offset[1]);
+  }
+  sprite->setTextColor(fillColor);
+  sprite->drawCenterString(text, centerX, y);
 }
 
 const lgfx::IFont* UIController::selectFontForCodepoint(uint16_t codepoint, const lgfx::IFont* primaryFont) const {
@@ -1266,23 +1298,32 @@ void UIController::drawGuidePokemonDetailScreen(
 
 void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const String& answerName) {
   sprite->fillScreen(TFT_BLACK);
-  if (SD.exists(kQuizBackgroundPath)) {
-    sprite->drawPngFile(SD, kQuizBackgroundPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  String backgroundPath = getQuizBackgroundPath(currentLanguage);
+  if (!SD.exists(backgroundPath.c_str())) {
+    backgroundPath = kQuizBackgroundLegacyPath;
   }
+  if (SD.exists(backgroundPath.c_str())) {
+    sprite->drawPngFile(SD, backgroundPath.c_str(), 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  }
+
+  const int englishYOffset = (currentLanguage == APP_LANGUAGE_EN) ? 20 : 0;
 
   if (answerSide) {
-    drawQuizPokemonImage(pokemonId, 15, 15, 133, 128);
+    drawQuizPokemonImage(pokemonId, 15, 15 + englishYOffset, 133, 128);
   } else {
-    drawQuizSilhouetteImage(pokemonId, 15, 15, 133, 128);
+    drawQuizSilhouetteImage(pokemonId, 15, 15 + englishYOffset, 133, 128);
   }
 
-  sprite->setTextColor(COLOR_PK_BAR);
   sprite->setFont(&fonts::efontJA_16_b);
-  const int textBoxX = 175;
-  const int textBoxY = 30;
-  const int textBoxW = 125;
-  const String displayName = answerSide ? answerName : "？？？？";
-  sprite->drawCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14);
+  const int textBoxX = 168;
+  const int textBoxY = 24 + englishYOffset;
+  const int textBoxW = 136;
+  const String displayName = answerSide
+      ? answerName
+      : (currentLanguage == APP_LANGUAGE_EN ? "?" : "？？？？");
+  const uint16_t fillColor = lgfx::v1::color565(255, 222, 80);
+  const uint16_t outlineColor = lgfx::v1::color565(40, 90, 255);
+  drawOutlinedCenterString(displayName, textBoxX + (textBoxW / 2), textBoxY + 14, fillColor, outlineColor, 2);
 }
 
 void UIController::drawQuizSilhouetteImage(uint16_t pokemonId, int x, int y, int w, int h) {
