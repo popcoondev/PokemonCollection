@@ -88,6 +88,8 @@ public:
       const std::vector<bool>& unlockedFlags,
       size_t unlockedCount,
       size_t totalCount,
+      size_t pageIndex,
+      size_t pageCount,
       bool backPressed,
       bool prevPressed,
       bool nextPressed);

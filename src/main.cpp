@@ -4274,6 +4274,8 @@ void loop() {
           unlockedFlags,
           getUnlockedLockOnBadgeCount(),
           LOCKON_BADGE_COUNT,
+          (lockOnBadgeListOffset / 3) + 1,
+          (LOCKON_BADGE_COUNT + 2) / 3,
           visualControl == PRESS_GUIDE_LIST_BACK,
           visualControl == PRESS_GUIDE_LIST_PREV,
           visualControl == PRESS_GUIDE_LIST_NEXT);

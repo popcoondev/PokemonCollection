@@ -1092,6 +1092,8 @@ void UIController::drawLockOnAchievementBadgesScreen(
     const std::vector<bool>& unlockedFlags,
     size_t unlockedCount,
     size_t totalCount,
+    size_t pageIndex,
+    size_t pageCount,
     bool backPressed,
     bool prevPressed,
     bool nextPressed) {
@@ -1108,9 +1110,12 @@ void UIController::drawLockOnAchievementBadgesScreen(
   sprite->drawCenterString(tr("かくとくバッジ", "Badges"), SCREEN_WIDTH / 2, 18);
   sprite->setFont(&fonts::efontJA_10);
   sprite->setTextColor(theme.sub);
-  char progressLabel[32];
-  snprintf(progressLabel, sizeof(progressLabel), "%u / %u", static_cast<unsigned>(unlockedCount), static_cast<unsigned>(totalCount));
+  char progressLabel[24];
+  snprintf(progressLabel, sizeof(progressLabel), "%u/%u", static_cast<unsigned>(pageIndex), static_cast<unsigned>(pageCount));
   sprite->drawRightString(progressLabel, SCREEN_WIDTH - 18, 22);
+  char unlockedLabel[32];
+  snprintf(unlockedLabel, sizeof(unlockedLabel), "GET %u/%u", static_cast<unsigned>(unlockedCount), static_cast<unsigned>(totalCount));
+  sprite->drawString(unlockedLabel, 18, 22);
   drawDetailNavigation(prevPressed, nextPressed);
 
   constexpr int itemX = 18;
@@ -1145,9 +1150,9 @@ void UIController::drawLockOnAchievementBadgesScreen(
     sprite->setTextColor(titleColor);
     sprite->drawString(titles[i], itemX + 10, y + 8);
 
-    sprite->setFont(&fonts::efontJA_10);
+    sprite->setFont(&fonts::efontJA_12);
     sprite->setTextColor(descColor);
-    sprite->drawString(descriptions[i], itemX + 10, y + 30);
+    sprite->drawString(descriptions[i], itemX + 10, y + 28);
   }
 }
 
