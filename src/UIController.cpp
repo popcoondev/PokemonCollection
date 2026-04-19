@@ -1519,6 +1519,11 @@ void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const Str
   if (SD.exists(backgroundPath.c_str())) {
     sprite->drawPngFile(SD, backgroundPath.c_str(), 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   }
+  if (SD.exists(backgroundPath.c_str())) {
+    sprite->drawPngFile(SD, backgroundPath.c_str(), 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  }
+
+  const int englishYOffset = (currentLanguage == APP_LANGUAGE_EN) ? 20 : 0;
 
   const int englishYOffset = (currentLanguage == APP_LANGUAGE_EN) ? 20 : 0;
 
