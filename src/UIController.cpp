@@ -995,7 +995,7 @@ void UIController::drawMenuScreen(
   drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, tr("ポケモンずかん", "Pokedex"), theme.accent, theme.invertedText, pokedexPressed, theme.buttonPressedFill, theme.accent);
   drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("ポケモンクイズ", "Pokemon Quiz"), theme.surface, theme.text, quizPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("スライドショー", "Slide Show"), theme.surface, theme.text, slideshowPressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 3), menuButtonW, menuButtonH, tr("相性確認", "Matchup"), theme.surface, theme.text, matchupPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 3), menuButtonW, menuButtonH, tr("たたかう", "Battle"), theme.surface, theme.text, matchupPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, tr("こうりゃく", "Guide"), theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("せってい", "Settings"), theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("じっせき", "Achievements"), theme.surface, theme.text, achievementsPressed, theme.buttonPressedFill, theme.border);
@@ -1019,23 +1019,76 @@ void UIController::drawTypeMatchupScreen(
   }
   sprite->setFont(&fonts::efontJA_16_b);
   sprite->setTextColor(theme.text);
-  sprite->drawCenterString(tr("相性確認", "Type Matchup"), SCREEN_WIDTH / 2, 22);
+  sprite->drawCenterString(tr("たたかう", "Battle"), SCREEN_WIDTH / 2, 22);
+
+  constexpr int battleTopY = 50;
+  constexpr int battleTopH = 82;
+  constexpr int leftPanelX = 14;
+  constexpr int panelW = 132;
+  constexpr int rightPanelX = SCREEN_WIDTH - leftPanelX - panelW;
+  constexpr int panelH = 70;
+  constexpr int panelY = battleTopY + 8;
+  constexpr int lowerY = 146;
+  constexpr int textBoxX = 12;
+  constexpr int textBoxW = 208;
+  constexpr int lowerH = 78;
+  constexpr int actionBoxX = 230;
+  constexpr int actionBoxW = 78;
+
+  const uint16_t frameColor = blend565(theme.border, theme.text, 140);
+  const uint16_t boxFill = blend565(theme.surface, theme.bg, 220);
 
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.sub);
-  sprite->drawCenterString(tr("こうげきタイプ", "Attack Type"), 86, 62);
-  sprite->drawCenterString(tr("ぼうぎょタイプ", "Defense Type"), 234, 62);
-  sprite->drawCenterString("->", SCREEN_WIDTH / 2, 102);
+  sprite->drawCenterString(tr("こうげき", "Attack"), leftPanelX + (panelW / 2), panelY + 26);
+  sprite->drawCenterString(tr("ぼうぎょ", "Defense"), rightPanelX + (panelW / 2), panelY - 6);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.accent);
+  sprite->drawCenterString(">", SCREEN_WIDTH / 2, panelY + 32);
 
-  drawActionButton(20, 76, 120, 38, attackTypeLabel, theme.surface, theme.text, attackPressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(180, 76, 120, 38, defenseTypeLabel, theme.surface, theme.text, defensePressed, theme.buttonPressedFill, theme.border);
-  drawActionButton(60, 130, SCREEN_WIDTH - 120, 38, tr("確認", "Check"), theme.accent, theme.invertedText, confirmPressed, theme.buttonPressedFill, theme.accent);
+  auto drawTypeSelector = [&](int x, const char* label, bool pressed, int yOffset) {
+    const String colorKey = String(label);
+    const bool unselected = (strcmp(label, tr("みせってい", "-")) == 0);
+    const uint16_t fill = unselected ? theme.surface : typeBadgeColor(colorKey);
+    const uint16_t border = unselected ? theme.border : blend565(fill, theme.border, 120);
+    const uint16_t textColor = unselected ? theme.text : readableTextColor(fill);
+    const int buttonX = x + 6;
+    const int buttonY = panelY + 24 + yOffset;
+    const int buttonW = panelW - 12;
+    const int buttonH = 26;
+    sprite->fillRoundRect(buttonX, buttonY, buttonW, buttonH, 10, fill);
+    sprite->drawRoundRect(buttonX, buttonY, buttonW, buttonH, 10, border);
+    if (pressed) {
+      drawPressedOverlay(buttonX, buttonY, buttonW, buttonH, 10);
+    }
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(textColor);
+    sprite->drawCenterString(label, buttonX + (buttonW / 2), buttonY + 6);
+  };
 
-  sprite->fillRoundRect(18, 178, SCREEN_WIDTH - 36, 42, 10, theme.surface);
-  sprite->drawRoundRect(18, 178, SCREEN_WIDTH - 36, 42, 10, theme.border);
+  drawTypeSelector(leftPanelX, attackTypeLabel, attackPressed, 20);
+  drawTypeSelector(rightPanelX, defenseTypeLabel, defensePressed, -20);
+
+  sprite->drawRoundRect(textBoxX, lowerY, textBoxW, lowerH, 10, frameColor);
+  sprite->drawRoundRect(textBoxX + 4, lowerY + 4, textBoxW - 8, lowerH - 8, 8, frameColor);
+  sprite->fillRoundRect(textBoxX + 6, lowerY + 6, textBoxW - 12, lowerH - 12, 6, boxFill);
   sprite->setFont(&fonts::efontJA_12);
   sprite->setTextColor(theme.text);
-  sprite->drawCenterString(resultText != nullptr ? resultText : "", SCREEN_WIDTH / 2, 193);
+  if (resultText != nullptr && resultText[0] != '\0') {
+    drawWrappedText(String(resultText), textBoxX + 12, lowerY + 14, textBoxW - 24, 18, 3);
+  }
+
+  drawActionButton(
+      actionBoxX + 8,
+      lowerY + 18,
+      actionBoxW - 16,
+      38,
+      tr("こうげき", "Attack"),
+      theme.surface,
+      theme.text,
+      confirmPressed,
+      theme.buttonPressedFill,
+      theme.border);
 }
 
 void UIController::drawTypePickerScreen(
