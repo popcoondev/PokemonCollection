@@ -937,6 +937,7 @@ void UIController::drawMenuScreen(
     bool quizPressed,
     bool slideshowPressed,
     bool guidePressed,
+    bool achievementsPressed,
     bool settingsPressed,
     const char* volumeLabel,
     int batteryLevel,
@@ -987,6 +988,172 @@ void UIController::drawMenuScreen(
   drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("スライドショー", "Slide Show"), theme.surface, theme.text, slideshowPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, tr("こうりゃく", "Guide"), theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("せってい", "Settings"), theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("じっせき", "Achievements"), theme.surface, theme.text, achievementsPressed, theme.buttonPressedFill, theme.border);
+}
+
+void UIController::drawAchievementsMenuScreen(
+    size_t pokedexViewedCount,
+    uint32_t quizViewedCount,
+    size_t guideCaughtCount,
+    size_t slideshowViewedCount,
+    bool lockOnPressed,
+    bool backPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("じっせき", "Achievements"), SCREEN_WIDTH / 2, 22);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(theme.text);
+  sprite->drawString(String("ずかんでひらいたポケモン数 : ") + static_cast<unsigned>(pokedexViewedCount) + "ひき", 20, 56);
+  sprite->drawString(String("ポケモンクイズをやった数 : ") + static_cast<unsigned>(quizViewedCount) + "かい", 20, 78);
+  sprite->drawString(String("こうりゃくでつかまえた数 : ") + static_cast<unsigned>(guideCaughtCount) + "ひき", 20, 100);
+  sprite->drawString(String("スライドショーをみた数 : ") + static_cast<unsigned>(slideshowViewedCount) + "ひき", 20, 122);
+
+  drawActionButton(32, 160, SCREEN_WIDTH - 64, 42, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
+}
+
+void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool badgesPressed, bool backPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("ロックオンじっせき", "Lock-On Records"), SCREEN_WIDTH / 2, 22);
+
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  char countLabel[48];
+  snprintf(countLabel, sizeof(countLabel), "つかまえたかず : %uひき", static_cast<unsigned>(caughtCount));
+  sprite->drawCenterString(countLabel, SCREEN_WIDTH / 2, 72);
+
+  drawActionButton(32, 114, SCREEN_WIDTH - 64, 38, tr("つかまえたリスト", "Caught List"), theme.accent, theme.invertedText, listPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(32, 162, SCREEN_WIDTH - 64, 38, tr("かくとくバッジ", "Badges"), theme.surface, theme.text, badgesPressed, theme.buttonPressedFill, theme.border);
+}
+
+void UIController::drawLockOnAchievementsListScreen(
+    const std::vector<String>& labels,
+    const std::vector<bool>& headerFlags,
+    bool backPressed,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("つかまえたリスト", "Caught List"), SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  constexpr int itemX = 28;
+  constexpr int itemYStart = 48;
+  constexpr int itemW = SCREEN_WIDTH - 56;
+  constexpr int itemH = 20;
+  constexpr int itemGapY = 4;
+  for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+    const int y = itemYStart + (i * (itemH + itemGapY));
+    const bool isHeader = i < static_cast<int>(headerFlags.size()) && headerFlags[i];
+    if (isHeader) {
+      sprite->fillRoundRect(itemX, y, itemW, itemH, 6, blend565(theme.highlight, theme.surface, 80));
+      sprite->drawRoundRect(itemX, y, itemW, itemH, 6, theme.highlight);
+      sprite->setFont(&fonts::efontJA_12_b);
+      sprite->setTextColor(theme.highlight);
+      sprite->drawString(labels[i], itemX + 8, y + 5);
+    } else {
+      sprite->fillRoundRect(itemX, y, itemW, itemH, 6, theme.surface);
+      sprite->drawRoundRect(itemX, y, itemW, itemH, 6, theme.border);
+      sprite->setFont(&fonts::efontJA_12);
+      sprite->setTextColor(theme.text);
+      sprite->drawString(truncateUtf8Label(labels[i], 24), itemX + 8, y + 5);
+    }
+  }
+}
+
+void UIController::drawLockOnAchievementBadgesScreen(
+    const std::vector<String>& titles,
+    const std::vector<String>& descriptions,
+    const std::vector<bool>& unlockedFlags,
+    size_t unlockedCount,
+    size_t totalCount,
+    size_t pageIndex,
+    size_t pageCount,
+    bool backPressed,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("かくとくバッジ", "Badges"), SCREEN_WIDTH / 2, 18);
+  sprite->setFont(&fonts::efontJA_10);
+  sprite->setTextColor(theme.sub);
+  char progressLabel[24];
+  snprintf(progressLabel, sizeof(progressLabel), "%u/%u", static_cast<unsigned>(pageIndex), static_cast<unsigned>(pageCount));
+  sprite->drawRightString(progressLabel, SCREEN_WIDTH - 18, 22);
+  char unlockedLabel[32];
+  snprintf(unlockedLabel, sizeof(unlockedLabel), "GET %u/%u", static_cast<unsigned>(unlockedCount), static_cast<unsigned>(totalCount));
+  sprite->drawString(unlockedLabel, 18, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  constexpr int itemX = 18;
+  constexpr int itemYStart = 46;
+  constexpr int itemW = SCREEN_WIDTH - 36;
+  constexpr int itemH = 52;
+  constexpr int itemGapY = 6;
+  for (int i = 0; i < static_cast<int>(titles.size()); ++i) {
+    const int y = itemYStart + (i * (itemH + itemGapY));
+    const bool unlocked = i < static_cast<int>(unlockedFlags.size()) && unlockedFlags[i];
+    const uint16_t fill = unlocked ? blend565(theme.accent, theme.surface, 120) : theme.surface;
+    const uint16_t border = unlocked ? theme.accent : theme.border;
+    const uint16_t titleColor = unlocked ? theme.invertedText : theme.text;
+    const uint16_t descColor = unlocked ? blend565(theme.invertedText, theme.accent, 80) : theme.sub;
+
+    sprite->fillRoundRect(itemX, y, itemW, itemH, 10, fill);
+    sprite->drawRoundRect(itemX, y, itemW, itemH, 10, border);
+
+    if (unlocked) {
+      sprite->fillRoundRect(itemX + itemW - 54, y + 8, 40, 16, 8, theme.invertedText);
+      sprite->setFont(&fonts::efontJA_10);
+      sprite->setTextColor(theme.accent);
+      sprite->drawCenterString("GET", itemX + itemW - 34, y + 12);
+    } else {
+      sprite->drawRoundRect(itemX + itemW - 54, y + 8, 40, 16, 8, theme.border);
+      sprite->setFont(&fonts::efontJA_10);
+      sprite->setTextColor(theme.sub);
+      sprite->drawCenterString("LOCK", itemX + itemW - 34, y + 12);
+    }
+
+    sprite->setFont(&fonts::efontJA_12_b);
+    sprite->setTextColor(titleColor);
+    sprite->drawString(titles[i], itemX + 10, y + 8);
+
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(descColor);
+    sprite->drawString(descriptions[i], itemX + 10, y + 28);
+  }
 }
 
 void UIController::drawSettingsScreen(

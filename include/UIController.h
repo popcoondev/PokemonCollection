@@ -63,10 +63,36 @@ public:
       bool quizPressed,
       bool slideshowPressed,
       bool guidePressed,
+      bool achievementsPressed,
       bool settingsPressed,
       const char* volumeLabel,
       int batteryLevel,
       bool batteryCharging);
+  void drawAchievementsMenuScreen(
+      size_t pokedexViewedCount,
+      uint32_t quizViewedCount,
+      size_t guideCaughtCount,
+      size_t slideshowViewedCount,
+      bool lockOnPressed,
+      bool backPressed);
+  void drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool badgesPressed, bool backPressed);
+  void drawLockOnAchievementsListScreen(
+      const std::vector<String>& labels,
+      const std::vector<bool>& headerFlags,
+      bool backPressed,
+      bool prevPressed,
+      bool nextPressed);
+  void drawLockOnAchievementBadgesScreen(
+      const std::vector<String>& titles,
+      const std::vector<String>& descriptions,
+      const std::vector<bool>& unlockedFlags,
+      size_t unlockedCount,
+      size_t totalCount,
+      size_t pageIndex,
+      size_t pageCount,
+      bool backPressed,
+      bool prevPressed,
+      bool nextPressed);
   void drawSettingsScreen(
       bool backPressed,
       int settingsTabIndex,
