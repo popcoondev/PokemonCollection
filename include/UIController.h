@@ -62,12 +62,29 @@ public:
       bool pokedexPressed,
       bool quizPressed,
       bool slideshowPressed,
+      bool matchupPressed,
       bool guidePressed,
       bool achievementsPressed,
       bool settingsPressed,
       const char* volumeLabel,
       int batteryLevel,
       bool batteryCharging);
+  void drawTypeMatchupScreen(
+      const char* attackTypeLabel,
+      const char* defenseTypeLabel,
+      const char* resultText,
+      bool attackPressed,
+      bool defensePressed,
+      bool confirmPressed,
+      bool backPressed);
+  void drawTypePickerScreen(
+      const char* title,
+      const std::vector<String>& labels,
+      const std::vector<String>& colorKeys,
+      bool backPressed,
+      int pressedItemIndex,
+      bool prevPressed,
+      bool nextPressed);
   void drawAchievementsMenuScreen(
       size_t pokedexViewedCount,
       uint32_t quizViewedCount,

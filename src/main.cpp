@@ -25,6 +25,8 @@ enum ScreenMode {
   SCREEN_MENU = 0,
   SCREEN_LOCKON,
   SCREEN_SETTINGS,
+  SCREEN_TYPE_MATCHUP,
+  SCREEN_TYPE_PICKER,
   SCREEN_ACHIEVEMENTS_MENU,
   SCREEN_ACHIEVEMENTS_LOCKON,
   SCREEN_ACHIEVEMENTS_LOCKON_LIST,
@@ -42,6 +44,12 @@ enum ScreenMode {
   SCREEN_PREVIEW_POC,
   SCREEN_SLIDESHOW,
   SCREEN_QUIZ,
+};
+
+enum TypeMatchupMessagePhase {
+  TYPE_MATCHUP_MESSAGE_IDLE = 0,
+  TYPE_MATCHUP_MESSAGE_ATTACK,
+  TYPE_MATCHUP_MESSAGE_RESULT,
 };
 
 ScreenMode screenMode = SCREEN_MENU;
@@ -62,6 +70,7 @@ constexpr int kEvolutionImageH = 32;
 constexpr uint32_t kQuizSideDurationMs = 7000;
 constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
 constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
+constexpr const char* kUiConfirmSoundPath = "/pokemon/ui/sounds/ui_confirm_gb.wav";
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 constexpr const char* kLockOnAchievementsPath = "/pokemon/achievements/lockon.json";
@@ -87,6 +96,7 @@ constexpr uint32_t kLockOnReadyDurationMs = 400;
 constexpr uint32_t kLockOnConfirmFreezeMs = 140;
 constexpr uint32_t kLockOnSuccessDisplayMs = 4000;
 constexpr uint32_t kLockOnFailDisplayMs = 3000;
+constexpr uint32_t kTypeMatchupAttackMessageDurationMs = 800;
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
 constexpr uint16_t kLockOnRareIds[] = {
@@ -105,6 +115,36 @@ constexpr uint16_t kLockOnMythicIds[] = {
     150, 151, 382, 383, 384, 385, 386,
     483, 484, 487, 489, 490, 491, 492, 493,
 };
+constexpr const char* kPokemonTypeNamesJa[] = {
+    "ノーマル", "ほのお", "みず", "でんき", "くさ", "こおり",
+    "かくとう", "どく", "じめん", "ひこう", "エスパー", "むし",
+    "いわ", "ゴースト", "ドラゴン", "あく", "はがね", "フェアリー",
+};
+constexpr const char* kPokemonTypeNamesEn[] = {
+    "Normal", "Fire", "Water", "Electric", "Grass", "Ice",
+    "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug",
+    "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy",
+};
+constexpr uint8_t kTypeEffectivenessChart[18][18] = {
+    {10,10,10,10,10,10,10,10,10,10,10,10, 5, 0,10,10, 5,10},
+    {10, 5, 5,10,20,20,10,10,10,10,10,20, 5,10, 5,10,20,10},
+    {10,20, 5,10, 5,10,10,10,20,10,10,10,20,10, 5,10,10,10},
+    {10,10,20, 5, 5,10,10,10, 0,20,10,10,10,10, 5,10,10,10},
+    {10, 5,20,10, 5,10,10, 5,20, 5,10, 5,20,10, 5,10, 5,10},
+    {10, 5, 5,10,20, 5,10,10,20,20,10,10,10,10,20,10, 5,10},
+    {20,10,10,10,10,20,10, 5,10, 5, 5, 5,20, 0,10,20,20, 5},
+    {10,10,10,10,20,10,10, 5, 5,10,10,10, 5, 5,10,10, 0,20},
+    {10,20,10,20, 5,10,10,20,10, 0,10, 5,20,10,10,10,20,10},
+    {10,10,10, 5,20,10,20,10,10,10,10,20, 5,10,10,10, 5,10},
+    {10,10,10,10,10,10,20,20,10,10, 5,10,10,10,10, 0, 5,10},
+    {10, 5,10,10,20,10, 5, 5,10, 5,20,10,10, 5,10,20, 5, 5},
+    {10,20,10,10,10,20, 5,10, 5,20,10,20,10,10,10,10, 5,10},
+    { 0,10,10,10,10,10,10,10,10,10,20,10,10,20,10, 5,10,10},
+    {10,10,10,10,10,10,10,10,10,10,10,10,10,10,20,10, 5, 0},
+    {10,10,10,10,10,10, 5,10,10,10,20,10,10,20,10, 5,10, 5},
+    {10, 5, 5, 5,10,20,10,10,10,10,10,10,20,10,10,10, 5,20},
+    {10, 5,10,10,10,10,20, 5,10,10,10,10,10,10,20,20, 5,10},
+};
 
 enum QuizPhase {
   QUIZ_A_SIDE = 0,
@@ -114,6 +154,11 @@ enum QuizPhase {
 enum SearchMode {
   SEARCH_MODE_NUMBER = 0,
   SEARCH_MODE_NAME,
+};
+
+enum TypeMatchupPickerTarget {
+  TYPE_MATCHUP_PICKER_ATTACK = 0,
+  TYPE_MATCHUP_PICKER_DEFENSE,
 };
 
 enum LockOnPhase {
@@ -317,6 +362,7 @@ uint16_t evolutionRenderedIds[kMaxEvolutionCards] = {};
 uint32_t evolutionRenderedGeneration = 0;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
+QuizSoundCache uiConfirmSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
@@ -399,6 +445,12 @@ uint32_t lockOnFeverEndsAt = 0;
 size_t lockOnAchievementsListOffset = 0;
 size_t lockOnBadgeListOffset = 0;
 unsigned long vibrationStopAt = 0;
+int selectedAttackTypeIndex = -1;
+int selectedDefenseTypeIndex = -1;
+TypeMatchupMessagePhase typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+unsigned long typeMatchupMessageStartedAt = 0;
+TypeMatchupPickerTarget typeMatchupPickerTarget = TYPE_MATCHUP_PICKER_ATTACK;
+size_t typePickerOffset = 0;
 
 uint16_t getAvailableMaxPokemonId();
 
@@ -738,6 +790,66 @@ size_t countTrueFlags(const std::vector<bool>& flags) {
     if (flag) count += 1;
   }
   return count;
+}
+
+const char* getPokemonTypeLabel(int typeIndex, AppLanguage language) {
+  if (typeIndex < 0 || typeIndex >= 18) {
+    return (language == APP_LANGUAGE_EN) ? "-" : "みせってい";
+  }
+  return (language == APP_LANGUAGE_EN) ? kPokemonTypeNamesEn[typeIndex] : kPokemonTypeNamesJa[typeIndex];
+}
+
+String getTypeMatchupAttackText(int attackTypeIndex, AppLanguage language) {
+  if (attackTypeIndex < 0 || attackTypeIndex >= 18) {
+    return (language == APP_LANGUAGE_EN) ? "Choose an attack type first." : "こうげきタイプを えらんでね";
+  }
+
+  const char* attackLabel = getPokemonTypeLabel(attackTypeIndex, language);
+  if (language == APP_LANGUAGE_EN) {
+    return String(attackLabel) + "-type move!";
+  }
+  return String(attackLabel) + "タイプ わざ！";
+}
+
+String getTypeMatchupEffectText(int attackTypeIndex, int defenseTypeIndex, AppLanguage language, bool checked) {
+  if (!checked) {
+    return "";
+  }
+  if (attackTypeIndex < 0 || attackTypeIndex >= 18 || defenseTypeIndex < 0 || defenseTypeIndex >= 18) {
+    return (language == APP_LANGUAGE_EN) ? "Choose both types first." : "こうげきタイプと ぼうぎょタイプを えらんでね";
+  }
+
+  const uint8_t multiplier = kTypeEffectivenessChart[attackTypeIndex][defenseTypeIndex];
+
+  if (language == APP_LANGUAGE_EN) {
+    if (multiplier == 20) return "It's super effective!";
+    if (multiplier == 5) return "It's not very effective...";
+    if (multiplier == 0) return "It doesn't affect the foe...";
+    return "It hit normally!";
+  }
+
+  if (multiplier == 20) return "こうかは ばつぐんだ！";
+  if (multiplier == 5) return "こうかは いまひとつの ようだ…";
+  if (multiplier == 0) return "こうかが ない ようだ…";
+  return "ふつうに きいた！";
+}
+
+std::vector<String> getTypePickerLabels(AppLanguage language, size_t offset, size_t limit) {
+  std::vector<String> labels;
+  const size_t end = std::min<size_t>(18, offset + limit);
+  for (size_t i = offset; i < end; ++i) {
+    labels.push_back(getPokemonTypeLabel(static_cast<int>(i), language));
+  }
+  return labels;
+}
+
+std::vector<String> getTypePickerColorKeys(size_t offset, size_t limit) {
+  std::vector<String> labels;
+  const size_t end = std::min<size_t>(18, offset + limit);
+  for (size_t i = offset; i < end; ++i) {
+    labels.push_back(kPokemonTypeNamesJa[i]);
+  }
+  return labels;
 }
 
 const char* trApp(const char* ja, const char* en) {
@@ -1401,6 +1513,7 @@ enum PressedControl {
   PRESS_MENU_POKEDEX,
   PRESS_MENU_QUIZ,
   PRESS_MENU_SLIDESHOW,
+  PRESS_MENU_TYPE_MATCHUP,
   PRESS_MENU_GUIDE,
   PRESS_MENU_SETTINGS,
   PRESS_MENU_ACHIEVEMENTS,
@@ -1427,6 +1540,10 @@ enum PressedControl {
   PRESS_ACHIEVEMENT_LOCKON,
   PRESS_ACHIEVEMENT_LIST,
   PRESS_ACHIEVEMENT_BADGES,
+  PRESS_TYPE_MATCHUP_ATTACK,
+  PRESS_TYPE_MATCHUP_DEFENSE,
+  PRESS_TYPE_MATCHUP_TEXTBOX,
+  PRESS_TYPE_MATCHUP_CONFIRM,
   PRESS_GUIDE_HALL_OF_FAME,
   PRESS_GUIDE_LIST_BACK,
   PRESS_GUIDE_LIST_ITEM_0,
@@ -1464,9 +1581,35 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 24, 64, 130, 34, 8)) return PRESS_MENU_POKEDEX;
     if (hitTest(tx, ty, 24, 106, 130, 34, 8)) return PRESS_MENU_QUIZ;
     if (hitTest(tx, ty, 24, 148, 130, 34, 8)) return PRESS_MENU_SLIDESHOW;
+    if (hitTest(tx, ty, 24, 190, 130, 34, 8)) return PRESS_MENU_TYPE_MATCHUP;
     if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
     if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
     if (hitTest(tx, ty, 166, 148, 130, 34, 8)) return PRESS_MENU_ACHIEVEMENTS;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_TYPE_MATCHUP) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 20, 102, 120, 26, 8)) return PRESS_TYPE_MATCHUP_ATTACK;
+    if (hitTest(tx, ty, 180, 62, 120, 26, 8)) return PRESS_TYPE_MATCHUP_DEFENSE;
+    if (hitTest(tx, ty, 12, 146, 208, 78, 0)) return PRESS_TYPE_MATCHUP_TEXTBOX;
+    if (hitTest(tx, ty, 238, 164, 62, 38, 8)) return PRESS_TYPE_MATCHUP_CONFIRM;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_TYPE_PICKER) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      const int x = (col == 0) ? 44 : 162;
+      const int y = 48 + (row * 30);
+      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
     return PRESS_NONE;
   }
 
@@ -1674,6 +1817,16 @@ enum PendingActionType {
   ACTION_CLOSE_GUIDE_MENU,
   ACTION_OPEN_SETTINGS,
   ACTION_CLOSE_SETTINGS,
+  ACTION_OPEN_TYPE_MATCHUP,
+  ACTION_CLOSE_TYPE_MATCHUP,
+  ACTION_OPEN_TYPE_PICKER_ATTACK,
+  ACTION_OPEN_TYPE_PICKER_DEFENSE,
+  ACTION_CLOSE_TYPE_PICKER,
+  ACTION_TYPE_PICKER_PAGE,
+  ACTION_SET_ATTACK_TYPE,
+  ACTION_SET_DEFENSE_TYPE,
+  ACTION_CHECK_TYPE_MATCHUP,
+  ACTION_ADVANCE_TYPE_MATCHUP_TEXT,
   ACTION_OPEN_ACHIEVEMENTS_MENU,
   ACTION_CLOSE_ACHIEVEMENTS_MENU,
   ACTION_OPEN_ACHIEVEMENTS_LOCKON,
@@ -1757,7 +1910,10 @@ PressedControl getBackPressedControlForScreen(ScreenMode mode) {
     case SCREEN_LOCKON:
       return PRESS_LOCKON_ACTION;
     case SCREEN_SETTINGS:
+    case SCREEN_TYPE_MATCHUP:
       return PRESS_GUIDE_BACK;
+    case SCREEN_TYPE_PICKER:
+      return PRESS_GUIDE_LIST_BACK;
     case SCREEN_ACHIEVEMENTS_MENU:
     case SCREEN_ACHIEVEMENTS_LOCKON:
       return PRESS_GUIDE_BACK;
@@ -1799,6 +1955,10 @@ PendingAction getBackPendingActionForScreen(ScreenMode mode) {
       return {};
     case SCREEN_SETTINGS:
       return makePendingAction(ACTION_CLOSE_SETTINGS);
+    case SCREEN_TYPE_MATCHUP:
+      return makePendingAction(ACTION_CLOSE_TYPE_MATCHUP);
+    case SCREEN_TYPE_PICKER:
+      return makePendingAction(ACTION_CLOSE_TYPE_PICKER);
     case SCREEN_ACHIEVEMENTS_MENU:
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_MENU);
     case SCREEN_ACHIEVEMENTS_LOCKON:
@@ -2580,6 +2740,22 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
   return true;
 }
 
+void playUiConfirmSound() {
+  if (!loadQuizSound(kUiConfirmSoundPath, uiConfirmSound)) {
+    return;
+  }
+
+  M5.Speaker.stop();
+  M5.Speaker.playRaw(
+      uiConfirmSound.pcm16,
+      uiConfirmSound.sampleCount,
+      uiConfirmSound.sampleRate,
+      uiConfirmSound.stereo,
+      1,
+      0,
+      true);
+}
+
 void playQuizSound(QuizPhase phase) {
   if (phase == QUIZ_A_SIDE) {
     recordQuizQuestionViewed(millis());
@@ -2930,6 +3106,7 @@ void setup() {
     M5.Display.print("SD Error");
     while(1) delay(100);
   }
+  loadQuizSound(kUiConfirmSoundPath, uiConfirmSound);
   loadLockOnSecretIds();
   loadGuideLocations();
 
@@ -3334,12 +3511,40 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_QUIZ);
         } else if (pressedControl == PRESS_MENU_SLIDESHOW) {
           pendingAction = makePendingAction(ACTION_OPEN_SLIDESHOW);
+        } else if (pressedControl == PRESS_MENU_TYPE_MATCHUP) {
+          pendingAction = makePendingAction(ACTION_OPEN_TYPE_MATCHUP);
         } else if (pressedControl == PRESS_MENU_GUIDE) {
           pendingAction = makePendingAction(ACTION_OPEN_GUIDE_MENU);
         } else if (pressedControl == PRESS_MENU_SETTINGS) {
           pendingAction = makePendingAction(ACTION_OPEN_SETTINGS);
         } else if (pressedControl == PRESS_MENU_ACHIEVEMENTS) {
           pendingAction = makePendingAction(ACTION_OPEN_ACHIEVEMENTS_MENU);
+        }
+      } else if (screenMode == SCREEN_TYPE_MATCHUP) {
+        if (pressedControl == PRESS_GUIDE_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_TYPE_MATCHUP);
+        } else if (pressedControl == PRESS_TYPE_MATCHUP_ATTACK) {
+          pendingAction = makePendingAction(ACTION_OPEN_TYPE_PICKER_ATTACK);
+        } else if (pressedControl == PRESS_TYPE_MATCHUP_DEFENSE) {
+          pendingAction = makePendingAction(ACTION_OPEN_TYPE_PICKER_DEFENSE);
+        } else if (pressedControl == PRESS_TYPE_MATCHUP_CONFIRM) {
+          pendingAction = makePendingAction(ACTION_CHECK_TYPE_MATCHUP);
+        }
+      } else if (screenMode == SCREEN_TYPE_PICKER) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_TYPE_PICKER);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_TYPE_PICKER_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_TYPE_PICKER_PAGE, 10);
+        } else if (pressedControl >= PRESS_GUIDE_LIST_ITEM_0 && pressedControl <= PRESS_GUIDE_LIST_ITEM_9) {
+          const int pageIndex = pressedControl - PRESS_GUIDE_LIST_ITEM_0;
+          const int selectedIndex = static_cast<int>(typePickerOffset) + pageIndex;
+          if (selectedIndex >= 0 && selectedIndex < 18) {
+            pendingAction = makePendingAction(
+                (typeMatchupPickerTarget == TYPE_MATCHUP_PICKER_ATTACK) ? ACTION_SET_ATTACK_TYPE : ACTION_SET_DEFENSE_TYPE,
+                selectedIndex);
+          }
         }
       } else {
         if (pressedControl == PRESS_SEARCH_HEADER) {
@@ -3375,6 +3580,72 @@ void loop() {
 
   if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
     switch (pendingAction.type) {
+      case ACTION_OPEN_TYPE_MATCHUP:
+        screenMode = SCREEN_TYPE_MATCHUP;
+        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+        typeMatchupMessageStartedAt = 0;
+        break;
+      case ACTION_CLOSE_TYPE_MATCHUP:
+        screenMode = SCREEN_MENU;
+        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+        typeMatchupMessageStartedAt = 0;
+        break;
+      case ACTION_OPEN_TYPE_PICKER_ATTACK:
+        playUiConfirmSound();
+        screenMode = SCREEN_TYPE_PICKER;
+        typeMatchupPickerTarget = TYPE_MATCHUP_PICKER_ATTACK;
+        typePickerOffset = 0;
+        break;
+      case ACTION_OPEN_TYPE_PICKER_DEFENSE:
+        playUiConfirmSound();
+        screenMode = SCREEN_TYPE_PICKER;
+        typeMatchupPickerTarget = TYPE_MATCHUP_PICKER_DEFENSE;
+        typePickerOffset = 0;
+        break;
+      case ACTION_CLOSE_TYPE_PICKER:
+        screenMode = SCREEN_TYPE_MATCHUP;
+        break;
+      case ACTION_TYPE_PICKER_PAGE: {
+        const size_t totalCount = 18;
+        const size_t pageSize = 10;
+        const size_t maxOffset = (totalCount > pageSize) ? (((totalCount - 1) / pageSize) * pageSize) : 0;
+        if (pendingAction.value < 0) {
+          typePickerOffset = (typePickerOffset == 0) ? maxOffset : (typePickerOffset - pageSize);
+        } else if (pendingAction.value > 0) {
+          typePickerOffset = (typePickerOffset >= maxOffset) ? 0 : (typePickerOffset + pageSize);
+        }
+        break;
+      }
+      case ACTION_SET_ATTACK_TYPE:
+        selectedAttackTypeIndex = pendingAction.value;
+        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+        typeMatchupMessageStartedAt = 0;
+        playUiConfirmSound();
+        screenMode = SCREEN_TYPE_MATCHUP;
+        break;
+      case ACTION_SET_DEFENSE_TYPE:
+        selectedDefenseTypeIndex = pendingAction.value;
+        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+        typeMatchupMessageStartedAt = 0;
+        playUiConfirmSound();
+        screenMode = SCREEN_TYPE_MATCHUP;
+        break;
+      case ACTION_CHECK_TYPE_MATCHUP:
+        playUiConfirmSound();
+        if (selectedAttackTypeIndex >= 0 && selectedDefenseTypeIndex >= 0) {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
+          typeMatchupMessageStartedAt = now;
+        } else {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
+          typeMatchupMessageStartedAt = 0;
+        }
+        needsRedraw = true;
+        break;
+      case ACTION_ADVANCE_TYPE_MATCHUP_TEXT:
+        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
+        typeMatchupMessageStartedAt = 0;
+        needsRedraw = true;
+        break;
       case ACTION_OPEN_ACHIEVEMENTS_MENU:
         screenMode = SCREEN_ACHIEVEMENTS_MENU;
         break;
@@ -4056,6 +4327,14 @@ void loop() {
     previewPocShiftY = 0;
   }
 
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupAttackMessageDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
+    typeMatchupMessageStartedAt = 0;
+    needsRedraw = true;
+  }
+
   const PressedControl visualControl = (latchedControl != PRESS_NONE) ? latchedControl : heldControl;
   const bool tabChanged = lastRenderedTab != currentTab;
   if (tabChanged) {
@@ -4191,12 +4470,45 @@ void loop() {
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
           visualControl == PRESS_MENU_SLIDESHOW,
+          visualControl == PRESS_MENU_TYPE_MATCHUP,
           visualControl == PRESS_MENU_GUIDE,
           visualControl == PRESS_MENU_ACHIEVEMENTS,
           visualControl == PRESS_MENU_SETTINGS,
           getQuizVolumeStatusLabel(quizVolumeSetting),
           batteryLevel,
           batteryCharging);
+    } else if (screenMode == SCREEN_TYPE_MATCHUP) {
+      String resultText = "";
+      if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {
+        resultText = getTypeMatchupAttackText(selectedAttackTypeIndex, appLanguage);
+      } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT) {
+        resultText = getTypeMatchupAttackText(selectedAttackTypeIndex, appLanguage);
+        resultText += "\n";
+        resultText += getTypeMatchupEffectText(selectedAttackTypeIndex, selectedDefenseTypeIndex, appLanguage, true);
+      }
+      ui.drawTypeMatchupScreen(
+          getPokemonTypeLabel(selectedAttackTypeIndex, appLanguage),
+          getPokemonTypeLabel(selectedDefenseTypeIndex, appLanguage),
+          resultText.c_str(),
+          visualControl == PRESS_TYPE_MATCHUP_ATTACK,
+          visualControl == PRESS_TYPE_MATCHUP_DEFENSE,
+          visualControl == PRESS_TYPE_MATCHUP_CONFIRM,
+          visualControl == PRESS_GUIDE_BACK);
+    } else if (screenMode == SCREEN_TYPE_PICKER) {
+      const auto labels = getTypePickerLabels(appLanguage, typePickerOffset, 10);
+      const auto colorKeys = getTypePickerColorKeys(typePickerOffset, 10);
+      ui.drawTypePickerScreen(
+          (typeMatchupPickerTarget == TYPE_MATCHUP_PICKER_ATTACK)
+              ? ((appLanguage == APP_LANGUAGE_EN) ? "Attack Type" : "こうげきタイプ")
+              : ((appLanguage == APP_LANGUAGE_EN) ? "Defense Type" : "ぼうぎょタイプ"),
+          labels,
+          colorKeys,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
     } else if (screenMode == SCREEN_SETTINGS) {
       ui.drawSettingsScreen(
           visualControl == PRESS_GUIDE_BACK,

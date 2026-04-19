@@ -121,6 +121,14 @@ uint16_t blend565(uint16_t fg, uint16_t bg, uint8_t alpha) {
   return (outR << 11) | (outG << 5) | outB;
 }
 
+uint16_t readableTextColor(uint16_t color565) {
+  const uint8_t r = ((color565 >> 11) & 0x1F) * 255 / 31;
+  const uint8_t g = ((color565 >> 5) & 0x3F) * 255 / 63;
+  const uint8_t b = (color565 & 0x1F) * 255 / 31;
+  const uint16_t luminance = (r * 30 + g * 59 + b * 11) / 100;
+  return (luminance >= 140) ? TFT_BLACK : TFT_WHITE;
+}
+
 uint16_t typeBadgeColor(const String& type) {
   if (type == "ノーマル") return 0xA4B0;
   if (type == "ほのお") return 0xFBE0;
@@ -936,6 +944,7 @@ void UIController::drawMenuScreen(
     bool pokedexPressed,
     bool quizPressed,
     bool slideshowPressed,
+    bool matchupPressed,
     bool guidePressed,
     bool achievementsPressed,
     bool settingsPressed,
@@ -986,9 +995,146 @@ void UIController::drawMenuScreen(
   drawActionButton(menuLeftX, menuRowY0, menuButtonW, menuButtonH, tr("ポケモンずかん", "Pokedex"), theme.accent, theme.invertedText, pokedexPressed, theme.buttonPressedFill, theme.accent);
   drawActionButton(menuLeftX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("ポケモンクイズ", "Pokemon Quiz"), theme.surface, theme.text, quizPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("スライドショー", "Slide Show"), theme.surface, theme.text, slideshowPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuLeftX, menuRowY0 + (menuRowGap * 3), menuButtonW, menuButtonH, tr("たたかう", "Battle"), theme.surface, theme.text, matchupPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, tr("こうりゃく", "Guide"), theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("せってい", "Settings"), theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("じっせき", "Achievements"), theme.surface, theme.text, achievementsPressed, theme.buttonPressedFill, theme.border);
+}
+
+void UIController::drawTypeMatchupScreen(
+    const char* attackTypeLabel,
+    const char* defenseTypeLabel,
+    const char* resultText,
+    bool attackPressed,
+    bool defensePressed,
+    bool confirmPressed,
+    bool backPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(tr("たたかう", "Battle"), SCREEN_WIDTH / 2, 22);
+
+  constexpr int battleTopY = 50;
+  constexpr int battleTopH = 82;
+  constexpr int leftPanelX = 14;
+  constexpr int panelW = 132;
+  constexpr int rightPanelX = SCREEN_WIDTH - leftPanelX - panelW;
+  constexpr int panelH = 70;
+  constexpr int panelY = battleTopY + 8;
+  constexpr int lowerY = 146;
+  constexpr int textBoxX = 12;
+  constexpr int textBoxW = 208;
+  constexpr int lowerH = 78;
+  constexpr int actionBoxX = 230;
+  constexpr int actionBoxW = 78;
+
+  const uint16_t frameColor = blend565(theme.border, theme.text, 140);
+  const uint16_t boxFill = blend565(theme.surface, theme.bg, 220);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(theme.sub);
+  sprite->drawCenterString(tr("こうげき", "Attack"), leftPanelX + (panelW / 2), panelY + 26);
+  sprite->drawCenterString(tr("ぼうぎょ", "Defense"), rightPanelX + (panelW / 2), panelY - 6);
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.accent);
+  sprite->drawCenterString(">", SCREEN_WIDTH / 2, panelY + 32);
+
+  auto drawTypeSelector = [&](int x, const char* label, bool pressed, int yOffset) {
+    const String colorKey = String(label);
+    const bool unselected = (strcmp(label, tr("みせってい", "-")) == 0);
+    const uint16_t fill = unselected ? theme.surface : typeBadgeColor(colorKey);
+    const uint16_t border = unselected ? theme.border : blend565(fill, theme.border, 120);
+    const uint16_t textColor = unselected ? theme.text : readableTextColor(fill);
+    const int buttonX = x + 6;
+    const int buttonY = panelY + 24 + yOffset;
+    const int buttonW = panelW - 12;
+    const int buttonH = 26;
+    sprite->fillRoundRect(buttonX, buttonY, buttonW, buttonH, 10, fill);
+    sprite->drawRoundRect(buttonX, buttonY, buttonW, buttonH, 10, border);
+    if (pressed) {
+      drawPressedOverlay(buttonX, buttonY, buttonW, buttonH, 10);
+    }
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(textColor);
+    sprite->drawCenterString(label, buttonX + (buttonW / 2), buttonY + 6);
+  };
+
+  drawTypeSelector(leftPanelX, attackTypeLabel, attackPressed, 20);
+  drawTypeSelector(rightPanelX, defenseTypeLabel, defensePressed, -20);
+
+  sprite->drawRoundRect(textBoxX, lowerY, textBoxW, lowerH, 10, frameColor);
+  sprite->drawRoundRect(textBoxX + 4, lowerY + 4, textBoxW - 8, lowerH - 8, 8, frameColor);
+  sprite->fillRoundRect(textBoxX + 6, lowerY + 6, textBoxW - 12, lowerH - 12, 6, boxFill);
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(theme.text);
+  if (resultText != nullptr && resultText[0] != '\0') {
+    drawWrappedText(String(resultText), textBoxX + 12, lowerY + 14, textBoxW - 24, 18, 3);
+  }
+
+  drawActionButton(
+      actionBoxX + 8,
+      lowerY + 18,
+      actionBoxW - 16,
+      38,
+      tr("こうげき", "Attack"),
+      theme.surface,
+      theme.text,
+      confirmPressed,
+      theme.buttonPressedFill,
+      theme.border);
+}
+
+void UIController::drawTypePickerScreen(
+    const char* title,
+    const std::vector<String>& labels,
+    const std::vector<String>& colorKeys,
+    bool backPressed,
+    int pressedItemIndex,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(title, SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  constexpr int itemX[2] = {44, 162};
+  constexpr int itemYStart = 48;
+  constexpr int itemW = 114;
+  constexpr int itemH = 24;
+  constexpr int itemGapY = 6;
+  sprite->setFont(&fonts::efontJA_12);
+  for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+    const int col = i % 2;
+    const int row = i / 2;
+    const int x = itemX[col];
+    const int y = itemYStart + (row * (itemH + itemGapY));
+    const String colorKey = (i < static_cast<int>(colorKeys.size())) ? colorKeys[i] : labels[i];
+    const uint16_t fill = typeBadgeColor(colorKey);
+    const uint16_t border = blend565(fill, theme.border, 120);
+    const uint16_t textColor = readableTextColor(fill);
+    sprite->fillRoundRect(x, y, itemW, itemH, 8, fill);
+    sprite->drawRoundRect(x, y, itemW, itemH, 8, border);
+    if (pressedItemIndex == i) {
+      drawPressedOverlay(x, y, itemW, itemH, 8);
+    }
+    sprite->setTextColor(textColor);
+    sprite->drawCenterString(labels[i], x + (itemW / 2), y + 6);
+  }
 }
 
 void UIController::drawAchievementsMenuScreen(
@@ -1519,12 +1665,6 @@ void UIController::drawQuizScreen(bool answerSide, uint16_t pokemonId, const Str
   if (SD.exists(backgroundPath.c_str())) {
     sprite->drawPngFile(SD, backgroundPath.c_str(), 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
   }
-  if (SD.exists(backgroundPath.c_str())) {
-    sprite->drawPngFile(SD, backgroundPath.c_str(), 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-  }
-
-  const int englishYOffset = (currentLanguage == APP_LANGUAGE_EN) ? 20 : 0;
-
   const int englishYOffset = (currentLanguage == APP_LANGUAGE_EN) ? 20 : 0;
 
   if (answerSide) {
