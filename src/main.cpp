@@ -8,6 +8,7 @@
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/task.h>
+#include <algorithm>
 #include <math.h>
 #include <vector>
 #include "Config.h"
@@ -31,6 +32,7 @@ enum ScreenMode {
   SCREEN_ACHIEVEMENTS_LOCKON,
   SCREEN_ACHIEVEMENTS_LOCKON_LIST,
   SCREEN_ACHIEVEMENTS_LOCKON_BADGES,
+  SCREEN_MUSIC_LIST,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
   SCREEN_GUIDE_LOCATION_LIST,
@@ -52,6 +54,11 @@ enum TypeMatchupMessagePhase {
   TYPE_MATCHUP_MESSAGE_RESULT,
 };
 
+enum AudioBusKind {
+  AUDIO_BUS_BGM = 0,
+  AUDIO_BUS_SE,
+};
+
 ScreenMode screenMode = SCREEN_MENU;
 ScreenMode detailReturnScreen = SCREEN_MENU;
 
@@ -71,6 +78,10 @@ constexpr uint32_t kQuizSideDurationMs = 7000;
 constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
 constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kUiConfirmSoundPath = "/pokemon/ui/sounds/ui_confirm_gb.wav";
+constexpr const char* kTypeMatchupBgmPath = "/pokemon/bgm/type_matchup_loop.wav";
+constexpr const char* kMusicDirectoryPath = "/pokemon/sounds/music";
+constexpr size_t kMusicStreamBufferCount = 3;
+constexpr size_t kMusicStreamBufferBytes = 8192;
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
 constexpr const char* kGuideCaughtPath = "/pokemon/firered/caught.json";
 constexpr const char* kLockOnAchievementsPath = "/pokemon/achievements/lockon.json";
@@ -99,6 +110,27 @@ constexpr uint32_t kLockOnFailDisplayMs = 3000;
 constexpr uint32_t kTypeMatchupAttackMessageDurationMs = 800;
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
+
+struct __attribute__((packed)) RiffHeader {
+  char riff[4];
+  uint32_t chunkSize;
+  char wave[4];
+};
+
+struct __attribute__((packed)) WavChunkHeader {
+  char identifier[4];
+  uint32_t chunkSize;
+};
+
+struct __attribute__((packed)) WavFmtChunk {
+  uint16_t audioFmt;
+  uint16_t channels;
+  uint32_t sampleRate;
+  uint32_t bytesPerSec;
+  uint16_t blockSize;
+  uint16_t bitPerSample;
+};
+
 constexpr uint16_t kLockOnRareIds[] = {
     113, 131, 132, 133, 134, 135, 136, 137, 141, 142, 143,
     196, 197, 212, 214, 229, 233, 241, 242, 248, 306, 330,
@@ -262,6 +294,24 @@ struct QuizSoundCache {
   String path;
 };
 
+struct MusicStreamState {
+  File file;
+  bool active = false;
+  bool stereo = false;
+  uint32_t sampleRate = 44100;
+  uint32_t dataRemainingBytes = 0;
+  uint32_t dataSizeBytes = 0;
+  uint32_t dataStartOffset = 0;
+  String path = "";
+  size_t queuedBufferIndex = 0;
+};
+
+struct MusicListEntry {
+  String path;
+  String label;
+  bool isDirectory = false;
+};
+
 struct GuideLocationEntry {
   String id;
   String name;
@@ -364,6 +414,15 @@ QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizSoundCache uiConfirmSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
+std::vector<String> musicTrackPaths;
+std::vector<String> musicTrackLabels;
+std::vector<MusicListEntry> musicListEntries;
+size_t musicListOffset = 0;
+MusicStreamState musicStreamState;
+String musicNowPlayingPath = "";
+String musicNowPlayingLabel = "";
+String musicCurrentDirectoryPath = kMusicDirectoryPath;
+uint8_t musicStreamBuffers[kMusicStreamBufferCount][kMusicStreamBufferBytes] = {};
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 std::vector<uint16_t> lockOnSecretIds;
@@ -544,6 +603,289 @@ LockOnRarity chooseLockOnRarity(bool feverActive) {
   return LOCKON_RARITY_NORMAL;
 }
 
+int getAudioChannelForBus(AudioBusKind bus) {
+  switch (bus) {
+    case AUDIO_BUS_BGM: return 0;
+    case AUDIO_BUS_SE:
+    default: return 1;
+  }
+}
+
+void audioStopAll() {
+  M5.Speaker.stop();
+}
+
+void audioStopBus(AudioBusKind bus) {
+  M5.Speaker.stop(getAudioChannelForBus(bus));
+}
+
+void audioSetMasterVolume(uint8_t volume) {
+  M5.Speaker.setVolume(volume);
+}
+
+bool audioPlayTone(AudioBusKind bus, float frequency, uint32_t durationMs, bool stopCurrentSound = true) {
+  return M5.Speaker.tone(frequency, durationMs, getAudioChannelForBus(bus), stopCurrentSound);
+}
+
+bool audioPlayRaw16(
+    AudioBusKind bus,
+    const int16_t* rawData,
+    size_t sampleCount,
+    uint32_t sampleRate,
+    bool stereo,
+    uint32_t repeat = 1,
+    bool stopCurrentSound = false) {
+  return M5.Speaker.playRaw(
+      rawData,
+      sampleCount,
+      sampleRate,
+      stereo,
+      repeat,
+      getAudioChannelForBus(bus),
+      stopCurrentSound);
+}
+
+String getMusicTrackLabelFromPath(const String& path) {
+  const int slash = path.lastIndexOf('/');
+  String label = (slash >= 0) ? path.substring(slash + 1) : path;
+  const int dot = label.lastIndexOf('.');
+  if (dot > 0) {
+    label.remove(dot);
+  }
+  return label;
+}
+
+bool hasWavExtension(const String& path) {
+  String lower = path;
+  lower.toLowerCase();
+  return lower.endsWith(".wav");
+}
+
+String getLastPathSegment(const String& path);
+
+bool shouldHideMusicEntry(const String& path) {
+  const String name = getLastPathSegment(path);
+  return name.startsWith(".") || name.startsWith("._");
+}
+
+void serviceMusicStream();
+
+String getParentDirectoryPath(const String& path) {
+  if (path.length() == 0 || path == "/") return "/";
+  int slash = path.lastIndexOf('/');
+  if (slash <= 0) return "/";
+  return path.substring(0, slash);
+}
+
+String getLastPathSegment(const String& path) {
+  const int slash = path.lastIndexOf('/');
+  return (slash >= 0) ? path.substring(slash + 1) : path;
+}
+
+void stopMusicStream(bool clearNowPlaying = false) {
+  audioStopBus(AUDIO_BUS_BGM);
+  if (musicStreamState.file) {
+    musicStreamState.file.close();
+  }
+  musicStreamState.active = false;
+  musicStreamState.stereo = false;
+  musicStreamState.sampleRate = 44100;
+  musicStreamState.dataRemainingBytes = 0;
+  musicStreamState.dataSizeBytes = 0;
+  musicStreamState.dataStartOffset = 0;
+  musicStreamState.path = "";
+  musicStreamState.queuedBufferIndex = 0;
+  if (clearNowPlaying) {
+    musicNowPlayingPath = "";
+    musicNowPlayingLabel = "";
+  }
+}
+
+void refreshMusicTrackList() {
+  musicTrackPaths.clear();
+  musicTrackLabels.clear();
+  musicListEntries.clear();
+  musicListOffset = 0;
+
+  File dir = SD.open(musicCurrentDirectoryPath.c_str(), FILE_READ);
+  if (!dir || !dir.isDirectory()) {
+    if (dir) dir.close();
+    return;
+  }
+
+  File entry = dir.openNextFile();
+  while (entry) {
+    String path = entry.path();
+    if (shouldHideMusicEntry(path)) {
+      entry.close();
+      entry = dir.openNextFile();
+      continue;
+    }
+    if (entry.isDirectory()) {
+      MusicListEntry item;
+      item.path = path;
+      item.label = String("[") + getLastPathSegment(path) + "]";
+      item.isDirectory = true;
+      musicListEntries.push_back(item);
+    } else {
+      if (hasWavExtension(path)) {
+        MusicListEntry item;
+        item.path = path;
+        item.label = getMusicTrackLabelFromPath(path);
+        item.isDirectory = false;
+        musicListEntries.push_back(item);
+      }
+    }
+    entry.close();
+    entry = dir.openNextFile();
+  }
+  dir.close();
+
+  std::vector<size_t> order(musicListEntries.size());
+  for (size_t i = 0; i < order.size(); ++i) {
+    order[i] = i;
+  }
+  std::sort(order.begin(), order.end(), [](size_t a, size_t b) {
+    const auto& lhs = musicListEntries[a];
+    const auto& rhs = musicListEntries[b];
+    if (lhs.isDirectory != rhs.isDirectory) {
+      return lhs.isDirectory > rhs.isDirectory;
+    }
+    return lhs.label < rhs.label;
+  });
+
+  std::vector<MusicListEntry> sortedEntries;
+  sortedEntries.reserve(order.size());
+  for (size_t index : order) {
+    sortedEntries.push_back(musicListEntries[index]);
+  }
+  musicListEntries.swap(sortedEntries);
+}
+
+bool beginMusicStream(const String& path) {
+  stopMusicStream(false);
+
+  File file = SD.open(path.c_str(), FILE_READ);
+  if (!file) {
+    return false;
+  }
+
+  RiffHeader riff = {};
+  if (file.read(reinterpret_cast<uint8_t*>(&riff), sizeof(riff)) != sizeof(riff)
+      || memcmp(riff.riff, "RIFF", 4) != 0
+      || memcmp(riff.wave, "WAVE", 4) != 0) {
+    file.close();
+    return false;
+  }
+
+  bool foundFmt = false;
+  bool foundData = false;
+  WavFmtChunk fmt = {};
+  uint32_t dataOffset = 0;
+  uint32_t dataSize = 0;
+
+  while (file.available() >= static_cast<int>(sizeof(WavChunkHeader))) {
+    WavChunkHeader chunk = {};
+    if (file.read(reinterpret_cast<uint8_t*>(&chunk), sizeof(chunk)) != sizeof(chunk)) {
+      break;
+    }
+
+    if (memcmp(chunk.identifier, "fmt ", 4) == 0) {
+      if (chunk.chunkSize < sizeof(WavFmtChunk)) {
+        file.close();
+        return false;
+      }
+      if (file.read(reinterpret_cast<uint8_t*>(&fmt), sizeof(fmt)) != sizeof(fmt)) {
+        file.close();
+        return false;
+      }
+      if (chunk.chunkSize > sizeof(WavFmtChunk)) {
+        file.seek(file.position() + (chunk.chunkSize - sizeof(WavFmtChunk)));
+      }
+      foundFmt = true;
+    } else if (memcmp(chunk.identifier, "data", 4) == 0) {
+      dataOffset = file.position();
+      dataSize = chunk.chunkSize;
+      file.seek(file.position() + chunk.chunkSize);
+      foundData = true;
+    } else {
+      file.seek(file.position() + chunk.chunkSize);
+    }
+
+    if (chunk.chunkSize & 1) {
+      file.seek(file.position() + 1);
+    }
+    if (foundFmt && foundData) {
+      break;
+    }
+  }
+
+  if (!foundFmt
+      || !foundData
+      || fmt.audioFmt != 1
+      || fmt.channels != 2
+      || fmt.sampleRate != 44100
+      || fmt.bitPerSample != 16) {
+    file.close();
+    return false;
+  }
+
+  if (!file.seek(dataOffset)) {
+    file.close();
+    return false;
+  }
+
+  musicStreamState.file = file;
+  musicStreamState.active = true;
+  musicStreamState.stereo = true;
+  musicStreamState.sampleRate = fmt.sampleRate;
+  musicStreamState.dataRemainingBytes = dataSize;
+  musicStreamState.dataSizeBytes = dataSize;
+  musicStreamState.dataStartOffset = dataOffset;
+  musicStreamState.path = path;
+  musicStreamState.queuedBufferIndex = 0;
+  musicNowPlayingPath = path;
+  musicNowPlayingLabel = getMusicTrackLabelFromPath(path);
+  audioStopBus(AUDIO_BUS_BGM);
+  serviceMusicStream();
+  return true;
+}
+
+void serviceMusicStream() {
+  if (!musicStreamState.active || !musicStreamState.file) {
+    return;
+  }
+
+  const uint8_t channel = getAudioChannelForBus(AUDIO_BUS_BGM);
+  while (musicStreamState.active && M5.Speaker.isPlaying(channel) < 2) {
+    if (musicStreamState.dataRemainingBytes == 0) {
+      if (!musicStreamState.file.seek(musicStreamState.dataStartOffset)) {
+        stopMusicStream(false);
+        return;
+      }
+      musicStreamState.dataRemainingBytes = musicStreamState.dataSizeBytes;
+    }
+
+    size_t len = std::min<size_t>(musicStreamState.dataRemainingBytes, kMusicStreamBufferBytes);
+    len = musicStreamState.file.read(musicStreamBuffers[musicStreamState.queuedBufferIndex], len);
+    if (len == 0) {
+      stopMusicStream(false);
+      return;
+    }
+
+    musicStreamState.dataRemainingBytes -= len;
+    audioPlayRaw16(
+        AUDIO_BUS_BGM,
+        reinterpret_cast<const int16_t*>(musicStreamBuffers[musicStreamState.queuedBufferIndex]),
+        len / sizeof(int16_t),
+        musicStreamState.sampleRate,
+        musicStreamState.stereo,
+        1,
+        false);
+    musicStreamState.queuedBufferIndex = (musicStreamState.queuedBufferIndex + 1) % kMusicStreamBufferCount;
+  }
+}
+
 bool isPokemonIdInTable(uint16_t pokemonId, const uint16_t* ids, size_t count) {
   if (ids == nullptr) return false;
   for (size_t i = 0; i < count; ++i) {
@@ -680,48 +1022,48 @@ const char* getLockOnRarityLabel(LockOnRarity rarity) {
 }
 
 void playLockOnResultSound(bool success, LockOnRarity rarity) {
-  M5.Speaker.stop();
+  audioStopBus(AUDIO_BUS_SE);
   if (!success) {
-    M5.Speaker.tone(420, 90, 0, true);
-    M5.Speaker.tone(280, 180, 0, false);
+    audioPlayTone(AUDIO_BUS_SE, 420, 90, true);
+    audioPlayTone(AUDIO_BUS_SE, 280, 180, false);
     return;
   }
 
   switch (rarity) {
     case LOCKON_RARITY_SECRET:
-      M5.Speaker.tone(1200, 40, 0, true);
-      M5.Speaker.tone(1700, 50, 0, false);
-      M5.Speaker.tone(2100, 60, 0, false);
-      M5.Speaker.tone(2600, 70, 0, false);
-      M5.Speaker.tone(3200, 220, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 1200, 40, true);
+      audioPlayTone(AUDIO_BUS_SE, 1700, 50, false);
+      audioPlayTone(AUDIO_BUS_SE, 2100, 60, false);
+      audioPlayTone(AUDIO_BUS_SE, 2600, 70, false);
+      audioPlayTone(AUDIO_BUS_SE, 3200, 220, false);
       break;
     case LOCKON_RARITY_MYTHIC:
-      M5.Speaker.tone(1100, 50, 0, true);
-      M5.Speaker.tone(1480, 60, 0, false);
-      M5.Speaker.tone(1860, 70, 0, false);
-      M5.Speaker.tone(2340, 180, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 1100, 50, true);
+      audioPlayTone(AUDIO_BUS_SE, 1480, 60, false);
+      audioPlayTone(AUDIO_BUS_SE, 1860, 70, false);
+      audioPlayTone(AUDIO_BUS_SE, 2340, 180, false);
       break;
     case LOCKON_RARITY_LEGEND:
-      M5.Speaker.tone(1320, 70, 0, true);
-      M5.Speaker.tone(1760, 80, 0, false);
-      M5.Speaker.tone(2210, 110, 0, false);
-      M5.Speaker.tone(2640, 220, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 1320, 70, true);
+      audioPlayTone(AUDIO_BUS_SE, 1760, 80, false);
+      audioPlayTone(AUDIO_BUS_SE, 2210, 110, false);
+      audioPlayTone(AUDIO_BUS_SE, 2640, 220, false);
       break;
     case LOCKON_RARITY_EPIC:
-      M5.Speaker.tone(980, 60, 0, true);
-      M5.Speaker.tone(1320, 70, 0, false);
-      M5.Speaker.tone(1640, 80, 0, false);
-      M5.Speaker.tone(1980, 150, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 980, 60, true);
+      audioPlayTone(AUDIO_BUS_SE, 1320, 70, false);
+      audioPlayTone(AUDIO_BUS_SE, 1640, 80, false);
+      audioPlayTone(AUDIO_BUS_SE, 1980, 150, false);
       break;
     case LOCKON_RARITY_RARE:
-      M5.Speaker.tone(1040, 70, 0, true);
-      M5.Speaker.tone(1390, 80, 0, false);
-      M5.Speaker.tone(1760, 180, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 1040, 70, true);
+      audioPlayTone(AUDIO_BUS_SE, 1390, 80, false);
+      audioPlayTone(AUDIO_BUS_SE, 1760, 180, false);
       break;
     case LOCKON_RARITY_NORMAL:
     default:
-      M5.Speaker.tone(880, 80, 0, true);
-      M5.Speaker.tone(1320, 180, 0, false);
+      audioPlayTone(AUDIO_BUS_SE, 880, 80, true);
+      audioPlayTone(AUDIO_BUS_SE, 1320, 180, false);
       break;
   }
 }
@@ -1517,6 +1859,7 @@ enum PressedControl {
   PRESS_MENU_GUIDE,
   PRESS_MENU_SETTINGS,
   PRESS_MENU_ACHIEVEMENTS,
+  PRESS_MENU_MUSIC,
   PRESS_MENU_3D,
   PRESS_MENU_PREVIEW_CAPTION,
   PRESS_MENU_SETTINGS_TAB_0,
@@ -1585,6 +1928,21 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
     if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
     if (hitTest(tx, ty, 166, 148, 130, 34, 8)) return PRESS_MENU_ACHIEVEMENTS;
+    if (hitTest(tx, ty, 166, 190, 130, 34, 8)) return PRESS_MENU_MUSIC;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_MUSIC_LIST) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    for (int i = 0; i < 10; ++i) {
+      const int x = 30;
+      const int y = 46 + (i * 32);
+      if (hitTest(tx, ty, x, y, SCREEN_WIDTH - 60, 26, 8)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
     return PRESS_NONE;
   }
 
@@ -1837,6 +2195,11 @@ enum PendingActionType {
   ACTION_OPEN_ACHIEVEMENTS_LOCKON_BADGES,
   ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES,
   ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE,
+  ACTION_OPEN_MUSIC_LIST,
+  ACTION_CLOSE_MUSIC_LIST,
+  ACTION_MUSIC_LIST_PAGE,
+  ACTION_MUSIC_OPEN_DIRECTORY,
+  ACTION_MUSIC_PLAY_TRACK,
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
@@ -1919,6 +2282,7 @@ PressedControl getBackPressedControlForScreen(ScreenMode mode) {
       return PRESS_GUIDE_BACK;
     case SCREEN_ACHIEVEMENTS_LOCKON_LIST:
     case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
+    case SCREEN_MUSIC_LIST:
       return PRESS_GUIDE_LIST_BACK;
     case SCREEN_GUIDE_MENU:
       return PRESS_GUIDE_BACK;
@@ -1967,6 +2331,8 @@ PendingAction getBackPendingActionForScreen(ScreenMode mode) {
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_LIST);
     case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES);
+    case SCREEN_MUSIC_LIST:
+      return makePendingAction(ACTION_CLOSE_MUSIC_LIST);
     case SCREEN_GUIDE_MENU:
       return makePendingAction(ACTION_CLOSE_GUIDE_MENU);
     case SCREEN_GUIDE_POKEMON_LIST:
@@ -2443,7 +2809,7 @@ QuizVolumeSetting parseQuizVolumeKey(const char* value) {
 }
 
 void applyQuizVolume() {
-  M5.Speaker.setVolume(getQuizVolumeValue(quizVolumeSetting));
+  audioSetMasterVolume(getQuizVolumeValue(quizVolumeSetting));
 }
 
 const char* getQuizSoundLanguageDir(AppLanguage language) {
@@ -2630,26 +2996,6 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
     releaseQuizSoundCache(cache);
   }
 
-  struct __attribute__((packed)) RiffHeader {
-    char riff[4];
-    uint32_t chunkSize;
-    char wave[4];
-  };
-
-  struct __attribute__((packed)) WavChunkHeader {
-    char identifier[4];
-    uint32_t chunkSize;
-  };
-
-  struct __attribute__((packed)) WavFmtChunk {
-    uint16_t audioFmt;
-    uint16_t channels;
-    uint32_t sampleRate;
-    uint32_t bytesPerSec;
-    uint16_t blockSize;
-    uint16_t bitPerSample;
-  };
-
   File file = SD.open(path, FILE_READ);
   if (!file) {
     return false;
@@ -2745,14 +3091,14 @@ void playUiConfirmSound() {
     return;
   }
 
-  M5.Speaker.stop();
-  M5.Speaker.playRaw(
+  audioStopBus(AUDIO_BUS_SE);
+  audioPlayRaw16(
+      AUDIO_BUS_SE,
       uiConfirmSound.pcm16,
       uiConfirmSound.sampleCount,
       uiConfirmSound.sampleRate,
       uiConfirmSound.stereo,
       1,
-      0,
       true);
 }
 
@@ -2769,15 +3115,19 @@ void playQuizSound(QuizPhase phase) {
     return;
   }
 
-  M5.Speaker.stop();
-  M5.Speaker.playRaw(
+  audioStopBus(AUDIO_BUS_SE);
+  audioPlayRaw16(
+      AUDIO_BUS_SE,
       cache.pcm16,
       cache.sampleCount,
       cache.sampleRate,
       cache.stereo,
       1,
-      0,
       true);
+}
+
+void playTypeMatchupBgm() {
+  beginMusicStream(kTypeMatchupBgmPath);
 }
 
 uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
@@ -3094,7 +3444,7 @@ void setup() {
     M5.Speaker.config(spk_cfg);
   }
   M5.Speaker.begin();
-  M5.Speaker.setVolume(128);
+  audioSetMasterVolume(128);
   M5.Display.setBrightness(kDisplayBrightnessOn);
 
   if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
@@ -3222,6 +3572,7 @@ void loop() {
   PendingAction portBClickedAction;
   const unsigned long now = millis();
   updateLockOnBadgeFeverState(now);
+  serviceMusicStream();
 
   if (coverProximityReady && (now - coverLastPollAt) >= kCoverPollIntervalMs) {
     coverLastPollAt = now;
@@ -3519,6 +3870,23 @@ void loop() {
           pendingAction = makePendingAction(ACTION_OPEN_SETTINGS);
         } else if (pressedControl == PRESS_MENU_ACHIEVEMENTS) {
           pendingAction = makePendingAction(ACTION_OPEN_ACHIEVEMENTS_MENU);
+        } else if (pressedControl == PRESS_MENU_MUSIC) {
+          pendingAction = makePendingAction(ACTION_OPEN_MUSIC_LIST);
+        }
+      } else if (screenMode == SCREEN_MUSIC_LIST) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_MUSIC_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, 10);
+        } else if (pressedControl >= PRESS_GUIDE_LIST_ITEM_0 && pressedControl <= PRESS_GUIDE_LIST_ITEM_9) {
+          const size_t itemIndex = musicListOffset + static_cast<size_t>(pressedControl - PRESS_GUIDE_LIST_ITEM_0);
+          if (itemIndex < musicListEntries.size()) {
+            pendingAction = makePendingAction(
+                musicListEntries[itemIndex].isDirectory ? ACTION_MUSIC_OPEN_DIRECTORY : ACTION_MUSIC_PLAY_TRACK,
+                static_cast<int>(itemIndex));
+          }
         }
       } else if (screenMode == SCREEN_TYPE_MATCHUP) {
         if (pressedControl == PRESS_GUIDE_BACK) {
@@ -3580,12 +3948,51 @@ void loop() {
 
   if (pendingAction.type != ACTION_NONE && latchedControl != PRESS_NONE) {
     switch (pendingAction.type) {
+      case ACTION_OPEN_MUSIC_LIST:
+        musicCurrentDirectoryPath = kMusicDirectoryPath;
+        refreshMusicTrackList();
+        musicListOffset = 0;
+        screenMode = SCREEN_MUSIC_LIST;
+        break;
+      case ACTION_CLOSE_MUSIC_LIST:
+        if (musicCurrentDirectoryPath != kMusicDirectoryPath) {
+          musicCurrentDirectoryPath = getParentDirectoryPath(musicCurrentDirectoryPath);
+          refreshMusicTrackList();
+        } else {
+          stopMusicStream(true);
+          screenMode = SCREEN_MENU;
+        }
+        break;
+      case ACTION_MUSIC_LIST_PAGE: {
+        const size_t pageSize = 10;
+        const size_t totalCount = musicListEntries.size();
+        const size_t maxOffset = (totalCount > pageSize) ? (((totalCount - 1) / pageSize) * pageSize) : 0;
+        if (pendingAction.value < 0) {
+          musicListOffset = (musicListOffset == 0) ? maxOffset : (musicListOffset - pageSize);
+        } else if (pendingAction.value > 0) {
+          musicListOffset = (musicListOffset >= maxOffset) ? 0 : (musicListOffset + pageSize);
+        }
+        break;
+      }
+      case ACTION_MUSIC_OPEN_DIRECTORY:
+        if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
+          musicCurrentDirectoryPath = musicListEntries[static_cast<size_t>(pendingAction.value)].path;
+          refreshMusicTrackList();
+        }
+        break;
+      case ACTION_MUSIC_PLAY_TRACK:
+        if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
+          beginMusicStream(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+        }
+        break;
       case ACTION_OPEN_TYPE_MATCHUP:
         screenMode = SCREEN_TYPE_MATCHUP;
+        playTypeMatchupBgm();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
         break;
       case ACTION_CLOSE_TYPE_MATCHUP:
+        stopMusicStream(true);
         screenMode = SCREEN_MENU;
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
@@ -3844,14 +4251,14 @@ void loop() {
         lockOnSearchDurationMs = getLockOnSearchDurationMs(lockOnRarity);
         lockOnZoneWidth = getLockOnZoneWidth(lockOnRarity);
         lockOnZoneCenterX = chooseLockOnZoneCenterX(lockOnZoneWidth);
-        M5.Speaker.stop();
-        M5.Speaker.tone(1240, 90);
+        audioStopAll();
+        audioPlayTone(AUDIO_BUS_SE, 1240, 90);
         triggerVibration(72, 60, now);
         break;
       case ACTION_CLOSE_LOCKON:
         screenMode = SCREEN_MENU;
         lockOnPhase = LOCKON_IDLE;
-        M5.Speaker.stop();
+        audioStopAll();
         triggerVibration(0, 0, now);
         break;
       case ACTION_OPEN_QUIZ:
@@ -3904,7 +4311,7 @@ void loop() {
         break;
       }
       case ACTION_CLOSE_QUIZ:
-        M5.Speaker.stop();
+        audioStopAll();
         resetQuizState(quizPhase, quizPhaseStartedAt, quizPokemonId, now);
         screenMode = SCREEN_MENU;
         break;
@@ -4096,8 +4503,8 @@ void loop() {
         lockOnPendingSuccess = markerX >= zoneLeft && markerX <= zoneRight;
         lockOnPhase = LOCKON_LOCKED;
         lockOnPhaseStartedAt = now;
-        M5.Speaker.stop();
-        M5.Speaker.tone(lockOnPendingSuccess ? 1760 : 320, lockOnPendingSuccess ? 100 : 120);
+        audioStopAll();
+        audioPlayTone(AUDIO_BUS_SE, lockOnPendingSuccess ? 1760 : 320, lockOnPendingSuccess ? 100 : 120);
         triggerVibration(lockOnPendingSuccess ? 180 : 96, lockOnPendingSuccess ? 220 : 120, now);
         break;
       }
@@ -4253,7 +4660,7 @@ void loop() {
         lockOnLastPulseAt = now;
         const float progress = constrain(static_cast<float>(elapsedMs) / static_cast<float>(lockOnSearchDurationMs), 0.0f, 1.0f);
         const float frequency = 680.0f + (progress * rarityFrequencyBoost);
-        M5.Speaker.tone(frequency, 45, 0, false);
+        audioPlayTone(AUDIO_BUS_SE, frequency, 45, false);
         triggerVibration(vibrationLevel, 30, now);
       }
       if (elapsedMs >= lockOnSearchDurationMs) {
@@ -4474,9 +4881,36 @@ void loop() {
           visualControl == PRESS_MENU_GUIDE,
           visualControl == PRESS_MENU_ACHIEVEMENTS,
           visualControl == PRESS_MENU_SETTINGS,
+          visualControl == PRESS_MENU_MUSIC,
           getQuizVolumeStatusLabel(quizVolumeSetting),
           batteryLevel,
           batteryCharging);
+    } else if (screenMode == SCREEN_MUSIC_LIST) {
+      std::vector<String> pageLabels;
+      std::vector<bool> playingFlags;
+      String musicScreenTitle = (musicCurrentDirectoryPath == kMusicDirectoryPath)
+          ? String((appLanguage == APP_LANGUAGE_EN) ? "Music" : "おんがく")
+          : getLastPathSegment(musicCurrentDirectoryPath);
+      const size_t endIndex = std::min(musicListEntries.size(), musicListOffset + 10);
+      pageLabels.reserve(endIndex - musicListOffset);
+      playingFlags.reserve(endIndex - musicListOffset);
+      for (size_t i = musicListOffset; i < endIndex; ++i) {
+        String label = musicListEntries[i].label;
+        if (!musicListEntries[i].isDirectory && musicListEntries[i].path == musicNowPlayingPath) {
+          label = String("▶ ") + label;
+        }
+        pageLabels.push_back(label);
+        playingFlags.push_back(false);
+      }
+      ui.drawMusicListScreen(
+          musicScreenTitle.c_str(),
+          pageLabels,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
     } else if (screenMode == SCREEN_TYPE_MATCHUP) {
       String resultText = "";
       if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {

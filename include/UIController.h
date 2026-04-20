@@ -66,6 +66,7 @@ public:
       bool guidePressed,
       bool achievementsPressed,
       bool settingsPressed,
+      bool musicPressed,
       const char* volumeLabel,
       int batteryLevel,
       bool batteryCharging);
@@ -129,6 +130,13 @@ public:
       const char* title,
       const std::vector<String>& labels,
       const std::vector<bool>& caughtFlags,
+      bool backPressed,
+      int pressedItemIndex,
+      bool prevPressed,
+      bool nextPressed);
+  void drawMusicListScreen(
+      const char* title,
+      const std::vector<String>& labels,
       bool backPressed,
       int pressedItemIndex,
       bool prevPressed,

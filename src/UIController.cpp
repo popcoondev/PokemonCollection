@@ -948,6 +948,7 @@ void UIController::drawMenuScreen(
     bool guidePressed,
     bool achievementsPressed,
     bool settingsPressed,
+    bool musicPressed,
     const char* volumeLabel,
     int batteryLevel,
     bool batteryCharging) {
@@ -999,6 +1000,7 @@ void UIController::drawMenuScreen(
   drawActionButton(menuRightX, menuRowY0, menuButtonW, menuButtonH, tr("こうりゃく", "Guide"), theme.surface, theme.text, guidePressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + menuRowGap, menuButtonW, menuButtonH, tr("せってい", "Settings"), theme.surface, theme.text, settingsPressed, theme.buttonPressedFill, theme.border);
   drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 2), menuButtonW, menuButtonH, tr("じっせき", "Achievements"), theme.surface, theme.text, achievementsPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(menuRightX, menuRowY0 + (menuRowGap * 3), menuButtonW, menuButtonH, tr("おんがく", "Music"), theme.surface, theme.text, musicPressed, theme.buttonPressedFill, theme.border);
 }
 
 void UIController::drawTypeMatchupScreen(
@@ -1517,6 +1519,59 @@ void UIController::drawGuidePokemonListScreen(
     }
   }
 
+}
+
+void UIController::drawMusicListScreen(
+    const char* title,
+    const std::vector<String>& labels,
+    bool backPressed,
+    int pressedItemIndex,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString(title, SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  sprite->setFont(&fonts::efontJA_12);
+  constexpr int itemX = 30;
+  constexpr int itemYStart = 46;
+  constexpr int itemW = SCREEN_WIDTH - 60;
+  constexpr int itemH = 26;
+  constexpr int itemGapY = 6;
+  for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+    const int y = itemYStart + (i * (itemH + itemGapY));
+    sprite->fillRoundRect(itemX, y, itemW, itemH, theme.buttonRadius, theme.bg);
+    sprite->drawRoundRect(itemX, y, itemW, itemH, theme.buttonRadius, theme.border);
+    if (pressedItemIndex == i) {
+      drawPressedOverlay(itemX, y, itemW, itemH, theme.buttonRadius);
+    }
+
+    String label = labels[i];
+    const int textMaxWidth = itemW - 16;
+    while (label.length() > 0 && sprite->textWidth(label) > textMaxWidth) {
+      label.remove(label.length() - 1);
+    }
+    if (label != labels[i] && label.length() > 3) {
+      label.remove(label.length() - 3);
+      label += "...";
+      while (label.length() > 0 && sprite->textWidth(label) > textMaxWidth) {
+        label.remove(label.length() - 4);
+        label += "...";
+      }
+    }
+
+    sprite->setTextColor(theme.text);
+    sprite->drawString(label, itemX + 8, y + 7);
+  }
 }
 
 void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {
