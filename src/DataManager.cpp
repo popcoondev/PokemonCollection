@@ -6,6 +6,14 @@ namespace {
 const char* getPokemonIndexPath(AppLanguage language) {
   return (language == APP_LANGUAGE_EN) ? "/pokemon/index_en.json" : "/pokemon/index.json";
 }
+
+bool deserializeJsonFromFile(JsonDocument& doc, File& file) {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  return deserializeJson(doc, file.contents().c_str()) == DeserializationError::Ok;
+#else
+  return deserializeJson(doc, file) == DeserializationError::Ok;
+#endif
+}
 }
 
 DataManager::DataManager() {
@@ -44,9 +52,9 @@ bool DataManager::loadPokemonIndex() {
   if (!file) return false;
 
   JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, file);
+  const bool ok = deserializeJsonFromFile(doc, file);
   file.close();
-  if (error || !doc.is<JsonArray>()) return false;
+  if (!ok || !doc.is<JsonArray>()) return false;
 
   uint16_t detectedMaxId = MIN_POKEMON_ID;
   for (JsonObject entry : doc.as<JsonArray>()) {
@@ -95,8 +103,7 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
   if (!file) return false;
 
   JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, file);
-  if (error) return false;
+  if (!deserializeJsonFromFile(doc, file)) return false;
 
   currentPokemon.id = doc["id"];
   currentPokemon.name = getPokemonName(id);
