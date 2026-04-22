@@ -1,8 +1,10 @@
 #include "ImageLoader.h"
 #include <FS.h>
 #include <SD.h>
+#ifndef POKEMONCOLLECTION_SIM_NATIVE
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#endif
 
 // ========== Constructor & Destructor ==========
 
@@ -13,6 +15,26 @@ ImageLoader::~ImageLoader() {
 }
 
 namespace {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+struct SimMutex {
+};
+using SemaphoreHandle_t = SimMutex*;
+constexpr int pdTRUE = 1;
+constexpr int portMAX_DELAY = 0;
+SemaphoreHandle_t xSemaphoreCreateMutex() {
+  static SimMutex mutex;
+  return &mutex;
+}
+int xSemaphoreTake(SemaphoreHandle_t mutex, int ticks) {
+  (void)mutex;
+  (void)ticks;
+  return pdTRUE;
+}
+void xSemaphoreGive(SemaphoreHandle_t mutex) {
+  (void)mutex;
+}
+#endif
+
 SemaphoreHandle_t pngLoadMutex = nullptr;
 
 uint32_t readBigEndian32(const uint8_t* bytes) {
