@@ -13,6 +13,7 @@
 #include <vector>
 #include "Config.h"
 #include "DataManager.h"
+#include "Renderer.h"
 #include "UIController.h"
 
 DataManager dataMgr;
@@ -75,6 +76,10 @@ ScreenMode screenMode = SCREEN_MENU;
 ScreenMode detailReturnScreen = SCREEN_MENU;
 
 namespace {
+Renderer& displayRenderer() {
+  return M5Renderer::instance();
+}
+
 constexpr int kAppearanceImageX = 6;
 constexpr int kAppearanceImageY = 54;
 constexpr int kAppearanceImageW = 140;
@@ -3367,7 +3372,7 @@ bool ensurePreviewSpriteReady() {
     return true;
   }
 
-  previewImageSprite = new LGFX_Sprite(&M5.Display);
+  previewImageSprite = new LGFX_Sprite(&displayRenderer().device());
   if (previewImageSprite == nullptr) {
     return false;
   }
@@ -3437,7 +3442,7 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
   }
 
   if (previewPocShadowSprite == nullptr) {
-    previewPocShadowSprite = new LGFX_Sprite(&M5.Display);
+    previewPocShadowSprite = new LGFX_Sprite(&displayRenderer().device());
     if (previewPocShadowSprite == nullptr) {
       return false;
     }
@@ -3451,7 +3456,7 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
   }
 
   if (previewPocIconSprite == nullptr) {
-    previewPocIconSprite = new LGFX_Sprite(&M5.Display);
+    previewPocIconSprite = new LGFX_Sprite(&displayRenderer().device());
     if (previewPocIconSprite == nullptr) {
       return false;
     }
@@ -3465,7 +3470,7 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
   }
 
   if (previewPocBackgroundSprite == nullptr) {
-    previewPocBackgroundSprite = new LGFX_Sprite(&M5.Display);
+    previewPocBackgroundSprite = new LGFX_Sprite(&displayRenderer().device());
     if (previewPocBackgroundSprite != nullptr) {
       previewPocBackgroundSprite->setColorDepth(16);
       previewPocBackgroundSprite->setPsram(true);
@@ -3597,8 +3602,8 @@ void setup() {
   cfg.internal_mic = false;
   M5.begin(cfg);
   randomSeed(static_cast<uint32_t>(esp_random()));
-  M5.Display.setRotation(1);
-  M5.Display.setTextFont(2);
+  displayRenderer().setRotation(1);
+  displayRenderer().setTextFont(2);
   {
     auto spk_cfg = M5.Speaker.config();
     spk_cfg.sample_rate = 44100;
@@ -3607,23 +3612,24 @@ void setup() {
   M5.Speaker.begin();
   audioSetMasterVolume(128);
   audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
-  M5.Display.setBrightness(kDisplayBrightnessOn);
+  displayRenderer().setBrightness(kDisplayBrightnessOn);
 
   if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
-    M5.Display.print("SD Init Error");
+    displayRenderer().print("SD Init Error");
     while(1) delay(100);
   }
 
   if (!dataMgr.begin()) {
-    M5.Display.print("SD Error");
+    displayRenderer().print("SD Error");
     while(1) delay(100);
   }
   loadQuizSound(kUiConfirmSoundPath, uiConfirmSound);
   loadLockOnSecretIds();
   loadGuideLocations();
+  ui.setRenderer(&displayRenderer());
 
   if (!ui.begin()) {
-    M5.Display.print("UI Error");
+    displayRenderer().print("UI Error");
     while(1) delay(100);
   }
 
@@ -3640,7 +3646,7 @@ void setup() {
   appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
   appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
   appearanceSpriteMutex = xSemaphoreCreateMutex();
-  appearanceImageSprite = new LGFX_Sprite(&M5.Display);
+  appearanceImageSprite = new LGFX_Sprite(&displayRenderer().device());
   previewRequestQueue = xQueueCreate(1, sizeof(PreviewImageRequest));
   previewResultQueue = xQueueCreate(4, sizeof(PreviewImageResult));
   previewSpriteMutex = xSemaphoreCreateMutex();
@@ -3648,7 +3654,7 @@ void setup() {
   evolutionResultQueue = xQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageResult));
   evolutionSpriteMutex = xSemaphoreCreateMutex();
   for (auto& sprite : evolutionImageSprites) {
-    sprite = new LGFX_Sprite(&M5.Display);
+    sprite = new LGFX_Sprite(&displayRenderer().device());
   }
 
   if (appearanceRequestQueue == nullptr
@@ -3664,26 +3670,26 @@ void setup() {
       || !appearanceImageLoader.begin()
       || !previewImageLoader.begin()
       || !evolutionImageLoader.begin()) {
-    M5.Display.print("Image Queue Error");
+    displayRenderer().print("Image Queue Error");
     while(1) delay(100);
   }
 
   for (auto* sprite : evolutionImageSprites) {
     if (sprite == nullptr) {
-      M5.Display.print("Image Queue Error");
+      displayRenderer().print("Image Queue Error");
       while(1) delay(100);
     }
   }
 
   appearanceImageSprite->setColorDepth(16);
   if (!appearanceImageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
-    M5.Display.print("Image Sprite Error");
+    displayRenderer().print("Image Sprite Error");
     while(1) delay(100);
   }
   for (auto& sprite : evolutionImageSprites) {
     sprite->setColorDepth(16);
     if (!sprite->createSprite(kEvolutionImageW, kEvolutionImageH)) {
-      M5.Display.print("Evolution Sprite Error");
+      displayRenderer().print("Evolution Sprite Error");
       while(1) delay(100);
     }
   }
@@ -3749,8 +3755,8 @@ void loop() {
 
     if (coverDisplaySleeping) {
       if (coverOpened) {
-        M5.Display.wakeup();
-        M5.Display.setBrightness(kDisplayBrightnessOn);
+        displayRenderer().wakeup();
+        displayRenderer().setBrightness(kDisplayBrightnessOn);
         coverDisplaySleeping = false;
         wakeSplashActive = true;
         wakeSplashStartedAt = now;
@@ -3766,11 +3772,11 @@ void loop() {
         needsRedraw = true;
       }
     } else {
-      if (coverClosed) {
-        if (coverClosedSince == 0) {
-          coverClosedSince = now;
-        } else if ((now - coverClosedSince) >= kCoverSleepDelayMs) {
-          M5.Display.sleep();
+        if (coverClosed) {
+          if (coverClosedSince == 0) {
+            coverClosedSince = now;
+          } else if ((now - coverClosedSince) >= kCoverSleepDelayMs) {
+          displayRenderer().sleep();
           coverDisplaySleeping = true;
           wakeSplashActive = false;
           heldControl = PRESS_NONE;

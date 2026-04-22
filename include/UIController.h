@@ -2,6 +2,7 @@
 #define UI_CONTROLLER_H
 
 #include "ImageLoader.h"
+#include "Renderer.h"
 #include <M5Unified.h>
 #include <vector>
 #include "Config.h"
@@ -12,6 +13,7 @@ public:
   UIController();
   ~UIController();
   bool begin();
+  void setRenderer(Renderer* renderer);
   void setTheme(UIThemeStyle theme);
   void setLanguage(AppLanguage language);
   UIThemeStyle getTheme() const;
@@ -209,6 +211,7 @@ private:
   ImageLoader imageLoader;
   UIThemeStyle currentTheme;
   AppLanguage currentLanguage;
+  Renderer* renderer;
   void drawPressedOverlay(int x, int y, int w, int h, int radius = 0);
   void drawActionButton(
       int x,

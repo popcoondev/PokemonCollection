@@ -270,7 +270,8 @@ UIController::UIController()
     : sprite(nullptr),
       wakeSplashSprite(nullptr),
       currentTheme(UI_THEME_CLASSIC),
-      currentLanguage(APP_LANGUAGE_JA) {}
+      currentLanguage(APP_LANGUAGE_JA),
+      renderer(nullptr) {}
 
 UIController::~UIController() {
   if (sprite != nullptr) {
@@ -286,11 +287,15 @@ UIController::~UIController() {
 }
 
 bool UIController::begin() {
-  sprite = new LGFX_Sprite(&M5.Display);
+  if (renderer == nullptr) {
+    renderer = &M5Renderer::instance();
+  }
+
+  sprite = new LGFX_Sprite(&renderer->device());
   if (sprite == nullptr) {
     return false;
   }
-  wakeSplashSprite = new LGFX_Sprite(&M5.Display);
+  wakeSplashSprite = new LGFX_Sprite(&renderer->device());
   if (wakeSplashSprite == nullptr) {
     return false;
   }
@@ -308,6 +313,10 @@ bool UIController::begin() {
   wakeSplashSprite->fillScreen(TFT_BLACK);
   imageLoader.loadAndDisplayPNGPath(*wakeSplashSprite, kWakeSplashPath, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, false);
   return true;
+}
+
+void UIController::setRenderer(Renderer* nextRenderer) {
+  renderer = nextRenderer;
 }
 
 void UIController::setTheme(UIThemeStyle theme) {
@@ -700,13 +709,16 @@ void UIController::drawPreviewCaption(uint16_t pokemonId, const String& pokemonN
 }
 
 void UIController::redrawPreviewCaptionToDisplay(uint16_t pokemonId, const String& pokemonName) {
+  if (renderer == nullptr) {
+    return;
+  }
   char label[32];
   snprintf(label, sizeof(label), "No.%04d", pokemonId);
   const String caption = String(label) + " " + pokemonName;
 
-  M5.Display.setFont(&fonts::efontJA_12_b);
-  M5.Display.setTextColor(TFT_WHITE);
-  M5.Display.drawRightString(caption, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 24);
+  renderer->setFont(&fonts::efontJA_12_b);
+  renderer->setTextColor(TFT_WHITE);
+  renderer->drawRightString(caption, SCREEN_WIDTH - 12, SCREEN_HEIGHT - 24);
 }
 
 void UIController::applyBlackFade(uint8_t alpha) {
@@ -1809,15 +1821,21 @@ void UIController::blitAppearanceImageToCanvas(LGFX_Sprite& imageSprite) {
 }
 
 void UIController::pushAppearanceImageToDisplay(LGFX_Sprite& imageSprite) {
-  imageSprite.pushSprite(&M5.Display, kAppearanceImageX, kAppearanceImageY);
+  if (renderer == nullptr) {
+    return;
+  }
+  imageSprite.pushSprite(&renderer->device(), kAppearanceImageX, kAppearanceImageY);
 }
 
 void UIController::redrawDetailNavigationToDisplay() {
+  if (renderer == nullptr) {
+    return;
+  }
   const auto& theme = getThemePalette(currentTheme);
-  M5.Display.setTextColor(theme.sub);
-  M5.Display.setFont(&fonts::efontJA_12);
-  M5.Display.drawCenterString("◀", 18, 50);
-  M5.Display.drawCenterString("▶", SCREEN_WIDTH - 18, 50);
+  renderer->setTextColor(theme.sub);
+  renderer->setFont(&fonts::efontJA_12);
+  renderer->drawCenterString("◀", 18, 50);
+  renderer->drawCenterString("▶", SCREEN_WIDTH - 18, 50);
 }
 
 void UIController::blitPreviewImageToCanvas(LGFX_Sprite& imageSprite) {
@@ -1830,7 +1848,10 @@ void UIController::blitPreviewImageToCanvas(LGFX_Sprite& imageSprite) {
 }
 
 void UIController::pushPreviewImageToDisplay(LGFX_Sprite& imageSprite) {
-  imageSprite.pushSprite(&M5.Display, 0, 0);
+  if (renderer == nullptr) {
+    return;
+  }
+  imageSprite.pushSprite(&renderer->device(), 0, 0);
 }
 
 void UIController::blitEvolutionImageToCanvas(LGFX_Sprite& imageSprite, int imageIndex, int totalCount) {
@@ -1850,9 +1871,12 @@ void UIController::pushEvolutionImageToDisplay(LGFX_Sprite& imageSprite, int ima
   if (imageIndex < 0 || imageIndex >= totalCount) {
     return;
   }
+  if (renderer == nullptr) {
+    return;
+  }
   const auto layout = getEvolutionCardLayout(imageIndex, totalCount);
   imageSprite.pushSprite(
-      &M5.Display,
+      &renderer->device(),
       layout.imageX,
       layout.imageY);
 }
