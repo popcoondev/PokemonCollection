@@ -59,6 +59,18 @@ enum AudioBusKind {
   AUDIO_BUS_SE,
 };
 
+enum MusicViewMode {
+  MUSIC_VIEW_LIBRARY = 0,
+  MUSIC_VIEW_PLAYLIST,
+};
+
+enum MusicPlaybackSource {
+  MUSIC_PLAYBACK_NONE = 0,
+  MUSIC_PLAYBACK_LIBRARY,
+  MUSIC_PLAYBACK_PLAYLIST,
+  MUSIC_PLAYBACK_TYPE_MATCHUP,
+};
+
 ScreenMode screenMode = SCREEN_MENU;
 ScreenMode detailReturnScreen = SCREEN_MENU;
 
@@ -80,6 +92,8 @@ constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
 constexpr const char* kUiConfirmSoundPath = "/pokemon/ui/sounds/ui_confirm_gb.wav";
 constexpr const char* kTypeMatchupBgmPath = "/pokemon/bgm/type_matchup_loop.wav";
 constexpr const char* kMusicDirectoryPath = "/pokemon/sounds/music";
+constexpr size_t kMusicRowsPerPage = 5;
+constexpr uint8_t kMusicVolumeStep = 32;
 constexpr size_t kMusicStreamBufferCount = 3;
 constexpr size_t kMusicStreamBufferBytes = 8192;
 constexpr const char* kSettingsPath = "/pokemon/settings.json";
@@ -414,14 +428,21 @@ QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizSoundCache uiConfirmSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
-std::vector<String> musicTrackPaths;
-std::vector<String> musicTrackLabels;
 std::vector<MusicListEntry> musicListEntries;
 size_t musicListOffset = 0;
 MusicStreamState musicStreamState;
 String musicNowPlayingPath = "";
 String musicNowPlayingLabel = "";
 String musicCurrentDirectoryPath = kMusicDirectoryPath;
+String musicLibraryDirectoryPath = kMusicDirectoryPath;
+String musicPlaybackDirectoryPath = kMusicDirectoryPath;
+std::vector<String> musicPlaylistPaths;
+MusicViewMode musicViewMode = MUSIC_VIEW_LIBRARY;
+MusicPlaybackSource musicPlaybackSource = MUSIC_PLAYBACK_NONE;
+bool musicPlaylistShuffleEnabled = false;
+bool musicPlaylistRepeatEnabled = false;
+uint8_t musicBgmVolume = 192;
+bool musicPlaybackVisualDirty = false;
 uint8_t musicStreamBuffers[kMusicStreamBufferCount][kMusicStreamBufferBytes] = {};
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
@@ -623,6 +644,10 @@ void audioSetMasterVolume(uint8_t volume) {
   M5.Speaker.setVolume(volume);
 }
 
+void audioSetBusVolume(AudioBusKind bus, uint8_t volume) {
+  M5.Speaker.setChannelVolume(getAudioChannelForBus(bus), volume);
+}
+
 bool audioPlayTone(AudioBusKind bus, float frequency, uint32_t durationMs, bool stopCurrentSound = true) {
   return M5.Speaker.tone(frequency, durationMs, getAudioChannelForBus(bus), stopCurrentSound);
 }
@@ -698,19 +723,30 @@ void stopMusicStream(bool clearNowPlaying = false) {
   if (clearNowPlaying) {
     musicNowPlayingPath = "";
     musicNowPlayingLabel = "";
+    musicPlaybackSource = MUSIC_PLAYBACK_NONE;
+    musicPlaybackVisualDirty = true;
   }
 }
 
-void refreshMusicTrackList() {
-  musicTrackPaths.clear();
-  musicTrackLabels.clear();
-  musicListEntries.clear();
-  musicListOffset = 0;
+void syncMusicListOffsetToNowPlaying() {
+  if (musicNowPlayingPath.length() == 0 || musicListEntries.empty()) {
+    return;
+  }
+  for (size_t i = 0; i < musicListEntries.size(); ++i) {
+    if (musicListEntries[i].path == musicNowPlayingPath) {
+      musicListOffset = (i / kMusicRowsPerPage) * kMusicRowsPerPage;
+      return;
+    }
+  }
+}
 
-  File dir = SD.open(musicCurrentDirectoryPath.c_str(), FILE_READ);
+std::vector<MusicListEntry> scanMusicDirectoryEntries(const String& directoryPath) {
+  std::vector<MusicListEntry> entries;
+
+  File dir = SD.open(directoryPath.c_str(), FILE_READ);
   if (!dir || !dir.isDirectory()) {
     if (dir) dir.close();
-    return;
+    return entries;
   }
 
   File entry = dir.openNextFile();
@@ -726,14 +762,14 @@ void refreshMusicTrackList() {
       item.path = path;
       item.label = String("[") + getLastPathSegment(path) + "]";
       item.isDirectory = true;
-      musicListEntries.push_back(item);
+      entries.push_back(item);
     } else {
       if (hasWavExtension(path)) {
         MusicListEntry item;
         item.path = path;
         item.label = getMusicTrackLabelFromPath(path);
         item.isDirectory = false;
-        musicListEntries.push_back(item);
+        entries.push_back(item);
       }
     }
     entry.close();
@@ -741,13 +777,13 @@ void refreshMusicTrackList() {
   }
   dir.close();
 
-  std::vector<size_t> order(musicListEntries.size());
+  std::vector<size_t> order(entries.size());
   for (size_t i = 0; i < order.size(); ++i) {
     order[i] = i;
   }
-  std::sort(order.begin(), order.end(), [](size_t a, size_t b) {
-    const auto& lhs = musicListEntries[a];
-    const auto& rhs = musicListEntries[b];
+  std::sort(order.begin(), order.end(), [&entries](size_t a, size_t b) {
+    const auto& lhs = entries[a];
+    const auto& rhs = entries[b];
     if (lhs.isDirectory != rhs.isDirectory) {
       return lhs.isDirectory > rhs.isDirectory;
     }
@@ -757,9 +793,44 @@ void refreshMusicTrackList() {
   std::vector<MusicListEntry> sortedEntries;
   sortedEntries.reserve(order.size());
   for (size_t index : order) {
-    sortedEntries.push_back(musicListEntries[index]);
+    sortedEntries.push_back(entries[index]);
   }
-  musicListEntries.swap(sortedEntries);
+  return sortedEntries;
+}
+
+void refreshMusicTrackList() {
+  musicListOffset = 0;
+  musicListEntries = scanMusicDirectoryEntries(musicCurrentDirectoryPath);
+}
+
+bool isMusicPathInPlaylist(const String& path) {
+  for (const auto& item : musicPlaylistPaths) {
+    if (item == path) return true;
+  }
+  return false;
+}
+
+void addMusicPathToPlaylist(const String& path) {
+  if (!isMusicPathInPlaylist(path)) {
+    musicPlaylistPaths.push_back(path);
+  }
+}
+
+void removeMusicPathFromPlaylist(const String& path) {
+  musicPlaylistPaths.erase(
+      std::remove(musicPlaylistPaths.begin(), musicPlaylistPaths.end(), path),
+      musicPlaylistPaths.end());
+}
+
+std::vector<String> getPlayableMusicPathsForDirectory(const String& directoryPath) {
+  std::vector<String> paths;
+  const auto entries = scanMusicDirectoryEntries(directoryPath);
+  for (const auto& entry : entries) {
+    if (!entry.isDirectory) {
+      paths.push_back(entry.path);
+    }
+  }
+  return paths;
 }
 
 bool beginMusicStream(const String& path) {
@@ -846,9 +917,63 @@ bool beginMusicStream(const String& path) {
   musicStreamState.queuedBufferIndex = 0;
   musicNowPlayingPath = path;
   musicNowPlayingLabel = getMusicTrackLabelFromPath(path);
+  syncMusicListOffsetToNowPlaying();
+  musicPlaybackVisualDirty = true;
   audioStopBus(AUDIO_BUS_BGM);
   serviceMusicStream();
   return true;
+}
+
+bool startLibraryMusicTrack(const String& path) {
+  musicPlaybackSource = MUSIC_PLAYBACK_LIBRARY;
+  musicPlaybackDirectoryPath = musicCurrentDirectoryPath;
+  return beginMusicStream(path);
+}
+
+bool startPlaylistMusicTrack(const String& path) {
+  musicPlaybackSource = MUSIC_PLAYBACK_PLAYLIST;
+  return beginMusicStream(path);
+}
+
+String getNextMusicTrackPath() {
+  switch (musicPlaybackSource) {
+    case MUSIC_PLAYBACK_TYPE_MATCHUP:
+      return musicStreamState.path;
+    case MUSIC_PLAYBACK_LIBRARY: {
+      const auto paths = getPlayableMusicPathsForDirectory(musicPlaybackDirectoryPath);
+      if (paths.empty()) return "";
+      auto it = std::find(paths.begin(), paths.end(), musicStreamState.path);
+      if (it == paths.end()) return paths.front();
+      size_t index = static_cast<size_t>(it - paths.begin());
+      return paths[(index + 1) % paths.size()];
+    }
+    case MUSIC_PLAYBACK_PLAYLIST: {
+      if (musicPlaylistPaths.empty()) return "";
+      if (musicPlaylistShuffleEnabled) {
+        if (musicPlaylistPaths.size() == 1) {
+          return musicPlaylistRepeatEnabled ? musicPlaylistPaths.front() : "";
+        }
+        String nextPath = musicStreamState.path;
+        for (int attempt = 0; attempt < 8 && nextPath == musicStreamState.path; ++attempt) {
+          nextPath = musicPlaylistPaths[static_cast<size_t>(random(0, static_cast<int>(musicPlaylistPaths.size())))];
+        }
+        if (nextPath == musicStreamState.path && !musicPlaylistRepeatEnabled) {
+          return "";
+        }
+        return nextPath;
+      }
+      auto it = std::find(musicPlaylistPaths.begin(), musicPlaylistPaths.end(), musicStreamState.path);
+      if (it == musicPlaylistPaths.end()) return musicPlaylistPaths.front();
+      size_t index = static_cast<size_t>(it - musicPlaylistPaths.begin());
+      if ((index + 1) < musicPlaylistPaths.size()) {
+        return musicPlaylistPaths[index + 1];
+      }
+      return musicPlaylistRepeatEnabled ? musicPlaylistPaths.front() : "";
+    }
+    case MUSIC_PLAYBACK_NONE:
+    default:
+      return "";
+  }
 }
 
 void serviceMusicStream() {
@@ -859,6 +984,21 @@ void serviceMusicStream() {
   const uint8_t channel = getAudioChannelForBus(AUDIO_BUS_BGM);
   while (musicStreamState.active && M5.Speaker.isPlaying(channel) < 2) {
     if (musicStreamState.dataRemainingBytes == 0) {
+      const String nextPath = getNextMusicTrackPath();
+      if (nextPath.length() == 0) {
+        stopMusicStream(false);
+        return;
+      }
+      if (nextPath != musicStreamState.path) {
+        if (musicPlaybackSource == MUSIC_PLAYBACK_PLAYLIST) {
+          startPlaylistMusicTrack(nextPath);
+        } else if (musicPlaybackSource == MUSIC_PLAYBACK_LIBRARY) {
+          startLibraryMusicTrack(nextPath);
+        } else {
+          beginMusicStream(nextPath);
+        }
+        return;
+      }
       if (!musicStreamState.file.seek(musicStreamState.dataStartOffset)) {
         stopMusicStream(false);
         return;
@@ -1883,6 +2023,14 @@ enum PressedControl {
   PRESS_ACHIEVEMENT_LOCKON,
   PRESS_ACHIEVEMENT_LIST,
   PRESS_ACHIEVEMENT_BADGES,
+  PRESS_MUSIC_CONTROL_LEFT,
+  PRESS_MUSIC_CONTROL_CENTER,
+  PRESS_MUSIC_CONTROL_RIGHT,
+  PRESS_MUSIC_ITEM_ACTION_0,
+  PRESS_MUSIC_ITEM_ACTION_1,
+  PRESS_MUSIC_ITEM_ACTION_2,
+  PRESS_MUSIC_ITEM_ACTION_3,
+  PRESS_MUSIC_ITEM_ACTION_4,
   PRESS_TYPE_MATCHUP_ATTACK,
   PRESS_TYPE_MATCHUP_DEFENSE,
   PRESS_TYPE_MATCHUP_TEXTBOX,
@@ -1936,11 +2084,16 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
-    for (int i = 0; i < 10; ++i) {
-      const int x = 30;
+    if (hitTest(tx, ty, 20, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_LEFT;
+    if (hitTest(tx, ty, 116, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_CENTER;
+    if (hitTest(tx, ty, 212, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_RIGHT;
+    for (int i = 0; i < static_cast<int>(kMusicRowsPerPage); ++i) {
       const int y = 46 + (i * 32);
-      if (hitTest(tx, ty, x, y, SCREEN_WIDTH - 60, 26, 8)) {
+      if (hitTest(tx, ty, 30, y, 212, 26, 8)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+      if (hitTest(tx, ty, 248, y + 1, 24, 24, 4)) {
+        return static_cast<PressedControl>(PRESS_MUSIC_ITEM_ACTION_0 + i);
       }
     }
     return PRESS_NONE;
@@ -2200,6 +2353,13 @@ enum PendingActionType {
   ACTION_MUSIC_LIST_PAGE,
   ACTION_MUSIC_OPEN_DIRECTORY,
   ACTION_MUSIC_PLAY_TRACK,
+  ACTION_MUSIC_ADD_TO_PLAYLIST,
+  ACTION_MUSIC_REMOVE_FROM_PLAYLIST,
+  ACTION_MUSIC_TOGGLE_VIEW,
+  ACTION_MUSIC_VOLUME_DOWN,
+  ACTION_MUSIC_VOLUME_UP,
+  ACTION_MUSIC_TOGGLE_SHUFFLE,
+  ACTION_MUSIC_TOGGLE_REPEAT,
   ACTION_OPEN_GUIDE_POKEMON_LIST,
   ACTION_CLOSE_GUIDE_POKEMON_LIST,
   ACTION_GUIDE_POKEMON_LIST_PAGE,
@@ -3127,6 +3287,7 @@ void playQuizSound(QuizPhase phase) {
 }
 
 void playTypeMatchupBgm() {
+  musicPlaybackSource = MUSIC_PLAYBACK_TYPE_MATCHUP;
   beginMusicStream(kTypeMatchupBgmPath);
 }
 
@@ -3445,6 +3606,7 @@ void setup() {
   }
   M5.Speaker.begin();
   audioSetMasterVolume(128);
+  audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
   M5.Display.setBrightness(kDisplayBrightnessOn);
 
   if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
@@ -3573,6 +3735,10 @@ void loop() {
   const unsigned long now = millis();
   updateLockOnBadgeFeverState(now);
   serviceMusicStream();
+  if (musicPlaybackVisualDirty) {
+    musicPlaybackVisualDirty = false;
+    needsRedraw = true;
+  }
 
   if (coverProximityReady && (now - coverLastPollAt) >= kCoverPollIntervalMs) {
     coverLastPollAt = now;
@@ -3877,14 +4043,29 @@ void loop() {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_MUSIC_LIST);
         } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
-          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, -10);
+          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, -static_cast<int>(kMusicRowsPerPage));
         } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
-          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, 10);
+          pendingAction = makePendingAction(ACTION_MUSIC_LIST_PAGE, static_cast<int>(kMusicRowsPerPage));
+        } else if (pressedControl == PRESS_MUSIC_CONTROL_LEFT) {
+          pendingAction = makePendingAction(ACTION_MUSIC_TOGGLE_VIEW);
+        } else if (pressedControl == PRESS_MUSIC_CONTROL_CENTER) {
+          pendingAction = makePendingAction(
+              (musicViewMode == MUSIC_VIEW_PLAYLIST) ? ACTION_MUSIC_TOGGLE_SHUFFLE : ACTION_MUSIC_VOLUME_DOWN);
+        } else if (pressedControl == PRESS_MUSIC_CONTROL_RIGHT) {
+          pendingAction = makePendingAction(
+              (musicViewMode == MUSIC_VIEW_PLAYLIST) ? ACTION_MUSIC_TOGGLE_REPEAT : ACTION_MUSIC_VOLUME_UP);
         } else if (pressedControl >= PRESS_GUIDE_LIST_ITEM_0 && pressedControl <= PRESS_GUIDE_LIST_ITEM_9) {
           const size_t itemIndex = musicListOffset + static_cast<size_t>(pressedControl - PRESS_GUIDE_LIST_ITEM_0);
           if (itemIndex < musicListEntries.size()) {
             pendingAction = makePendingAction(
                 musicListEntries[itemIndex].isDirectory ? ACTION_MUSIC_OPEN_DIRECTORY : ACTION_MUSIC_PLAY_TRACK,
+                static_cast<int>(itemIndex));
+          }
+        } else if (pressedControl >= PRESS_MUSIC_ITEM_ACTION_0 && pressedControl <= PRESS_MUSIC_ITEM_ACTION_4) {
+          const size_t itemIndex = musicListOffset + static_cast<size_t>(pressedControl - PRESS_MUSIC_ITEM_ACTION_0);
+          if (itemIndex < musicListEntries.size() && !musicListEntries[itemIndex].isDirectory) {
+            pendingAction = makePendingAction(
+                (musicViewMode == MUSIC_VIEW_PLAYLIST) ? ACTION_MUSIC_REMOVE_FROM_PLAYLIST : ACTION_MUSIC_ADD_TO_PLAYLIST,
                 static_cast<int>(itemIndex));
           }
         }
@@ -3950,13 +4131,20 @@ void loop() {
     switch (pendingAction.type) {
       case ACTION_OPEN_MUSIC_LIST:
         musicCurrentDirectoryPath = kMusicDirectoryPath;
+        musicLibraryDirectoryPath = kMusicDirectoryPath;
+        musicViewMode = MUSIC_VIEW_LIBRARY;
         refreshMusicTrackList();
         musicListOffset = 0;
         screenMode = SCREEN_MUSIC_LIST;
         break;
       case ACTION_CLOSE_MUSIC_LIST:
-        if (musicCurrentDirectoryPath != kMusicDirectoryPath) {
+        if (musicViewMode == MUSIC_VIEW_PLAYLIST) {
+          musicViewMode = MUSIC_VIEW_LIBRARY;
+          musicCurrentDirectoryPath = musicLibraryDirectoryPath;
+          refreshMusicTrackList();
+        } else if (musicCurrentDirectoryPath != kMusicDirectoryPath) {
           musicCurrentDirectoryPath = getParentDirectoryPath(musicCurrentDirectoryPath);
+          musicLibraryDirectoryPath = musicCurrentDirectoryPath;
           refreshMusicTrackList();
         } else {
           stopMusicStream(true);
@@ -3964,7 +4152,7 @@ void loop() {
         }
         break;
       case ACTION_MUSIC_LIST_PAGE: {
-        const size_t pageSize = 10;
+        const size_t pageSize = kMusicRowsPerPage;
         const size_t totalCount = musicListEntries.size();
         const size_t maxOffset = (totalCount > pageSize) ? (((totalCount - 1) / pageSize) * pageSize) : 0;
         if (pendingAction.value < 0) {
@@ -3974,16 +4162,73 @@ void loop() {
         }
         break;
       }
+      case ACTION_MUSIC_TOGGLE_VIEW:
+        if (musicViewMode == MUSIC_VIEW_LIBRARY) {
+          musicLibraryDirectoryPath = musicCurrentDirectoryPath;
+          musicViewMode = MUSIC_VIEW_PLAYLIST;
+          musicListEntries.clear();
+          for (const auto& path : musicPlaylistPaths) {
+            MusicListEntry item;
+            item.path = path;
+            item.label = getMusicTrackLabelFromPath(path);
+            item.isDirectory = false;
+            musicListEntries.push_back(item);
+          }
+          musicListOffset = 0;
+        } else {
+          musicViewMode = MUSIC_VIEW_LIBRARY;
+          musicCurrentDirectoryPath = musicLibraryDirectoryPath;
+          refreshMusicTrackList();
+        }
+        break;
       case ACTION_MUSIC_OPEN_DIRECTORY:
         if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
           musicCurrentDirectoryPath = musicListEntries[static_cast<size_t>(pendingAction.value)].path;
+          musicLibraryDirectoryPath = musicCurrentDirectoryPath;
           refreshMusicTrackList();
         }
         break;
       case ACTION_MUSIC_PLAY_TRACK:
         if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
-          beginMusicStream(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+          if (musicViewMode == MUSIC_VIEW_PLAYLIST) {
+            startPlaylistMusicTrack(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+          } else {
+            startLibraryMusicTrack(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+          }
         }
+        break;
+      case ACTION_MUSIC_ADD_TO_PLAYLIST:
+        if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
+          addMusicPathToPlaylist(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+        }
+        break;
+      case ACTION_MUSIC_REMOVE_FROM_PLAYLIST:
+        if (pendingAction.value >= 0 && static_cast<size_t>(pendingAction.value) < musicListEntries.size()) {
+          removeMusicPathFromPlaylist(musicListEntries[static_cast<size_t>(pendingAction.value)].path);
+          if (musicViewMode == MUSIC_VIEW_PLAYLIST) {
+            musicListEntries.erase(musicListEntries.begin() + pendingAction.value);
+            const size_t maxOffset = (musicListEntries.size() > kMusicRowsPerPage)
+                ? (((musicListEntries.size() - 1) / kMusicRowsPerPage) * kMusicRowsPerPage)
+                : 0;
+            if (musicListOffset > maxOffset) {
+              musicListOffset = maxOffset;
+            }
+          }
+        }
+        break;
+      case ACTION_MUSIC_VOLUME_DOWN:
+        musicBgmVolume = (musicBgmVolume > kMusicVolumeStep) ? (musicBgmVolume - kMusicVolumeStep) : 0;
+        audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
+        break;
+      case ACTION_MUSIC_VOLUME_UP:
+        musicBgmVolume = (musicBgmVolume < (255 - kMusicVolumeStep)) ? (musicBgmVolume + kMusicVolumeStep) : 255;
+        audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
+        break;
+      case ACTION_MUSIC_TOGGLE_SHUFFLE:
+        musicPlaylistShuffleEnabled = !musicPlaylistShuffleEnabled;
+        break;
+      case ACTION_MUSIC_TOGGLE_REPEAT:
+        musicPlaylistRepeatEnabled = !musicPlaylistRepeatEnabled;
         break;
       case ACTION_OPEN_TYPE_MATCHUP:
         screenMode = SCREEN_TYPE_MATCHUP;
@@ -4887,30 +5132,58 @@ void loop() {
           batteryCharging);
     } else if (screenMode == SCREEN_MUSIC_LIST) {
       std::vector<String> pageLabels;
-      std::vector<bool> playingFlags;
-      String musicScreenTitle = (musicCurrentDirectoryPath == kMusicDirectoryPath)
-          ? String((appLanguage == APP_LANGUAGE_EN) ? "Music" : "おんがく")
-          : getLastPathSegment(musicCurrentDirectoryPath);
-      const size_t endIndex = std::min(musicListEntries.size(), musicListOffset + 10);
+      std::vector<bool> actionVisibleFlags;
+      std::vector<bool> actionActiveFlags;
+      String musicScreenTitle = (musicViewMode == MUSIC_VIEW_PLAYLIST)
+          ? String((appLanguage == APP_LANGUAGE_EN) ? "Playlist" : "プレイリスト")
+          : ((musicCurrentDirectoryPath == kMusicDirectoryPath)
+                ? String((appLanguage == APP_LANGUAGE_EN) ? "Music" : "おんがく")
+                : getLastPathSegment(musicCurrentDirectoryPath));
+      const size_t endIndex = std::min(musicListEntries.size(), musicListOffset + kMusicRowsPerPage);
       pageLabels.reserve(endIndex - musicListOffset);
-      playingFlags.reserve(endIndex - musicListOffset);
+      actionVisibleFlags.reserve(endIndex - musicListOffset);
+      actionActiveFlags.reserve(endIndex - musicListOffset);
       for (size_t i = musicListOffset; i < endIndex; ++i) {
         String label = musicListEntries[i].label;
         if (!musicListEntries[i].isDirectory && musicListEntries[i].path == musicNowPlayingPath) {
           label = String("▶ ") + label;
         }
         pageLabels.push_back(label);
-        playingFlags.push_back(false);
+        actionVisibleFlags.push_back(!musicListEntries[i].isDirectory);
+        actionActiveFlags.push_back(
+            !musicListEntries[i].isDirectory
+            && musicViewMode == MUSIC_VIEW_LIBRARY
+            && isMusicPathInPlaylist(musicListEntries[i].path));
       }
       ui.drawMusicListScreen(
           musicScreenTitle.c_str(),
           pageLabels,
+          actionVisibleFlags,
+          actionActiveFlags,
+          musicViewMode == MUSIC_VIEW_PLAYLIST,
           visualControl == PRESS_GUIDE_LIST_BACK,
           (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
               ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
               : -1,
+          (visualControl >= PRESS_MUSIC_ITEM_ACTION_0 && visualControl <= PRESS_MUSIC_ITEM_ACTION_4)
+              ? (visualControl - PRESS_MUSIC_ITEM_ACTION_0)
+              : -1,
           visualControl == PRESS_GUIDE_LIST_PREV,
-          visualControl == PRESS_GUIDE_LIST_NEXT);
+          visualControl == PRESS_GUIDE_LIST_NEXT,
+          (musicViewMode == MUSIC_VIEW_PLAYLIST)
+              ? ((appLanguage == APP_LANGUAGE_EN) ? "Library" : "ライブラリ")
+              : ((appLanguage == APP_LANGUAGE_EN) ? "Playlist" : "プレイリスト"),
+          visualControl == PRESS_MUSIC_CONTROL_LEFT,
+          (musicViewMode == MUSIC_VIEW_PLAYLIST)
+              ? ((appLanguage == APP_LANGUAGE_EN) ? "Shuffle" : "シャッフル")
+              : ((appLanguage == APP_LANGUAGE_EN) ? "Vol -" : "おんりょう-"),
+          visualControl == PRESS_MUSIC_CONTROL_CENTER,
+          musicViewMode == MUSIC_VIEW_PLAYLIST ? musicPlaylistShuffleEnabled : false,
+          (musicViewMode == MUSIC_VIEW_PLAYLIST)
+              ? ((appLanguage == APP_LANGUAGE_EN) ? "Repeat" : "リピート")
+              : ((appLanguage == APP_LANGUAGE_EN) ? "Vol +" : "おんりょう+"),
+          visualControl == PRESS_MUSIC_CONTROL_RIGHT,
+          musicViewMode == MUSIC_VIEW_PLAYLIST ? musicPlaylistRepeatEnabled : false);
     } else if (screenMode == SCREEN_TYPE_MATCHUP) {
       String resultText = "";
       if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {
