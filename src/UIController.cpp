@@ -1524,10 +1524,22 @@ void UIController::drawGuidePokemonListScreen(
 void UIController::drawMusicListScreen(
     const char* title,
     const std::vector<String>& labels,
+    const std::vector<bool>& actionVisibleFlags,
+    const std::vector<bool>& actionActiveFlags,
+    bool playlistView,
     bool backPressed,
     int pressedItemIndex,
+    int pressedActionIndex,
     bool prevPressed,
-    bool nextPressed) {
+    bool nextPressed,
+    const char* leftControlLabel,
+    bool leftControlPressed,
+    const char* centerControlLabel,
+    bool centerControlPressed,
+    bool centerControlActive,
+    const char* rightControlLabel,
+    bool rightControlPressed,
+    bool rightControlActive) {
   const auto& theme = getThemePalette(currentTheme);
   sprite->fillScreen(theme.bg);
 
@@ -1544,19 +1556,22 @@ void UIController::drawMusicListScreen(
   sprite->setFont(&fonts::efontJA_12);
   constexpr int itemX = 30;
   constexpr int itemYStart = 46;
-  constexpr int itemW = SCREEN_WIDTH - 60;
+  constexpr int itemW = 242;
   constexpr int itemH = 26;
   constexpr int itemGapY = 6;
+  constexpr int actionX = 248;
+  constexpr int actionW = 24;
+  constexpr int actionH = 24;
   for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
     const int y = itemYStart + (i * (itemH + itemGapY));
     sprite->fillRoundRect(itemX, y, itemW, itemH, theme.buttonRadius, theme.bg);
     sprite->drawRoundRect(itemX, y, itemW, itemH, theme.buttonRadius, theme.border);
     if (pressedItemIndex == i) {
-      drawPressedOverlay(itemX, y, itemW, itemH, theme.buttonRadius);
+      drawPressedOverlay(itemX, y, 212, itemH, theme.buttonRadius);
     }
 
     String label = labels[i];
-    const int textMaxWidth = itemW - 16;
+    const int textMaxWidth = 200;
     while (label.length() > 0 && sprite->textWidth(label) > textMaxWidth) {
       label.remove(label.length() - 1);
     }
@@ -1571,7 +1586,36 @@ void UIController::drawMusicListScreen(
 
     sprite->setTextColor(theme.text);
     sprite->drawString(label, itemX + 8, y + 7);
+
+    const bool actionVisible = (i < static_cast<int>(actionVisibleFlags.size())) ? actionVisibleFlags[i] : false;
+    if (actionVisible) {
+      const bool actionActive = (i < static_cast<int>(actionActiveFlags.size())) ? actionActiveFlags[i] : false;
+      const uint16_t actionFill = actionActive ? theme.accent : theme.surface;
+      const uint16_t actionText = actionActive ? theme.invertedText : theme.text;
+      sprite->fillRoundRect(actionX, y + 1, actionW, actionH, 6, actionFill);
+      sprite->drawRoundRect(actionX, y + 1, actionW, actionH, 6, theme.border);
+      if (pressedActionIndex == i) {
+        drawPressedOverlay(actionX, y + 1, actionW, actionH, 6);
+      }
+      sprite->setFont(&fonts::efontJA_16_b);
+      sprite->setTextColor(actionText);
+      sprite->drawCenterString(playlistView ? "-" : "+", actionX + (actionW / 2), y + 4);
+      sprite->setFont(&fonts::efontJA_12);
+    }
   }
+
+  constexpr int controlY = 210;
+  constexpr int controlW = 88;
+  constexpr int controlH = 24;
+  constexpr int controlX[3] = {20, 116, 212};
+  const uint16_t centerFill = centerControlActive ? theme.accent : theme.surface;
+  const uint16_t centerText = centerControlActive ? theme.invertedText : theme.text;
+  const uint16_t rightFill = rightControlActive ? theme.accent : theme.surface;
+  const uint16_t rightText = rightControlActive ? theme.invertedText : theme.text;
+
+  drawActionButton(controlX[0], controlY, controlW, controlH, leftControlLabel, theme.surface, theme.text, leftControlPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(controlX[1], controlY, controlW, controlH, centerControlLabel, centerFill, centerText, centerControlPressed, theme.buttonPressedFill, theme.border);
+  drawActionButton(controlX[2], controlY, controlW, controlH, rightControlLabel, rightFill, rightText, rightControlPressed, theme.buttonPressedFill, theme.border);
 }
 
 void UIController::drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed) {

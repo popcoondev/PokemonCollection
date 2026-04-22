@@ -137,10 +137,22 @@ public:
   void drawMusicListScreen(
       const char* title,
       const std::vector<String>& labels,
+      const std::vector<bool>& actionVisibleFlags,
+      const std::vector<bool>& actionActiveFlags,
+      bool playlistView,
       bool backPressed,
       int pressedItemIndex,
+      int pressedActionIndex,
       bool prevPressed,
-      bool nextPressed);
+      bool nextPressed,
+      const char* leftControlLabel,
+      bool leftControlPressed,
+      const char* centerControlLabel,
+      bool centerControlPressed,
+      bool centerControlActive,
+      const char* rightControlLabel,
+      bool rightControlPressed,
+      bool rightControlActive);
   void drawGuideLocationListScreen(const std::vector<String>& labels, bool backPressed, int pressedItemIndex, bool prevPressed, bool nextPressed);
   void drawGuidePokemonDetailScreen(
       uint16_t pokemonId,
