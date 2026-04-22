@@ -12,6 +12,7 @@
 #include <math.h>
 #include <vector>
 #include "Config.h"
+#include "AppInput.h"
 #include "DataManager.h"
 #include "Renderer.h"
 #include "UIController.h"
@@ -571,18 +572,13 @@ uint16_t readCoverProximityValue() {
 }
 
 void initPortBBackButton() {
-  for (gpio_num_t pin : kPortBBackButtonPins) {
-    pinMode(static_cast<int>(pin), INPUT_PULLUP);
-  }
+  configureDigitalButtonInputs(
+      kPortBBackButtonPins,
+      sizeof(kPortBBackButtonPins) / sizeof(kPortBBackButtonPins[0]));
 }
 
 bool readPortBBackButtonRawPressed() {
-  for (gpio_num_t pin : kPortBBackButtonPins) {
-    if (digitalRead(static_cast<int>(pin)) == LOW) {
-      return true;
-    }
-  }
-  return false;
+  return readAnyDigitalButtonPressed(kPortBBackButtonPins, sizeof(kPortBBackButtonPins) / sizeof(kPortBBackButtonPins[0]));
 }
 
 void triggerVibration(uint8_t level, uint32_t durationMs, unsigned long now) {
@@ -3841,24 +3837,24 @@ void loop() {
     }
   }
 
-  if (!wakeSplashActive && screenMode == SCREEN_QUIZ && M5.Touch.getCount() > 0) {
-    auto t = M5.Touch.getDetail(0);
+  const AppTouchSnapshot touch = readPrimaryTouchSnapshot();
+
+  if (!wakeSplashActive && screenMode == SCREEN_QUIZ && touch.active) {
     heldControl = PRESS_MENU_QUIZ;
-    if (t.wasClicked()) {
+    if (touch.clicked) {
       latchedControl = PRESS_MENU_QUIZ;
       pendingAction = makePendingAction(ACTION_CLOSE_QUIZ);
       needsRedraw = true;
     }
-  } else if (!wakeSplashActive && M5.Touch.getCount() > 0) {
-    auto t = M5.Touch.getDetail(0);
-    pressedControl = getPressedControl(t.x, t.y, screenMode);
+  } else if (!wakeSplashActive && touch.active) {
+    pressedControl = getPressedControl(touch.x, touch.y, screenMode);
     if (pressedControl != heldControl) {
       heldControl = pressedControl;
       if (latchedControl == PRESS_NONE) {
         needsRedraw = true;
       }
     }
-    if (t.wasClicked()) {
+    if (touch.clicked) {
       latchedControl = pressedControl;
       needsRedraw = true;
 
