@@ -11,8 +11,26 @@ struct AppTouchSnapshot {
   int16_t y = 0;
 };
 
+struct AppButtonSnapshot {
+  bool pressed = false;
+  bool clicked = false;
+};
+
+struct DebouncedButtonState {
+  bool stablePressed = false;
+  bool lastRawPressed = false;
+  unsigned long lastChangeAt = 0;
+};
+
+void appInputBeginFrame();
 AppTouchSnapshot readPrimaryTouchSnapshot();
 void configureDigitalButtonInputs(const gpio_num_t* pins, size_t pinCount);
 bool readAnyDigitalButtonPressed(const gpio_num_t* pins, size_t pinCount);
+AppButtonSnapshot readDebouncedDigitalButton(
+    const gpio_num_t* pins,
+    size_t pinCount,
+    unsigned long now,
+    uint32_t debounceMs,
+    DebouncedButtonState& state);
 
 #endif

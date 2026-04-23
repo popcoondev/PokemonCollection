@@ -892,3 +892,30 @@
   - `M5.Lcd` の直接呼び出し箇所が洗い出されている
   - 主要画面の描画処理が Renderer 経由へ移行開始している
   - Renderer 実装以外で新規 `M5.Lcd` 直呼びをしないルールにできている
+
+### 0087. `AppRuntime` を共通ライフサイクルとして実機と sim の両方から起動できるようにしたい
+- 状態: open
+- 発生日: 2026-04-23
+- 画面/機能: アプリ実行基盤 / ライフサイクル
+- 再現手順: 実機と sim の起動入口を比較する
+- 期待結果: 実機は `setup()/loop()`、sim は SDL ループから、どちらも同じ `AppRuntime` の `boot/tick` を呼んでアプリ本体を動かせる
+- 実際の結果: 現在は `AppRuntime` の入口共有は始まっているが、sim はまだ最小ウィンドウ起動器のままで、アプリ本体の状態機械は回していない
+- 対応メモ: `sim/main.cpp` は simulator 専用 UI や専用 hit test を持たず、`appBoot(); while (...) appTick();` を呼ぶ薄い起動器だけにする。M5Stack 向けの座標系と画面遷移は既存アプリ側のまま維持する。完了条件は、トップメニューから起動する共通 runtime が sim でも回ること
+
+### 0088. sim 用の M5 下位 API shim を揃えて既存 `DataManager` と `ImageLoader` をそのまま使えるようにしたい
+- 状態: open
+- 発生日: 2026-04-23
+- 画面/機能: ストレージ基盤 / データ読込 / 画像読込 / sim backend
+- 再現手順: sim ビルドで既存の図鑑データ読込と画像読込を有効にしたい
+- 期待結果: `data/sd` を擬似 SD として扱い、既存の `DataManager` と `ImageLoader` が simulator でも同じコードのまま動く
+- 実際の結果: 現在は `SD/File` shim、`String` shim、`DataManager`、`ImageLoader` の sim ビルド対応は始まっているが、まだ `main.cpp` 全体と結合して runtime で使う段階までは進んでいない
+- 対応メモ: sim 側では `/pokemon/...` を `data/sd/pokemon/...` に解決する。独自の図鑑ローダや画像ローダは作らず、既存実装がコンパイル・動作できるだけの shim を補う。必要なら `ArduinoJson` 向けの最小分岐を許容するが、ロジックの再実装はしない
+
+### 0089. sim 用 backend として入力・時間・ストレージ・音・電源の責務境界を固めたい
+- 状態: open
+- 発生日: 2026-04-23
+- 画面/機能: プラットフォーム層 / backend 差し替え
+- 再現手順: `main.cpp` の実機依存 API を確認する
+- 期待結果: アプリ本体は M5 向けの API と座標系のまま書かれていても、下位 backend を差し替えるだけで sim でも同じ runtime を回せる
+- 実際の結果: 現在は `AppInput`、`AppPlatform`、`AppStorage` の分離は始まっているが、`M5.begin`、`M5.Speaker`、`M5.Power`、`M5.In_I2C`、worker task / queue / semaphore などの依存が残っている
+- 対応メモ: 目標は M5 全体の完全エミュレーションではなく、このアプリが依存している下位 API のみを adapter 化すること。sim 専用の画面ロジックや画面遷移は作らない。優先順位は `入力 -> 時間 -> ストレージ -> 描画 -> 音 -> 電源/センサー -> worker 実行基盤` の順で切る

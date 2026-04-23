@@ -25,6 +25,9 @@ public:
   void print(const char* text) override;
   void wakeup() override;
   void sleep() override;
+
+private:
+  uint16_t currentTextColor_ = 0xFFFF;
 };
 
 #endif

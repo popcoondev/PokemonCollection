@@ -44,8 +44,13 @@ bool DataManager::loadPokemonIndex() {
   if (!file) return false;
 
   JsonDocument doc;
+#ifdef POKEMONCOLLECTION_SIM
+  DeserializationError error = deserializeJson(doc, file.contents().c_str());
+  file.close();
+#else
   DeserializationError error = deserializeJson(doc, file);
   file.close();
+#endif
   if (error || !doc.is<JsonArray>()) return false;
 
   uint16_t detectedMaxId = MIN_POKEMON_ID;
@@ -67,7 +72,7 @@ bool DataManager::loadPokemonIndex() {
   for (JsonObject entry : doc.as<JsonArray>()) {
     const uint16_t id = static_cast<uint16_t>(entry["id"] | 0);
     if (id >= pokemonNames.size()) continue;
-    pokemonNames[id] = entry["n"].as<String>();
+    pokemonNames[id] = String(entry["n"] | "");
   }
 
   pokemonIdsSortedByName.clear();
@@ -95,25 +100,29 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
   if (!file) return false;
 
   JsonDocument doc;
+#ifdef POKEMONCOLLECTION_SIM
+  DeserializationError error = deserializeJson(doc, file.contents().c_str());
+#else
   DeserializationError error = deserializeJson(doc, file);
+#endif
   if (error) return false;
 
   currentPokemon.id = doc["id"];
   currentPokemon.name = getPokemonName(id);
   if (currentPokemon.name.length() == 0) {
-    currentPokemon.name = doc["name"].as<String>();
+    currentPokemon.name = String(doc["name"] | "");
   }
-  currentPokemon.category = doc["category"].as<String>();
-  currentPokemon.height = doc["height"].as<String>();
-  currentPokemon.weight = doc["weight"].as<String>();
-  currentPokemon.description = doc["desc"].as<String>();
+  currentPokemon.category = String(doc["category"] | "");
+  currentPokemon.height = String(doc["height"] | "");
+  currentPokemon.weight = String(doc["weight"] | "");
+  currentPokemon.description = String(doc["desc"] | "");
 
   currentPokemon.types.clear();
-  for (const char* t : doc["types"].as<JsonArray>()) currentPokemon.types.push_back(String(t));
+  for (const char* t : doc["types"].as<JsonArray>()) currentPokemon.types.push_back(String(t != nullptr ? t : ""));
 
   currentPokemon.abilities.clear();
   for (JsonObject ab : doc["abilities"].as<JsonArray>()) {
-    currentPokemon.abilities.push_back({ab["n"].as<String>(), ab["d"].as<String>()});
+    currentPokemon.abilities.push_back({String(ab["n"] | ""), String(ab["d"] | "")});
   }
 
   currentPokemon.evolutions.clear();
@@ -121,7 +130,7 @@ bool DataManager::loadPokemonDetail(uint16_t id) {
     const uint16_t evolutionId = static_cast<uint16_t>(evo["id"] | 0);
     String evolutionName = getPokemonName(evolutionId);
     if (evolutionName.length() == 0) {
-      evolutionName = evo["n"].as<String>();
+      evolutionName = String(evo["n"] | "");
     }
     currentPokemon.evolutions.push_back({evolutionId, evolutionName});
   }

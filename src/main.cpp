@@ -9,10 +9,19 @@
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 #include <algorithm>
+#include <cstdlib>
 #include <math.h>
 #include <vector>
 #include "Config.h"
+#include "AppAudio.h"
+#include "AppDevice.h"
+#include "AppRuntime.h"
 #include "AppInput.h"
+#include "AppMotion.h"
+#include "AppPlatform.h"
+#include "AppPower.h"
+#include "AppSensors.h"
+#include "AppStorage.h"
 #include "DataManager.h"
 #include "Renderer.h"
 #include "UIController.h"
@@ -501,9 +510,7 @@ unsigned long wakeSplashStartedAt = 0;
 unsigned long coverClosedSince = 0;
 unsigned long coverLastPollAt = 0;
 uint16_t coverLastProximityValue = 0;
-bool portBBackButtonStablePressed = false;
-bool portBBackButtonLastRawPressed = false;
-unsigned long portBBackButtonLastChangeAt = 0;
+DebouncedButtonState portBBackButtonState;
 bool portBBackButtonCapturedMarkerValid = false;
 int portBBackButtonCapturedMarkerX = kLockOnBarX + (kLockOnBarW / 2);
 SearchMode searchMode = SEARCH_MODE_NUMBER;
@@ -545,27 +552,129 @@ bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
       && ty >= (y - pad) && ty <= (y + h + pad);
 }
 
+#ifdef POKEMONCOLLECTION_SIM
+bool simDebugHitboxEnabled() {
+  static int enabled = -1;
+  if (enabled < 0) {
+    const char* value = std::getenv("SIM_DEBUG_HITBOX");
+    enabled = (value != nullptr && value[0] != '\0' && value[0] != '0') ? 1 : 0;
+  }
+  return enabled == 1;
+}
+
+void drawDebugHitboxRect(int x, int y, int w, int h, int pad = 0, uint16_t outerColor = 0xF800, uint16_t innerColor = 0x07E0) {
+  if (pad > 0) {
+    displayRenderer().drawRect(x - pad, y - pad, w + (pad * 2), h + (pad * 2), outerColor);
+  }
+  displayRenderer().drawRect(x, y, w, h, innerColor);
+}
+
+void drawDebugHitboxes(ScreenMode mode, TabType currentTabValue, int settingsTabIndexValue, int guidePokemonTabValue) {
+  if (!simDebugHitboxEnabled()) {
+    return;
+  }
+
+  constexpr uint16_t kPrimary = 0xF800;
+  constexpr uint16_t kSecondary = 0x07E0;
+  constexpr uint16_t kTertiary = 0x001F;
+
+  if (mode == SCREEN_MENU) {
+    drawDebugHitboxRect(24, 42, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(24, 84, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(24, 126, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(24, 168, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(166, 42, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(166, 84, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(166, 126, 130, 34, 0, kPrimary);
+    drawDebugHitboxRect(166, 168, 130, 34, 0, kPrimary);
+    return;
+  }
+
+  if (mode == SCREEN_DETAIL) {
+    drawDebugHitboxRect(0, 0, 40, TAB_BAR_Y, 0, kSecondary);
+    drawDebugHitboxRect(SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y, 0, kSecondary);
+    for (int i = 0; i < 5; ++i) {
+      drawDebugHitboxRect(i * (SCREEN_WIDTH / 5), TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 0, kTertiary);
+    }
+    if (currentTabValue == TAB_APPEARANCE) {
+      drawDebugHitboxRect(12, 56, 92, 92, 0, kPrimary);
+    }
+    return;
+  }
+
+  if (mode == SCREEN_MUSIC_LIST) {
+    drawDebugHitboxRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0, kPrimary);
+    drawDebugHitboxRect(0, 0, 40, SCREEN_HEIGHT, 0, kSecondary);
+    drawDebugHitboxRect(SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0, kSecondary);
+    drawDebugHitboxRect(20, 210, 88, 24, 0, kTertiary);
+    drawDebugHitboxRect(116, 210, 88, 24, 0, kTertiary);
+    drawDebugHitboxRect(212, 210, 88, 24, 0, kTertiary);
+    for (int i = 0; i < static_cast<int>(kMusicRowsPerPage); ++i) {
+      const int y = 46 + (i * 32);
+      drawDebugHitboxRect(30, y, 212, 26, 0, kPrimary);
+      drawDebugHitboxRect(248, y + 1, 24, 24, 0, kSecondary);
+    }
+    return;
+  }
+
+  if (mode == SCREEN_SETTINGS) {
+    drawDebugHitboxRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0, kPrimary);
+    drawDebugHitboxRect(0, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0, kSecondary);
+    drawDebugHitboxRect(SCREEN_WIDTH / 2, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0, kSecondary);
+    if (settingsTabIndexValue == 0) {
+      drawDebugHitboxRect(202, 60, 94, 30, 0, kTertiary);
+      drawDebugHitboxRect(202, 98, 94, 30, 0, kTertiary);
+      drawDebugHitboxRect(24, 152, 128, 30, 0, kTertiary);
+      drawDebugHitboxRect(164, 152, 128, 30, 0, kTertiary);
+    } else {
+      drawDebugHitboxRect(24, 84, 128, 30, 0, kTertiary);
+      drawDebugHitboxRect(164, 84, 128, 30, 0, kTertiary);
+      drawDebugHitboxRect(24, 152, 58, 28, 0, kTertiary);
+      drawDebugHitboxRect(94, 152, 58, 28, 0, kTertiary);
+      drawDebugHitboxRect(164, 152, 58, 28, 0, kTertiary);
+      drawDebugHitboxRect(234, 152, 58, 28, 0, kTertiary);
+    }
+    return;
+  }
+
+  if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
+    drawDebugHitboxRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0, kPrimary);
+    drawDebugHitboxRect(0, 0, 40, TAB_BAR_Y, 0, kSecondary);
+    drawDebugHitboxRect(SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y, 0, kSecondary);
+    if (guidePokemonTabValue == 0) {
+      drawDebugHitboxRect(16, 152, 84, 22, 0, kTertiary);
+      drawDebugHitboxRect(112, 56, SCREEN_WIDTH - 124, 122, 0, kTertiary);
+    } else {
+      drawDebugHitboxRect(12, 56, SCREEN_WIDTH - 24, 122, 0, kTertiary);
+    }
+    for (int i = 0; i < 5; ++i) {
+      drawDebugHitboxRect(i * (SCREEN_WIDTH / 5), TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 0, kPrimary);
+    }
+  }
+}
+#endif
+
 bool initCoverProximitySensor() {
-  const uint8_t partId = M5.In_I2C.readRegister8(kLtr553Address, kLtr553RegPartId, 400000);
+  const uint8_t partId = appI2CReadRegister8(kLtr553Address, kLtr553RegPartId, 400000);
   if (partId == 0x00 || partId == 0xFF) {
     return false;
   }
 
-  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsLed, 0x3F, 400000)) return false;
-  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsNPulses, 0x04, 400000)) return false;
-  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsMeasRate, 0x02, 400000)) return false;
-  if (!M5.In_I2C.writeRegister8(kLtr553Address, kLtr553RegPsContr, 0x03, 400000)) return false;
-  delay(10);
+  if (!appI2CWriteRegister8(kLtr553Address, kLtr553RegPsLed, 0x3F, 400000)) return false;
+  if (!appI2CWriteRegister8(kLtr553Address, kLtr553RegPsNPulses, 0x04, 400000)) return false;
+  if (!appI2CWriteRegister8(kLtr553Address, kLtr553RegPsMeasRate, 0x02, 400000)) return false;
+  if (!appI2CWriteRegister8(kLtr553Address, kLtr553RegPsContr, 0x03, 400000)) return false;
+  appDelay(10);
   return true;
 }
 
 uint16_t readCoverProximityValue() {
   uint8_t valueLow = 0;
   uint8_t valueHigh = 0;
-  if (!M5.In_I2C.readRegister(kLtr553Address, kLtr553RegPsDataLow, &valueLow, 1, 400000)) {
+  if (!appI2CReadRegister(kLtr553Address, kLtr553RegPsDataLow, &valueLow, 1, 400000)) {
     return coverLastProximityValue;
   }
-  if (!M5.In_I2C.readRegister(kLtr553Address, kLtr553RegPsDataHigh, &valueHigh, 1, 400000)) {
+  if (!appI2CReadRegister(kLtr553Address, kLtr553RegPsDataHigh, &valueHigh, 1, 400000)) {
     return coverLastProximityValue;
   }
   return static_cast<uint16_t>(((valueHigh & 0x07) << 8) | valueLow);
@@ -582,7 +691,7 @@ bool readPortBBackButtonRawPressed() {
 }
 
 void triggerVibration(uint8_t level, uint32_t durationMs, unsigned long now) {
-  M5.Power.setVibration(level);
+  appSetVibration(level);
   vibrationStopAt = (level == 0 || durationMs == 0) ? 0 : (now + durationMs);
 }
 
@@ -634,23 +743,23 @@ int getAudioChannelForBus(AudioBusKind bus) {
 }
 
 void audioStopAll() {
-  M5.Speaker.stop();
+  appAudioStopAll();
 }
 
 void audioStopBus(AudioBusKind bus) {
-  M5.Speaker.stop(getAudioChannelForBus(bus));
+  appAudioStopChannel(getAudioChannelForBus(bus));
 }
 
 void audioSetMasterVolume(uint8_t volume) {
-  M5.Speaker.setVolume(volume);
+  appAudioSetMasterVolume(volume);
 }
 
 void audioSetBusVolume(AudioBusKind bus, uint8_t volume) {
-  M5.Speaker.setChannelVolume(getAudioChannelForBus(bus), volume);
+  appAudioSetChannelVolume(getAudioChannelForBus(bus), volume);
 }
 
 bool audioPlayTone(AudioBusKind bus, float frequency, uint32_t durationMs, bool stopCurrentSound = true) {
-  return M5.Speaker.tone(frequency, durationMs, getAudioChannelForBus(bus), stopCurrentSound);
+  return appAudioPlayTone(frequency, durationMs, getAudioChannelForBus(bus), stopCurrentSound);
 }
 
 bool audioPlayRaw16(
@@ -661,7 +770,7 @@ bool audioPlayRaw16(
     bool stereo,
     uint32_t repeat = 1,
     bool stopCurrentSound = false) {
-  return M5.Speaker.playRaw(
+  return appAudioPlayRaw16(
       rawData,
       sampleCount,
       sampleRate,
@@ -983,7 +1092,7 @@ void serviceMusicStream() {
   }
 
   const uint8_t channel = getAudioChannelForBus(AUDIO_BUS_BGM);
-  while (musicStreamState.active && M5.Speaker.isPlaying(channel) < 2) {
+  while (musicStreamState.active && appAudioQueuedCount(channel) < 2) {
     if (musicStreamState.dataRemainingBytes == 0) {
       const String nextPath = getNextMusicTrackPath();
       if (nextPath.length() == 0) {
@@ -1849,7 +1958,7 @@ int getSearchInputKeyIndexAt(int tx, int ty) {
   for (int i = 0; i < 12; ++i) {
     const int col = i % 3;
     const int row = i / 3;
-    if (hitTest(tx, ty, keyX[col], keyY[row], 80, 24, 8)) {
+    if (hitTest(tx, ty, keyX[col], keyY[row], 80, 24, 0)) {
       return i;
     }
   }
@@ -2070,30 +2179,30 @@ enum PressedControl {
 
 PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   if (mode == SCREEN_MENU) {
-    if (hitTest(tx, ty, 24, 64, 130, 34, 8)) return PRESS_MENU_POKEDEX;
-    if (hitTest(tx, ty, 24, 106, 130, 34, 8)) return PRESS_MENU_QUIZ;
-    if (hitTest(tx, ty, 24, 148, 130, 34, 8)) return PRESS_MENU_SLIDESHOW;
-    if (hitTest(tx, ty, 24, 190, 130, 34, 8)) return PRESS_MENU_TYPE_MATCHUP;
-    if (hitTest(tx, ty, 166, 64, 130, 34, 8)) return PRESS_MENU_GUIDE;
-    if (hitTest(tx, ty, 166, 106, 130, 34, 8)) return PRESS_MENU_SETTINGS;
-    if (hitTest(tx, ty, 166, 148, 130, 34, 8)) return PRESS_MENU_ACHIEVEMENTS;
-    if (hitTest(tx, ty, 166, 190, 130, 34, 8)) return PRESS_MENU_MUSIC;
+    if (hitTest(tx, ty, 24, 42, 130, 34, 0)) return PRESS_MENU_POKEDEX;
+    if (hitTest(tx, ty, 24, 84, 130, 34, 0)) return PRESS_MENU_QUIZ;
+    if (hitTest(tx, ty, 24, 126, 130, 34, 0)) return PRESS_MENU_SLIDESHOW;
+    if (hitTest(tx, ty, 24, 168, 130, 34, 0)) return PRESS_MENU_TYPE_MATCHUP;
+    if (hitTest(tx, ty, 166, 42, 130, 34, 0)) return PRESS_MENU_GUIDE;
+    if (hitTest(tx, ty, 166, 84, 130, 34, 0)) return PRESS_MENU_SETTINGS;
+    if (hitTest(tx, ty, 166, 126, 130, 34, 0)) return PRESS_MENU_ACHIEVEMENTS;
+    if (hitTest(tx, ty, 166, 168, 130, 34, 0)) return PRESS_MENU_MUSIC;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_MUSIC_LIST) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
-    if (hitTest(tx, ty, 20, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_LEFT;
-    if (hitTest(tx, ty, 116, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_CENTER;
-    if (hitTest(tx, ty, 212, 210, 88, 24, 6)) return PRESS_MUSIC_CONTROL_RIGHT;
+    if (hitTest(tx, ty, 20, 210, 88, 24, 0)) return PRESS_MUSIC_CONTROL_LEFT;
+    if (hitTest(tx, ty, 116, 210, 88, 24, 0)) return PRESS_MUSIC_CONTROL_CENTER;
+    if (hitTest(tx, ty, 212, 210, 88, 24, 0)) return PRESS_MUSIC_CONTROL_RIGHT;
     for (int i = 0; i < static_cast<int>(kMusicRowsPerPage); ++i) {
       const int y = 46 + (i * 32);
-      if (hitTest(tx, ty, 30, y, 212, 26, 8)) {
+      if (hitTest(tx, ty, 30, y, 212, 26, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
-      if (hitTest(tx, ty, 248, y + 1, 24, 24, 4)) {
+      if (hitTest(tx, ty, 248, y + 1, 24, 24, 0)) {
         return static_cast<PressedControl>(PRESS_MUSIC_ITEM_ACTION_0 + i);
       }
     }
@@ -2101,16 +2210,16 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_TYPE_MATCHUP) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 20, 102, 120, 26, 8)) return PRESS_TYPE_MATCHUP_ATTACK;
-    if (hitTest(tx, ty, 180, 62, 120, 26, 8)) return PRESS_TYPE_MATCHUP_DEFENSE;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 20, 102, 120, 26, 0)) return PRESS_TYPE_MATCHUP_ATTACK;
+    if (hitTest(tx, ty, 180, 62, 120, 26, 0)) return PRESS_TYPE_MATCHUP_DEFENSE;
     if (hitTest(tx, ty, 12, 146, 208, 78, 0)) return PRESS_TYPE_MATCHUP_TEXTBOX;
-    if (hitTest(tx, ty, 238, 164, 62, 38, 8)) return PRESS_TYPE_MATCHUP_CONFIRM;
+    if (hitTest(tx, ty, 238, 164, 62, 38, 0)) return PRESS_TYPE_MATCHUP_CONFIRM;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_TYPE_PICKER) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     for (int i = 0; i < 10; ++i) {
@@ -2118,7 +2227,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
       const int row = i / 2;
       const int x = (col == 0) ? 44 : 162;
       const int y = 48 + (row * 30);
-      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
+      if (hitTest(tx, ty, x, y, 114, 24, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
@@ -2130,27 +2239,27 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SETTINGS) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
     if (hitTest(tx, ty, 0, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_0;
     if (hitTest(tx, ty, SCREEN_WIDTH / 2, TAB_BAR_Y, SCREEN_WIDTH / 2, TAB_BAR_H, 0)) return PRESS_MENU_SETTINGS_TAB_1;
     if (settingsTabIndex == 0) {
-      if (hitTest(tx, ty, 202, 60, 94, 30, 8)) return PRESS_MENU_3D;
-      if (hitTest(tx, ty, 202, 98, 94, 30, 8)) return PRESS_MENU_PREVIEW_CAPTION;
-      if (hitTest(tx, ty, 24, 152, 128, 30, 6)) return PRESS_MENU_THEME_0;
-      if (hitTest(tx, ty, 164, 152, 128, 30, 6)) return PRESS_MENU_THEME_1;
+      if (hitTest(tx, ty, 202, 60, 94, 30, 0)) return PRESS_MENU_3D;
+      if (hitTest(tx, ty, 202, 98, 94, 30, 0)) return PRESS_MENU_PREVIEW_CAPTION;
+      if (hitTest(tx, ty, 24, 152, 128, 30, 0)) return PRESS_MENU_THEME_0;
+      if (hitTest(tx, ty, 164, 152, 128, 30, 0)) return PRESS_MENU_THEME_1;
     } else {
-      if (hitTest(tx, ty, 24, 84, 128, 30, 6)) return PRESS_MENU_LANG_JA;
-      if (hitTest(tx, ty, 164, 84, 128, 30, 6)) return PRESS_MENU_LANG_EN;
-      if (hitTest(tx, ty, 24, 152, 58, 28, 6)) return PRESS_MENU_VOL_LARGE;
-      if (hitTest(tx, ty, 94, 152, 58, 28, 6)) return PRESS_MENU_VOL_MEDIUM;
-      if (hitTest(tx, ty, 164, 152, 58, 28, 6)) return PRESS_MENU_VOL_SMALL;
-      if (hitTest(tx, ty, 234, 152, 58, 28, 6)) return PRESS_MENU_VOL_MUTE;
+      if (hitTest(tx, ty, 24, 84, 128, 30, 0)) return PRESS_MENU_LANG_JA;
+      if (hitTest(tx, ty, 164, 84, 128, 30, 0)) return PRESS_MENU_LANG_EN;
+      if (hitTest(tx, ty, 24, 152, 58, 28, 0)) return PRESS_MENU_VOL_LARGE;
+      if (hitTest(tx, ty, 94, 152, 58, 28, 0)) return PRESS_MENU_VOL_MEDIUM;
+      if (hitTest(tx, ty, 164, 152, 58, 28, 0)) return PRESS_MENU_VOL_SMALL;
+      if (hitTest(tx, ty, 234, 152, 58, 28, 0)) return PRESS_MENU_VOL_MUTE;
     }
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_GUIDE_LOCATION_DETAIL) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     for (int i = 0; i < 10; ++i) {
@@ -2158,7 +2267,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
       const int row = i / 2;
       const int x = (col == 0) ? 44 : 162;
       const int y = 48 + (row * 30);
-      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
+      if (hitTest(tx, ty, x, y, 114, 24, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
@@ -2166,41 +2275,41 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_GUIDE_MENU) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_POKEMON;
-    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 8)) return PRESS_GUIDE_LOCATION;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 72, SCREEN_WIDTH - 64, 42, 0)) return PRESS_GUIDE_POKEMON;
+    if (hitTest(tx, ty, 32, 126, SCREEN_WIDTH - 64, 42, 0)) return PRESS_GUIDE_LOCATION;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_MENU) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 160, SCREEN_WIDTH - 64, 42, 8)) return PRESS_ACHIEVEMENT_LOCKON;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 160, SCREEN_WIDTH - 64, 42, 0)) return PRESS_ACHIEVEMENT_LOCKON;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 114, SCREEN_WIDTH - 64, 38, 8)) return PRESS_ACHIEVEMENT_LIST;
-    if (hitTest(tx, ty, 32, 162, SCREEN_WIDTH - 64, 38, 8)) return PRESS_ACHIEVEMENT_BADGES;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
+    if (hitTest(tx, ty, 32, 114, SCREEN_WIDTH - 64, 38, 0)) return PRESS_ACHIEVEMENT_LIST;
+    if (hitTest(tx, ty, 32, 162, SCREEN_WIDTH - 64, 38, 0)) return PRESS_ACHIEVEMENT_BADGES;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON_LIST) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON_BADGES) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_GUIDE_POKEMON_LIST) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     for (int i = 0; i < 10; ++i) {
@@ -2208,7 +2317,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
       const int row = i / 2;
       const int x = (col == 0) ? 44 : 162;
       const int y = 48 + (row * 30);
-      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
+      if (hitTest(tx, ty, x, y, 114, 24, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
@@ -2216,7 +2325,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_GUIDE_LOCATION_LIST) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
     for (int i = 0; i < 10; ++i) {
@@ -2224,7 +2333,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
       const int row = i / 2;
       const int x = (col == 0) ? 44 : 162;
       const int y = 48 + (row * 30);
-      if (hitTest(tx, ty, x, y, 114, 24, 8)) {
+      if (hitTest(tx, ty, x, y, 114, 24, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
       }
     }
@@ -2232,18 +2341,18 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_GUIDE_POKEMON_DETAIL) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_GUIDE_DETAIL_BACK;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_DETAIL_BACK;
     if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y, 0)) return PRESS_GUIDE_DETAIL_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y, 0)) return PRESS_GUIDE_DETAIL_NEXT;
-    if (guidePokemonTab == 0 && hitTest(tx, ty, 16, 152, 84, 22, 6)) return PRESS_GUIDE_DETAIL_CAUGHT;
+    if (guidePokemonTab == 0 && hitTest(tx, ty, 16, 152, 84, 22, 0)) return PRESS_GUIDE_DETAIL_CAUGHT;
     if (guidePokemonTab == 0) {
-      if (hitTest(tx, ty, 112, 56, SCREEN_WIDTH - 124, 122, 6)) return PRESS_GUIDE_DETAIL_PAGE;
+      if (hitTest(tx, ty, 112, 56, SCREEN_WIDTH - 124, 122, 0)) return PRESS_GUIDE_DETAIL_PAGE;
     } else {
-      if (hitTest(tx, ty, 12, 56, SCREEN_WIDTH - 24, 122, 6)) return PRESS_GUIDE_DETAIL_PAGE;
+      if (hitTest(tx, ty, 12, 56, SCREEN_WIDTH - 24, 122, 0)) return PRESS_GUIDE_DETAIL_PAGE;
     }
     for (int i = 0; i < 5; ++i) {
       const int x = i * (SCREEN_WIDTH / 5);
-      if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 8)) {
+      if (hitTest(tx, ty, x, TAB_BAR_Y, SCREEN_WIDTH / 5, TAB_BAR_H, 0)) {
         return static_cast<PressedControl>(PRESS_GUIDE_DETAIL_TAB_0 + i);
       }
     }
@@ -2259,9 +2368,9 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SEARCH) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_MENU;
-    if (hitTest(tx, ty, 44, 52, 114, 24, 6)) return PRESS_SEARCH_NAME_QUERY;
-    if (hitTest(tx, ty, 162, 52, 114, 24, 6)) return PRESS_SEARCH_MODE;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_SEARCH_MENU;
+    if (hitTest(tx, ty, 44, 52, 114, 24, 0)) return PRESS_SEARCH_NAME_QUERY;
+    if (hitTest(tx, ty, 162, 52, 114, 24, 0)) return PRESS_SEARCH_MODE;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_SEARCH_NAME_PAGE_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_SEARCH_NAME_PAGE_NEXT;
     const int resultX[2] = {44, 162};
@@ -2271,7 +2380,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     for (int i = 0; i < 10; ++i) {
       const int col = i % 2;
       const int row = i / 2;
-      if (hitTest(tx, ty, resultX[col], resultY + (row * 28), resultW, resultH, 6)) {
+      if (hitTest(tx, ty, resultX[col], resultY + (row * 28), resultW, resultH, 0)) {
         return static_cast<PressedControl>(PRESS_SEARCH_NAME_RESULT_0 + i);
       }
     }
@@ -2279,20 +2388,20 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_SEARCH_NUMBER) {
-    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_MENU;
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_SEARCH_MENU;
     const int digitX[4] = {60, 110, 160, 210};
     for (int i = 0; i < 4; ++i) {
-      if (hitTest(tx, ty, digitX[i], 52, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
-      if (hitTest(tx, ty, digitX[i], 120, 40, 34, 8)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
+      if (hitTest(tx, ty, digitX[i], 52, 40, 34, 0)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_UP_0 + i);
+      if (hitTest(tx, ty, digitX[i], 120, 40, 34, 0)) return static_cast<PressedControl>(PRESS_SEARCH_DIGIT_DOWN_0 + i);
     }
-    if (hitTest(tx, ty, 20, 178, 280, 40, 10)) return PRESS_SEARCH_OPEN;
+    if (hitTest(tx, ty, 20, 178, 280, 40, 0)) return PRESS_SEARCH_OPEN;
     return PRESS_NONE;
   }
 
   if (mode == SCREEN_SEARCH_INPUT) {
-    if (hitTest(tx, ty, 12, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_BACK;
-    if (hitTest(tx, ty, 116, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_DELETE;
-    if (hitTest(tx, ty, 220, 202, 88, 28, 8)) return PRESS_SEARCH_INPUT_CLEAR;
+    if (hitTest(tx, ty, 12, 202, 88, 28, 0)) return PRESS_SEARCH_INPUT_BACK;
+    if (hitTest(tx, ty, 116, 202, 88, 28, 0)) return PRESS_SEARCH_INPUT_DELETE;
+    if (hitTest(tx, ty, 220, 202, 88, 28, 0)) return PRESS_SEARCH_INPUT_CLEAR;
     const int keyIndex = getSearchInputKeyIndexAt(tx, ty);
     if (keyIndex >= 0) {
       return static_cast<PressedControl>(PRESS_SEARCH_INPUT_KEY_0 + keyIndex);
@@ -2315,7 +2424,7 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     return static_cast<PressedControl>(PRESS_EVOLUTION_0 + evolutionIndex);
   }
 
-  if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 6)) return PRESS_SEARCH_HEADER;
+  if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_SEARCH_HEADER;
   if (hitTest(tx, ty, 0, 0, 40, TAB_BAR_Y)) return PRESS_NAV_PREV;
   if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, TAB_BAR_Y)) return PRESS_NAV_NEXT;
   if (currentTab == TAB_APPEARANCE && hitTest(tx, ty, 46, 54, 100, 140, 0)) return PRESS_APPEARANCE_PREVIEW;
@@ -2530,48 +2639,44 @@ bool pollPortBBackButton(unsigned long now, ScreenMode mode, LockOnPhase current
   clickedAction = {};
 
   const bool rawPressed = readPortBBackButtonRawPressed();
-  if (rawPressed != portBBackButtonLastRawPressed) {
-    portBBackButtonLastRawPressed = rawPressed;
-    portBBackButtonLastChangeAt = now;
-    if (rawPressed) {
-      if (mode == SCREEN_LOCKON && currentLockOnPhase == LOCKON_SEARCH) {
-        const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
-        portBBackButtonCapturedMarkerX =
-            getLockOnMarkerCenterX(elapsedMs, lockOnSearchDurationMs, lockOnRarity);
-        portBBackButtonCapturedMarkerValid = true;
-      } else {
-        portBBackButtonCapturedMarkerValid = false;
-      }
+  if (rawPressed != portBBackButtonState.lastRawPressed) {
+    if (rawPressed && mode == SCREEN_LOCKON && currentLockOnPhase == LOCKON_SEARCH) {
+      const unsigned long elapsedMs = now - lockOnPhaseStartedAt;
+      portBBackButtonCapturedMarkerX =
+          getLockOnMarkerCenterX(elapsedMs, lockOnSearchDurationMs, lockOnRarity);
+      portBBackButtonCapturedMarkerValid = true;
     } else {
       portBBackButtonCapturedMarkerValid = false;
     }
   }
 
-  if ((now - portBBackButtonLastChangeAt) >= kPortBBackButtonDebounceMs
-      && portBBackButtonStablePressed != rawPressed) {
-    portBBackButtonStablePressed = rawPressed;
-    if (portBBackButtonStablePressed) {
-      if (mode == SCREEN_MENU) {
-        clickedAction = makePendingAction(ACTION_OPEN_LOCKON);
-      } else if (mode == SCREEN_LOCKON) {
-        if (currentLockOnPhase == LOCKON_SEARCH) {
-          clickedAction = makePendingAction(
-              ACTION_LOCKON_CONFIRM,
-              portBBackButtonCapturedMarkerValid
-                  ? portBBackButtonCapturedMarkerX
-                  : getLockOnMarkerCenterX(now - lockOnPhaseStartedAt, lockOnSearchDurationMs, lockOnRarity));
-        } else if (currentLockOnPhase == LOCKON_RESULT_SUCCESS) {
-          clickedAction = makePendingAction(ACTION_LOCKON_OPEN_DETAIL);
-        } else if (currentLockOnPhase == LOCKON_RESULT_FAIL) {
-          clickedAction = makePendingAction(ACTION_CLOSE_LOCKON);
-        }
-      } else {
-        clickedAction = getBackPendingActionForScreen(mode);
+  const AppButtonSnapshot buttonSnapshot = readDebouncedDigitalButton(
+      kPortBBackButtonPins,
+      sizeof(kPortBBackButtonPins) / sizeof(kPortBBackButtonPins[0]),
+      now,
+      kPortBBackButtonDebounceMs,
+      portBBackButtonState);
+  if (buttonSnapshot.clicked) {
+    if (mode == SCREEN_MENU) {
+      clickedAction = makePendingAction(ACTION_OPEN_LOCKON);
+    } else if (mode == SCREEN_LOCKON) {
+      if (currentLockOnPhase == LOCKON_SEARCH) {
+        clickedAction = makePendingAction(
+            ACTION_LOCKON_CONFIRM,
+            portBBackButtonCapturedMarkerValid
+                ? portBBackButtonCapturedMarkerX
+                : getLockOnMarkerCenterX(now - lockOnPhaseStartedAt, lockOnSearchDurationMs, lockOnRarity));
+      } else if (currentLockOnPhase == LOCKON_RESULT_SUCCESS) {
+        clickedAction = makePendingAction(ACTION_LOCKON_OPEN_DETAIL);
+      } else if (currentLockOnPhase == LOCKON_RESULT_FAIL) {
+        clickedAction = makePendingAction(ACTION_CLOSE_LOCKON);
       }
+    } else {
+      clickedAction = getBackPendingActionForScreen(mode);
     }
   }
 
-  if (portBBackButtonStablePressed) {
+  if (buttonSnapshot.pressed) {
     pressedControl = (mode == SCREEN_MENU || mode == SCREEN_LOCKON)
         ? PRESS_LOCKON_ACTION
         : getBackPressedControlForScreen(mode);
@@ -2638,8 +2743,8 @@ bool loadGuideLocations() {
 
   for (JsonObject item : doc.as<JsonArray>()) {
     GuideLocationEntry entry;
-    entry.id = item["id"].as<String>();
-    entry.name = item["name"].as<String>();
+    entry.id = String(item["id"] | "");
+    entry.name = String(item["name"] | "");
     entry.postgameOnly = item["postgame_only"] | false;
     if (item["pokemon"].is<JsonArray>()) {
       for (JsonVariant v : item["pokemon"].as<JsonArray>()) {
@@ -2778,16 +2883,16 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
   if (root["locations"].is<JsonArray>()) {
     for (JsonObject item : root["locations"].as<JsonArray>()) {
       GuidePokemonLocationEntry entry;
-      entry.area = item["area"].as<String>();
-      entry.method = item["method"].as<String>();
-      entry.rate = item["rate"].as<String>();
+      entry.area = String(item["area"] | "");
+      entry.method = String(item["method"] | "");
+      entry.rate = String(item["rate"] | "");
       guidePokemonDetail.locations.push_back(entry);
     }
   }
 
   if (root["evolution"].is<JsonArray>()) {
     for (JsonVariant item : root["evolution"].as<JsonArray>()) {
-      const String value = item.as<String>();
+      const String value = String(item | "");
       if (value.length() > 0) {
         guidePokemonDetail.evolutions.push_back(value);
       }
@@ -2798,7 +2903,7 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
     for (JsonObject item : root["level_up_moves"].as<JsonArray>()) {
       GuidePokemonMoveEntry entry;
       entry.level = item["level"] | 0;
-      entry.name = item["name"].as<String>();
+      entry.name = String(item["name"] | "");
       if (entry.name.length() > 0) {
         guidePokemonDetail.levelUpMoves.push_back(entry);
       }
@@ -2807,7 +2912,7 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
 
   if (root["machines"].is<JsonArray>()) {
     for (JsonVariant item : root["machines"].as<JsonArray>()) {
-      const String value = item.as<String>();
+      const String value = String(item | "");
       if (value.length() > 0) {
         guidePokemonDetail.machines.push_back(value);
       }
@@ -2816,7 +2921,7 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
 
   if (root["hms"].is<JsonArray>()) {
     for (JsonVariant item : root["hms"].as<JsonArray>()) {
-      const String value = item.as<String>();
+      const String value = String(item | "");
       if (value.length() > 0) {
         guidePokemonDetail.hms.push_back(value);
       }
@@ -3592,32 +3697,38 @@ void queueEvolutionImageRequests(const PokemonDetail& pk) {
 }
 }
 
-void setup() {
-  auto cfg = M5.config();
-  cfg.internal_spk = true;
-  cfg.internal_mic = false;
-  M5.begin(cfg);
-  randomSeed(static_cast<uint32_t>(esp_random()));
+AppRuntime appRuntime;
+
+AppRuntime& appRuntimeInstance() {
+  return appRuntime;
+}
+
+void appBoot() {
+  appRuntime.boot();
+}
+
+void appTick() {
+  appRuntime.tick();
+}
+
+void AppRuntime::boot() {
+  appDeviceBegin();
+  appSeedRandom();
   displayRenderer().setRotation(1);
   displayRenderer().setTextFont(2);
-  {
-    auto spk_cfg = M5.Speaker.config();
-    spk_cfg.sample_rate = 44100;
-    M5.Speaker.config(spk_cfg);
-  }
-  M5.Speaker.begin();
+  appAudioBegin(44100);
   audioSetMasterVolume(128);
   audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
   displayRenderer().setBrightness(kDisplayBrightnessOn);
 
-  if (!SD.begin(GPIO_NUM_4, SPI, 25000000)) {
+  if (!appStorageBegin()) {
     displayRenderer().print("SD Init Error");
-    while(1) delay(100);
+    while(1) appDelay(100);
   }
 
   if (!dataMgr.begin()) {
     displayRenderer().print("SD Error");
-    while(1) delay(100);
+    while(1) appDelay(100);
   }
   loadQuizSound(kUiConfirmSoundPath, uiConfirmSound);
   loadLockOnSecretIds();
@@ -3626,7 +3737,7 @@ void setup() {
 
   if (!ui.begin()) {
     displayRenderer().print("UI Error");
-    while(1) delay(100);
+    while(1) appDelay(100);
   }
 
   loadSettings();
@@ -3667,26 +3778,26 @@ void setup() {
       || !previewImageLoader.begin()
       || !evolutionImageLoader.begin()) {
     displayRenderer().print("Image Queue Error");
-    while(1) delay(100);
+    while(1) appDelay(100);
   }
 
   for (auto* sprite : evolutionImageSprites) {
     if (sprite == nullptr) {
       displayRenderer().print("Image Queue Error");
-      while(1) delay(100);
+      while(1) appDelay(100);
     }
   }
 
   appearanceImageSprite->setColorDepth(16);
   if (!appearanceImageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
     displayRenderer().print("Image Sprite Error");
-    while(1) delay(100);
+    while(1) appDelay(100);
   }
   for (auto& sprite : evolutionImageSprites) {
     sprite->setColorDepth(16);
     if (!sprite->createSprite(kEvolutionImageW, kEvolutionImageH)) {
       displayRenderer().print("Evolution Sprite Error");
-      while(1) delay(100);
+      while(1) appDelay(100);
     }
   }
 
@@ -3718,8 +3829,8 @@ void setup() {
   dataMgr.loadPokemonDetail(currentId);
 }
 
-void loop() {
-  M5.update();
+void AppRuntime::tick() {
+  appInputBeginFrame();
   static PressedControl heldControl = PRESS_NONE;
   static PressedControl latchedControl = PRESS_NONE;
   static PendingAction pendingAction;
@@ -3734,7 +3845,7 @@ void loop() {
   PressedControl pressedControl = PRESS_NONE;
   PressedControl portBPressedControl = PRESS_NONE;
   PendingAction portBClickedAction;
-  const unsigned long now = millis();
+  const unsigned long now = appMillis();
   updateLockOnBadgeFeverState(now);
   serviceMusicStream();
   if (musicPlaybackVisualDirty) {
@@ -3823,7 +3934,7 @@ void loop() {
       saveSettings();
       settingsDirty = false;
     }
-    delay(20);
+    appDelay(20);
     return;
   }
 
@@ -4856,7 +4967,7 @@ void loop() {
   }
 
   if (vibrationStopAt != 0 && now >= vibrationStopAt) {
-    M5.Power.setVibration(0);
+    appSetVibration(0);
     vibrationStopAt = 0;
   }
 
@@ -4960,7 +5071,7 @@ void loop() {
     float ax = 0.0f;
     float ay = 0.0f;
     float az = 0.0f;
-    if (M5.Imu.getAccel(&ax, &ay, &az)) {
+    if (appReadAccel(&ax, &ay, &az)) {
       const float targetShiftX = constrain(ax * -10.0f, -4.0f, 4.0f);
       const float targetShiftY = constrain(ay * 10.0f, -4.0f, 4.0f);
       previewPocShiftXF += (targetShiftX - previewPocShiftXF) * 0.45f;
@@ -5117,9 +5228,8 @@ void loop() {
           visualControl == PRESS_LOCKON_ACTION,
           lockOnPhase == LOCKON_RESULT_SUCCESS);
     } else if (screenMode == SCREEN_MENU) {
-      const int batteryLevel = M5.Power.getBatteryLevel();
-      const bool batteryCharging =
-          M5.Power.isCharging() == m5::Power_Class::is_charging_t::is_charging;
+      const int batteryLevel = appGetBatteryLevel();
+      const bool batteryCharging = appIsCharging();
       ui.drawMenuScreen(
           visualControl == PRESS_MENU_POKEDEX,
           visualControl == PRESS_MENU_QUIZ,
@@ -5545,28 +5655,48 @@ void loop() {
     }
 
     ui.pushToDisplay();
+#ifdef POKEMONCOLLECTION_SIM
+    drawDebugHitboxes(screenMode, currentTab, settingsTabIndex, guidePokemonTab);
+    if (simDebugHitboxEnabled()) {
+      const int cx = touch.x;
+      const int cy = touch.y;
+      displayRenderer().drawRect(cx - 2, cy - 2, 5, 5, 0xFFE0);
+      char coordLabel[32];
+      snprintf(coordLabel, sizeof(coordLabel), "(%d,%d)", cx, cy);
+      displayRenderer().setTextColor(0xFFE0);
+      displayRenderer().drawString(String(coordLabel), 6, SCREEN_HEIGHT - 18);
+    }
+#endif
     needsRedraw = false;
   }
 
-  if (guideCaughtDirty && millis() >= guideCaughtSaveAt) {
-    saveGuideCaughtFlags();
-    guideCaughtDirty = false;
+    if (guideCaughtDirty && appMillis() >= guideCaughtSaveAt) {
+      saveGuideCaughtFlags();
+      guideCaughtDirty = false;
+    }
+
+    if (lockOnAchievementsDirty && appMillis() >= lockOnAchievementsSaveAt) {
+      saveLockOnAchievements();
+      lockOnAchievementsDirty = false;
+    }
+
+    if (achievementStatsDirty && appMillis() >= achievementStatsSaveAt) {
+      saveAchievementStats();
+      achievementStatsDirty = false;
+    }
+
+    if (settingsDirty && appMillis() >= settingsSaveAt) {
+      saveSettings();
+      settingsDirty = false;
+    }
+
+    appDelay(10);
   }
 
-  if (lockOnAchievementsDirty && millis() >= lockOnAchievementsSaveAt) {
-    saveLockOnAchievements();
-    lockOnAchievementsDirty = false;
-  }
+void setup() {
+  appBoot();
+}
 
-  if (achievementStatsDirty && millis() >= achievementStatsSaveAt) {
-    saveAchievementStats();
-    achievementStatsDirty = false;
-  }
-
-  if (settingsDirty && millis() >= settingsSaveAt) {
-    saveSettings();
-    settingsDirty = false;
-  }
-
-  delay(10);
+void loop() {
+  appTick();
 }
