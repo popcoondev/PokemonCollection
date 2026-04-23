@@ -11,5 +11,8 @@ sim/build/
 *.log
 *.tmp
 *.bak
+data/sd/pokemon/settings.json
+data/sd/pokemon/achievements/*.json
+data/sd/pokemon/sounds/music/**/*.wav
 
 /.clangd/
