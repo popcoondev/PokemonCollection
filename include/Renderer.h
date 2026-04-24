@@ -1,6 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <Arduino.h>
 #include <M5Unified.h>
 
 class Renderer {

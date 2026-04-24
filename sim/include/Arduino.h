@@ -2,74 +2,162 @@
 #define SIM_ARDUINO_H
 
 #include <algorithm>
-#include <cctype>
+#include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
-template <typename T, typename U>
-constexpr auto max(T a, U b) {
-  return a < b ? b : a;
-}
+#include <SDL.h>
 
-template <typename T, typename U>
-constexpr auto min(T a, U b) {
-  return a < b ? a : b;
-}
-
-class String : public std::string {
+class String {
 public:
-  using std::string::string;
-
   String() = default;
-  String(const std::string& other) : std::string(other) {}
-  String(const char* other) : std::string(other != nullptr ? other : "") {}
-  String(unsigned value) : std::string(std::to_string(value)) {}
-  String(int value) : std::string(std::to_string(value)) {}
-  String(size_t value) : std::string(std::to_string(value)) {}
+  String(const char* value) : value_(value != nullptr ? value : "") {}
+  String(const std::string& value) : value_(value) {}
+  String(int value) : value_(std::to_string(value)) {}
+  String(unsigned value) : value_(std::to_string(value)) {}
+  String(long value) : value_(std::to_string(value)) {}
+  String(unsigned long value) : value_(std::to_string(value)) {}
 
-  size_t length() const { return size(); }
-
-  int compareTo(const String& other) const {
-    if (*this < other) return -1;
-    if (*this > other) return 1;
-    return 0;
-  }
+  size_t length() const { return value_.size(); }
+  const char* c_str() const { return value_.c_str(); }
 
   void toLowerCase() {
-    std::transform(begin(), end(), begin(), [](unsigned char ch) {
-      return static_cast<char>(std::tolower(ch));
+    std::transform(value_.begin(), value_.end(), value_.begin(), [](unsigned char c) {
+      return static_cast<char>(std::tolower(c));
     });
   }
 
+  int compareTo(const String& other) const {
+    if (value_ == other.value_) return 0;
+    return value_ < other.value_ ? -1 : 1;
+  }
+
+  bool startsWith(const char* prefix) const {
+    const std::string p = prefix != nullptr ? prefix : "";
+    return value_.rfind(p, 0) == 0;
+  }
+
+  bool endsWith(const char* suffix) const {
+    const std::string s = suffix != nullptr ? suffix : "";
+    return value_.size() >= s.size() && value_.compare(value_.size() - s.size(), s.size(), s) == 0;
+  }
+
   int indexOf(const String& needle) const {
-    const size_t pos = find(needle);
-    return pos == npos ? -1 : static_cast<int>(pos);
+    const std::size_t pos = value_.find(needle.value_);
+    return pos == std::string::npos ? -1 : static_cast<int>(pos);
+  }
+
+  int lastIndexOf(char ch) const {
+    const std::size_t pos = value_.find_last_of(ch);
+    return pos == std::string::npos ? -1 : static_cast<int>(pos);
+  }
+
+  String substring(size_t from) const {
+    return from >= value_.size() ? String("") : String(value_.substr(from));
+  }
+
+  String substring(size_t from, size_t to) const {
+    if (from >= value_.size() || to <= from) return String("");
+    return String(value_.substr(from, to - from));
   }
 
   void remove(size_t index) {
-    if (index < size()) {
-      erase(index);
+    if (index < value_.size()) {
+      value_.erase(index);
     }
   }
 
   void remove(size_t index, size_t count) {
-    if (index < size()) {
-      erase(index, count);
+    if (index < value_.size()) {
+      value_.erase(index, count);
     }
   }
+
+  String& operator=(const char* value) {
+    value_ = value != nullptr ? value : "";
+    return *this;
+  }
+
+  String& operator+=(const String& rhs) {
+    value_ += rhs.value_;
+    return *this;
+  }
+
+  String& operator+=(const char* rhs) {
+    value_ += (rhs != nullptr ? rhs : "");
+    return *this;
+  }
+
+  bool operator==(const char* rhs) const {
+    return value_ == (rhs != nullptr ? rhs : "");
+  }
+
+  bool operator!=(const char* rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator==(const String& rhs) const {
+    return value_ == rhs.value_;
+  }
+
+  bool operator!=(const String& rhs) const {
+    return value_ != rhs.value_;
+  }
+
+  bool operator<(const String& rhs) const {
+    return value_ < rhs.value_;
+  }
+
+  friend String operator+(const String& lhs, const String& rhs) {
+    return String(static_cast<std::string>(lhs) + static_cast<std::string>(rhs));
+  }
+
+  friend String operator+(const String& lhs, const char* rhs) {
+    return String(static_cast<std::string>(lhs) + (rhs != nullptr ? rhs : ""));
+  }
+
+  friend String operator+(const char* lhs, const String& rhs) {
+    return String((lhs != nullptr ? lhs : "") + static_cast<std::string>(rhs));
+  }
+
+  char operator[](size_t index) const {
+    return value_[index];
+  }
+
+  operator std::string() const { return value_; }
+
+private:
+  std::string value_;
 };
 
-inline String operator+(const String& lhs, const String& rhs) {
-  return String(static_cast<const std::string&>(lhs) + static_cast<const std::string&>(rhs));
+inline long random(long minValue, long maxValue) {
+  if (maxValue <= minValue) return minValue;
+  return minValue + (std::rand() % (maxValue - minValue));
 }
 
-inline String operator+(const String& lhs, const char* rhs) {
-  return String(static_cast<const std::string&>(lhs) + std::string(rhs != nullptr ? rhs : ""));
+inline unsigned long millis() {
+  return static_cast<unsigned long>(SDL_GetTicks());
 }
 
-inline String operator+(const char* lhs, const String& rhs) {
-  return String(std::string(lhs != nullptr ? lhs : "") + static_cast<const std::string&>(rhs));
+template <typename T, typename U, typename V>
+inline auto constrain(T value, U low, V high) -> std::common_type_t<T, U, V> {
+  using R = std::common_type_t<T, U, V>;
+  const R rv = static_cast<R>(value);
+  const R rl = static_cast<R>(low);
+  const R rh = static_cast<R>(high);
+  return std::min(std::max(rv, rl), rh);
+}
+
+template <typename T>
+inline T max(T lhs, T rhs) {
+  return std::max(lhs, rhs);
+}
+
+template <typename T>
+inline T min(T lhs, T rhs) {
+  return std::min(lhs, rhs);
 }
 
 #endif

@@ -7,9 +7,12 @@
 !.vscode/extensions.json
 
 /tmp/
+sim/build/
 *.log
 *.tmp
 *.bak
-sim/build/
+data/sd/pokemon/settings.json
+data/sd/pokemon/achievements/*.json
+data/sd/pokemon/sounds/music/**/*.wav
 
 /.clangd/

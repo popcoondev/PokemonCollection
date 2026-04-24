@@ -1,29 +1,17 @@
-#ifndef SIM_SD_H_WRAPPER
-#define SIM_SD_H_WRAPPER
+#ifndef SIM_SD_H
+#define SIM_SD_H
 
 #include "FS.h"
-#include "SimSd.h"
 
-constexpr int FILE_READ = 0;
-
-class SDClass {
+class SimSDClass {
 public:
-  std::filesystem::path resolvePath(const char* path) const {
-    return SimSd::resolve(path != nullptr ? path : "");
-  }
-
-  bool exists(const char* path) const {
-    const auto resolved = resolvePath(path);
-    return !resolved.empty() && std::filesystem::exists(resolved);
-  }
-
-  File open(const char* path, int mode = FILE_READ) const {
-    (void)mode;
-    const auto resolved = resolvePath(path);
-    return File(resolved);
-  }
+  bool begin();
+  bool exists(const char* path) const;
+  File open(const char* path, int mode = FILE_READ) const;
+  bool mkdir(const char* path) const;
+  bool remove(const char* path) const;
 };
 
-inline SDClass SD;
+extern SimSDClass SD;
 
 #endif

@@ -1,152 +1,139 @@
-#ifndef SIM_M5UNIFIED_H
-#define SIM_M5UNIFIED_H
+#ifndef SIM_M5_UNIFIED_H
+#define SIM_M5_UNIFIED_H
 
-#include "Arduino.h"
-
+#include <Arduino.h>
+#include <SimPlatform.h>
 #include <cstdint>
 
-#define TFT_BLACK 0x0000
-#define TFT_WHITE 0xFFFF
-
-class SDClass;
-
-template <typename T, typename U, typename V>
-constexpr auto constrain(T x, U a, V b) {
-  return x < a ? a : (x > b ? b : x);
-}
+using gpio_num_t = int;
+inline constexpr gpio_num_t GPIO_NUM_4 = 4;
+inline constexpr gpio_num_t GPIO_NUM_8 = 8;
+inline constexpr gpio_num_t GPIO_NUM_9 = 9;
+inline constexpr uint16_t TFT_BLACK = 0x0000;
+inline constexpr uint16_t TFT_WHITE = 0xFFFF;
 
 namespace lgfx {
+
 struct FontMetrics {
-  int x_advance = 8;
 };
 
-class IFont {
-public:
-  virtual ~IFont() = default;
-  virtual bool updateFontMetric(FontMetrics* metrics, uint16_t codepoint) const {
-    (void)codepoint;
-    if (metrics != nullptr) {
-      metrics->x_advance = 8;
-    }
-    return true;
-  }
+struct IFont {
+  bool updateFontMetric(FontMetrics*, uint16_t) const { return true; }
 };
 
-class LGFX_Device {
-public:
-  virtual ~LGFX_Device() = default;
-};
-
-class LGFXBase : public LGFX_Device {
+class LGFXBase {
 public:
   virtual ~LGFXBase() = default;
 
-  virtual void fillScreen(uint16_t color) = 0;
-  virtual void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) = 0;
-  virtual void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) = 0;
-  virtual void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) = 0;
-  virtual void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) = 0;
-  virtual void setFont(const lgfx::IFont* font) = 0;
-  virtual const lgfx::IFont* getFont() const = 0;
-  virtual void setTextColor(uint16_t color) = 0;
-  virtual void drawString(const String& text, int32_t x, int32_t y) = 0;
-  virtual void drawCenterString(const String& text, int32_t x, int32_t y) = 0;
-  virtual void drawRightString(const String& text, int32_t x, int32_t y) = 0;
-  virtual size_t textWidth(const String& text) const = 0;
-  virtual bool drawPngFile(const ::SDClass& fs,
-                           const char* path,
-                           int32_t x,
-                           int32_t y,
-                           int32_t sx,
-                           int32_t sy,
-                           int32_t sw,
-                           int32_t sh,
-                           float scaleX,
-                           float scaleY) = 0;
-  virtual void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t* data) = 0;
-  virtual void drawCircle(int32_t x, int32_t y, int32_t r, uint16_t color) = 0;
-  virtual void fillCircle(int32_t x, int32_t y, int32_t r, uint16_t color) = 0;
-  virtual void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t color) = 0;
-  virtual void drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) = 0;
-  virtual void drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) = 0;
+  virtual void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) { SimPlatform::fillRect(x, y, w, h, color); }
+  virtual void fillScreen(uint16_t color) { SimPlatform::clear(color); }
+  virtual void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t, uint16_t color) { SimPlatform::fillRect(x, y, w, h, color); }
+  virtual void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) { SimPlatform::drawRect(x, y, w, h, color); }
+  virtual void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t, uint16_t color) { SimPlatform::drawRect(x, y, w, h, color); }
+  virtual void setFont(const IFont* font) { font_ = font; }
+  virtual const IFont* getFont() const { return font_; }
+  virtual void setTextColor(uint16_t color) { textColor_ = color; }
+  virtual void drawString(const char* text, int32_t x, int32_t y) { SimPlatform::drawText(text, x, y, textColor_, 0); }
+  virtual void drawString(const String& text, int32_t x, int32_t y) { drawString(text.c_str(), x, y); }
+  virtual void drawCenterString(const char* text, int32_t x, int32_t y) { SimPlatform::drawText(text, x, y, textColor_, 1); }
+  virtual void drawCenterString(const String& text, int32_t x, int32_t y) { drawCenterString(text.c_str(), x, y); }
+  virtual void drawRightString(const char* text, int32_t x, int32_t y) { SimPlatform::drawText(text, x, y, textColor_, 2); }
+  virtual void drawRightString(const String& text, int32_t x, int32_t y) { drawRightString(text.c_str(), x, y); }
+  virtual void drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) { SimPlatform::drawLine(x, y, x + w - 1, y, color); }
+  virtual void drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) { SimPlatform::drawLine(x, y, x, y + h - 1, color); }
+  virtual void drawCircle(int32_t x, int32_t y, int32_t r, uint16_t color) { SimPlatform::drawCircle(x, y, r, color); }
+  virtual void fillCircle(int32_t x, int32_t y, int32_t r, uint16_t color) { SimPlatform::fillCircle(x, y, r, color); }
+  virtual void drawLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color) { SimPlatform::drawLine(x1, y1, x2, y2, color); }
+  virtual void pushImage(int32_t, int32_t, int32_t, int32_t, const uint16_t*) {}
+  virtual int32_t textWidth(const char* text) { return text != nullptr ? static_cast<int32_t>(std::strlen(text) * 8) : 0; }
+  virtual int32_t textWidth(const String& text) { return textWidth(text.c_str()); }
+  virtual bool drawPngFile(const class SimSDClass&, const char*, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, float, float) { return false; }
+  virtual bool drawPngFile(const class SimSDClass& sd, const char* path, int32_t x, int32_t y, int32_t maxWidth, int32_t maxHeight) {
+    return drawPngFile(sd, path, x, y, maxWidth, maxHeight, 0, 0, 1.0f, 1.0f);
+  }
+
+protected:
+  const IFont* font_ = nullptr;
+  uint16_t textColor_ = TFT_WHITE;
+};
+
+class LGFX_Device : public LGFXBase {
+};
+
+class LGFX_Sprite : public LGFXBase {
+public:
+  explicit LGFX_Sprite(LGFX_Device* = nullptr) {}
+
+  void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) override {
+    LGFXBase::fillRect(x, y, w, h, color);
+  }
+  void fillScreen(uint16_t color) override {
+    LGFXBase::fillScreen(color);
+  }
+  void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) override {
+    LGFXBase::fillRoundRect(x, y, w, h, r, color);
+  }
+  void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) override {
+    LGFXBase::drawRect(x, y, w, h, color);
+  }
+  void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) override {
+    LGFXBase::drawRoundRect(x, y, w, h, r, color);
+  }
+  void setFont(const IFont* font) override { LGFXBase::setFont(font); }
+  const IFont* getFont() const override { return LGFXBase::getFont(); }
+  void setTextColor(uint16_t color) override { LGFXBase::setTextColor(color); }
+  void drawString(const char* text, int32_t x, int32_t y) override { LGFXBase::drawString(text, x, y); }
+  void drawString(const String& text, int32_t x, int32_t y) { LGFXBase::drawString(text, x, y); }
+  void drawCenterString(const char* text, int32_t x, int32_t y) override { LGFXBase::drawCenterString(text, x, y); }
+  void drawCenterString(const String& text, int32_t x, int32_t y) { LGFXBase::drawCenterString(text, x, y); }
+  void drawRightString(const char* text, int32_t x, int32_t y) override { LGFXBase::drawRightString(text, x, y); }
+  void drawRightString(const String& text, int32_t x, int32_t y) { LGFXBase::drawRightString(text, x, y); }
+  void drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) override { LGFXBase::drawFastHLine(x, y, w, color); }
+  void drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) override { LGFXBase::drawFastVLine(x, y, h, color); }
+  void drawCircle(int32_t x, int32_t y, int32_t r, uint16_t color) override { LGFXBase::drawCircle(x, y, r, color); }
+  void fillCircle(int32_t x, int32_t y, int32_t r, uint16_t color) override { LGFXBase::fillCircle(x, y, r, color); }
+  void drawLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color) override { LGFXBase::drawLine(x1, y1, x2, y2, color); }
+  void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t* data) override { LGFXBase::pushImage(x, y, w, h, data); }
+  int32_t textWidth(const char* text) override { return LGFXBase::textWidth(text); }
+  int32_t textWidth(const String& text) { return LGFXBase::textWidth(text); }
+  void setColorDepth(int) {}
+  void setPsram(bool) {}
+  bool createSprite(int32_t w, int32_t h) { width_ = w; height_ = h; return true; }
+  void deleteSprite() { width_ = 0; height_ = 0; }
+  int32_t width() const { return width_; }
+  int32_t height() const { return height_; }
+  void* getBuffer() { return nullptr; }
+  void pushSprite(int32_t, int32_t) {}
+  void pushSprite(LGFX_Device*, int32_t, int32_t) {}
+  void pushSprite(LGFXBase*, int32_t, int32_t, uint16_t = 0) {}
+
+private:
+  int32_t width_ = 0;
+  int32_t height_ = 0;
 };
 
 namespace v1 {
-constexpr uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
-  return static_cast<uint16_t>(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3));
+inline uint16_t color565(uint8_t, uint8_t, uint8_t) { return 0; }
 }
-}  // namespace v1
+
 }  // namespace lgfx
 
-class LGFX_Sprite : public lgfx::LGFXBase {
-public:
-  explicit LGFX_Sprite(lgfx::LGFX_Device* target = nullptr);
-  ~LGFX_Sprite() override;
-
-  bool createSprite(int32_t width, int32_t height);
-  void deleteSprite();
-  void setColorDepth(int depth);
-  void setPsram(bool enabled);
-  void* getBuffer() const;
-  int32_t width() const;
-  int32_t height() const;
-  void pushSprite(int32_t x, int32_t y, uint16_t transparent = 0);
-  void pushSprite(LGFX_Sprite* target, int32_t x, int32_t y, uint16_t transparent = 0);
-  void pushSprite(lgfx::LGFX_Device* target, int32_t x, int32_t y, uint16_t transparent = 0);
-
-  void fillScreen(uint16_t color) override;
-  void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) override;
-  void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) override;
-  void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) override;
-  void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t color) override;
-  void setFont(const lgfx::IFont* font) override;
-  const lgfx::IFont* getFont() const override;
-  void setTextColor(uint16_t color) override;
-  void drawString(const String& text, int32_t x, int32_t y) override;
-  void drawCenterString(const String& text, int32_t x, int32_t y) override;
-  void drawRightString(const String& text, int32_t x, int32_t y) override;
-  size_t textWidth(const String& text) const override;
-  bool drawPngFile(const ::SDClass& fs,
-                   const char* path,
-                   int32_t x,
-                   int32_t y,
-                   int32_t sx,
-                   int32_t sy,
-                   int32_t sw,
-                   int32_t sh,
-                   float scaleX,
-                   float scaleY) override;
-  bool drawPngFile(const ::SDClass& fs, const char* path, int32_t x, int32_t y, int32_t maxWidth, int32_t maxHeight);
-  void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, const uint16_t* data) override;
-  void drawCircle(int32_t x, int32_t y, int32_t r, uint16_t color) override;
-  void fillCircle(int32_t x, int32_t y, int32_t r, uint16_t color) override;
-  void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t color) override;
-  void drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) override;
-  void drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) override;
-
-private:
-  lgfx::LGFXBase* target;
-  const lgfx::IFont* currentFont;
-  bool created;
-  mutable uint8_t bufferStub;
-  int32_t spriteWidth;
-  int32_t spriteHeight;
-};
+using LGFX_Sprite = lgfx::LGFX_Sprite;
 
 namespace fonts {
-extern lgfx::IFont Font0;
-extern lgfx::IFont efontJA_10;
-extern lgfx::IFont efontJA_10_b;
-extern lgfx::IFont efontJA_12;
-extern lgfx::IFont efontJA_12_b;
-extern lgfx::IFont efontJA_16;
-extern lgfx::IFont efontJA_16_b;
-extern lgfx::IFont efontCN_10;
-extern lgfx::IFont efontCN_10_b;
-extern lgfx::IFont efontCN_12;
-extern lgfx::IFont efontCN_12_b;
-extern lgfx::IFont efontCN_16;
-extern lgfx::IFont efontCN_16_b;
-}  // namespace fonts
+inline constexpr lgfx::IFont Font0{};
+inline constexpr lgfx::IFont efontJA_10{};
+inline constexpr lgfx::IFont efontJA_10_b{};
+inline constexpr lgfx::IFont efontJA_12{};
+inline constexpr lgfx::IFont efontJA_12_b{};
+inline constexpr lgfx::IFont efontJA_16{};
+inline constexpr lgfx::IFont efontJA_16_b{};
+inline constexpr lgfx::IFont efontCN_10{};
+inline constexpr lgfx::IFont efontCN_10_b{};
+inline constexpr lgfx::IFont efontCN_12{};
+inline constexpr lgfx::IFont efontCN_12_b{};
+inline constexpr lgfx::IFont efontCN_16{};
+inline constexpr lgfx::IFont efontCN_16_b{};
+}
 
 #endif
