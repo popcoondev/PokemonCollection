@@ -6,6 +6,14 @@ namespace {
 const char* getPokemonIndexPath(AppLanguage language) {
   return (language == APP_LANGUAGE_EN) ? "/pokemon/index_en.json" : "/pokemon/index.json";
 }
+
+bool deserializeJsonFromFile(JsonDocument& doc, File& file) {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  return deserializeJson(doc, file.contents().c_str()) == DeserializationError::Ok;
+#else
+  return deserializeJson(doc, file) == DeserializationError::Ok;
+#endif
+}
 }
 
 DataManager::DataManager() {

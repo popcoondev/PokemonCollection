@@ -3,9 +3,13 @@
 
 #include "Renderer.h"
 
-class PcRenderer : public Renderer {
+class PcRenderer : public Renderer, public lgfx::LGFXBase {
 public:
-  PcRenderer() = default;
+  PcRenderer();
+  ~PcRenderer() override;
+
+  bool beginNative(void* nativeRenderer, const char* fontPath, int pointSize = 14);
+  void endNative();
 
   lgfx::LGFX_Device& device() override;
   void fillScreen(uint16_t color) override;
