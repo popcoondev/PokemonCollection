@@ -5,6 +5,8 @@
 #include <cstdio>
 
 #include "AppRuntime.h"
+#include "PcRenderer.h"
+#include "Renderer.h"
 #include "SimPlatform.h"
 #include "SimSd.h"
 
@@ -14,6 +16,8 @@ constexpr int kLogicalHeight = 240;
 constexpr int kWindowScale = 2;
 constexpr int kDebugWindowWidth = 320;
 constexpr int kDebugWindowHeight = 140;
+constexpr int kControlWindowWidth = 360;
+constexpr int kControlWindowHeight = 260;
 
 bool simDebugHitboxEnabled() {
   const char* value = std::getenv("SIM_DEBUG_HITBOX");
@@ -68,6 +72,23 @@ void drawDebugText(SDL_Renderer* renderer, TTF_Font* font, const char* text, int
   SDL_DestroyTexture(texture);
   SDL_FreeSurface(surface);
 }
+
+struct ControlButton {
+  SDL_Rect rect;
+  const char* label;
+};
+
+bool hitRect(const SDL_Rect& rect, int x, int y) {
+  return x >= rect.x && x < (rect.x + rect.w) && y >= rect.y && y < (rect.y + rect.h);
+}
+
+void drawControlButton(SDL_Renderer* renderer, TTF_Font* font, const ControlButton& button, bool active) {
+  SDL_SetRenderDrawColor(renderer, active ? 48 : 28, active ? 120 : 58, active ? 84 : 62, 255);
+  SDL_RenderFillRect(renderer, &button.rect);
+  SDL_SetRenderDrawColor(renderer, 210, 220, 228, 255);
+  SDL_RenderDrawRect(renderer, &button.rect);
+  drawDebugText(renderer, font, button.label, button.rect.x + 12, button.rect.y + 10);
+}
 }
 
 int main(int argc, char** argv) {
@@ -107,10 +128,16 @@ int main(int argc, char** argv) {
 
   SDL_RenderSetLogicalSize(renderer, kLogicalWidth, kLogicalHeight);
   SimPlatform::setRenderer(renderer);
+  if (const char* fontPath = pickDebugFontPath()) {
+    reinterpret_cast<PcRenderer*>(&M5Renderer::instance())->beginNative(renderer, fontPath, 14);
+  }
 
   SDL_Window* debugWindow = nullptr;
   SDL_Renderer* debugRenderer = nullptr;
   TTF_Font* debugFont = nullptr;
+  SDL_Window* controlWindow = nullptr;
+  SDL_Renderer* controlRenderer = nullptr;
+  TTF_Font* controlFont = nullptr;
   if (simDebugHitboxEnabled()) {
     debugWindow = SDL_CreateWindow(
         "PokemonCollection Sim Debug",
@@ -132,6 +159,31 @@ int main(int argc, char** argv) {
     }
   }
 
+  controlWindow = SDL_CreateWindow(
+      "PokemonCollection Sim Controls",
+      SDL_WINDOWPOS_CENTERED + 80,
+      SDL_WINDOWPOS_CENTERED + 80,
+      kControlWindowWidth,
+      kControlWindowHeight,
+      SDL_WINDOW_SHOWN);
+  if (controlWindow != nullptr) {
+    controlRenderer = SDL_CreateRenderer(controlWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  }
+  if (controlRenderer != nullptr) {
+    if (TTF_WasInit() == 0) {
+      TTF_Init();
+    }
+    if (const char* fontPath = pickDebugFontPath()) {
+      controlFont = TTF_OpenFont(fontPath, 14);
+    }
+  }
+
+  SimControlState controlState;
+  controlState.proximityValue = 0;
+  controlState.batteryLevel = 100;
+  SimPlatform::setControlState(controlState);
+  SimPlatform::setDebugHitboxEnabled(simDebugHitboxEnabled());
+
   appBoot();
 
   bool running = true;
@@ -141,16 +193,55 @@ int main(int argc, char** argv) {
   int16_t mouseY = 0;
   int windowMouseX = 0;
   int windowMouseY = 0;
+  const uint32_t mainWindowId = SDL_GetWindowID(window);
+  const uint32_t debugWindowId = debugWindow != nullptr ? SDL_GetWindowID(debugWindow) : 0;
+  const uint32_t controlWindowId = controlWindow != nullptr ? SDL_GetWindowID(controlWindow) : 0;
+  const ControlButton nearButton{{16, 34, 76, 32}, "Near"};
+  const ControlButton farButton{{100, 34, 76, 32}, "Far"};
+  const ControlButton clickButton{{16, 88, 98, 32}, "Port.B Click"};
+  const ControlButton holdButton{{124, 88, 98, 32}, "Port.B Hold"};
+  const ControlButton chargeButton{{16, 142, 116, 32}, "Charging"};
+  const ControlButton batteryDownButton{{156, 142, 56, 32}, "Batt-"};
+  const ControlButton batteryUpButton{{220, 142, 56, 32}, "Batt+"};
+  const ControlButton hitboxButton{{16, 196, 150, 32}, "Debug Hitbox"};
   while (running) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         running = false;
+      } else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) {
+        running = false;
       } else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-        mouseDown = true;
+        if (event.button.windowID == mainWindowId) {
+          mouseDown = true;
+        }
       } else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-        mouseDown = false;
-        mouseClicked = true;
+        if (event.button.windowID == mainWindowId) {
+          mouseDown = false;
+          mouseClicked = true;
+        } else if (event.button.windowID == controlWindowId) {
+          const int x = event.button.x;
+          const int y = event.button.y;
+          controlState = SimPlatform::getControlState();
+          if (hitRect(nearButton.rect, x, y)) {
+            controlState.proximityValue = 1000;
+          } else if (hitRect(farButton.rect, x, y)) {
+            controlState.proximityValue = 0;
+          } else if (hitRect(clickButton.rect, x, y)) {
+            SimPlatform::triggerDigitalButtonClick();
+          } else if (hitRect(holdButton.rect, x, y)) {
+            controlState.portBHold = !controlState.portBHold;
+          } else if (hitRect(chargeButton.rect, x, y)) {
+            controlState.charging = !controlState.charging;
+          } else if (hitRect(batteryDownButton.rect, x, y)) {
+            controlState.batteryLevel = (controlState.batteryLevel >= 10) ? (controlState.batteryLevel - 10) : 0;
+          } else if (hitRect(batteryUpButton.rect, x, y)) {
+            controlState.batteryLevel = (controlState.batteryLevel <= 90) ? (controlState.batteryLevel + 10) : 100;
+          } else if (hitRect(hitboxButton.rect, x, y)) {
+            SimPlatform::setDebugHitboxEnabled(!SimPlatform::isDebugHitboxEnabled());
+          }
+          SimPlatform::setControlState(controlState);
+        }
       }
     }
     SDL_GetMouseState(&windowMouseX, &windowMouseY);
@@ -162,11 +253,12 @@ int main(int argc, char** argv) {
     touchState.y = mouseY;
     SimPlatform::setTouchState(touchState);
     mouseClicked = false;
-    SimPlatform::setDigitalButtonPressed(false);
+    SimPlatform::beginInputFrame();
     if (SimPlatform::beginRenderFrame()) {
       appTick();
       SimPlatform::endRenderFrame();
     }
+    SimPlatform::endInputFrame();
 
     if (debugRenderer != nullptr) {
       SDL_SetRenderDrawColor(debugRenderer, 18, 24, 32, 255);
@@ -187,6 +279,37 @@ int main(int argc, char** argv) {
       drawDebugText(debugRenderer, debugFont, line2, 16, 94);
       SDL_RenderPresent(debugRenderer);
     }
+
+    if (controlRenderer != nullptr) {
+      controlState = SimPlatform::getControlState();
+      SDL_SetRenderDrawColor(controlRenderer, 18, 24, 32, 255);
+      SDL_RenderClear(controlRenderer);
+      SDL_SetRenderDrawColor(controlRenderer, 82, 92, 108, 255);
+      SDL_Rect border = {8, 8, kControlWindowWidth - 16, kControlWindowHeight - 16};
+      SDL_RenderDrawRect(controlRenderer, &border);
+      drawDebugText(controlRenderer, controlFont, "SIM CONTROL WINDOW", 16, 12);
+      drawDebugText(controlRenderer, controlFont, "Proximity", 200, 18);
+      drawControlButton(controlRenderer, controlFont, nearButton, controlState.proximityValue >= 500);
+      drawControlButton(controlRenderer, controlFont, farButton, controlState.proximityValue < 500);
+      drawDebugText(controlRenderer, controlFont, "Port.B", 16, 72);
+      drawControlButton(controlRenderer, controlFont, clickButton, false);
+      drawControlButton(controlRenderer, controlFont, holdButton, controlState.portBHold);
+      drawDebugText(controlRenderer, controlFont, "Power", 16, 126);
+      drawControlButton(controlRenderer, controlFont, chargeButton, controlState.charging);
+      drawControlButton(controlRenderer, controlFont, batteryDownButton, false);
+      drawControlButton(controlRenderer, controlFont, batteryUpButton, false);
+      drawControlButton(controlRenderer, controlFont, hitboxButton, SimPlatform::isDebugHitboxEnabled());
+      char line[96];
+      std::snprintf(line, sizeof(line), "Battery: %d%%", controlState.batteryLevel);
+      drawDebugText(controlRenderer, controlFont, line, 286, 150);
+      std::snprintf(line, sizeof(line), "Port.B active: %d", SimPlatform::isDigitalButtonPressed() ? 1 : 0);
+      drawDebugText(controlRenderer, controlFont, line, 16, 186);
+      std::snprintf(line, sizeof(line), "Proximity: %u", static_cast<unsigned>(controlState.proximityValue));
+      drawDebugText(controlRenderer, controlFont, line, 176, 202);
+      std::snprintf(line, sizeof(line), "Display sleep: %d", SimPlatform::isDisplaySleeping() ? 1 : 0);
+      drawDebugText(controlRenderer, controlFont, line, 176, 226);
+      SDL_RenderPresent(controlRenderer);
+    }
   }
 
   if (debugFont != nullptr) {
@@ -198,6 +321,16 @@ int main(int argc, char** argv) {
   if (debugWindow != nullptr) {
     SDL_DestroyWindow(debugWindow);
   }
+  if (controlFont != nullptr) {
+    TTF_CloseFont(controlFont);
+  }
+  if (controlRenderer != nullptr) {
+    SDL_DestroyRenderer(controlRenderer);
+  }
+  if (controlWindow != nullptr) {
+    SDL_DestroyWindow(controlWindow);
+  }
+  reinterpret_cast<PcRenderer*>(&M5Renderer::instance())->endNative();
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   if (TTF_WasInit()) {

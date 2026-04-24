@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include <cstdlib>
 #include <ctime>
+#include "SimPlatform.h"
 #else
 #include <esp_heap_caps.h>
 #include <esp_system.h>
@@ -46,5 +47,13 @@ void* appAllocateImageBuffer(size_t size) {
   return std::malloc(size);
 #else
   return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+#endif
+}
+
+bool appConsumeExternalRedrawRequest() {
+#ifdef POKEMONCOLLECTION_SIM
+  return SimPlatform::consumeRedrawRequest();
+#else
+  return false;
 #endif
 }
