@@ -6,6 +6,7 @@
 namespace SimSd {
 
 bool begin();
+bool begin(const char* anchorPath);
 std::string rootPath();
 std::string resolvePath(const char* path);
 

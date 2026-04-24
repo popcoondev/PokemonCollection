@@ -27,7 +27,7 @@ bool appAudioPlayTone(float frequency, uint32_t durationMs, int channel, bool st
   (void)durationMs;
   (void)channel;
   (void)stopCurrentSound;
-  return false;
+  return true;
 }
 
 bool appAudioPlayRaw16(
@@ -45,12 +45,11 @@ bool appAudioPlayRaw16(
   (void)repeat;
   (void)channel;
   (void)stopCurrentSound;
-  return false;
+  return true;
 }
 
 int appAudioQueuedCount(int channel) {
-  (void)channel;
-  return 0;
+  return (channel == 0) ? 2 : 0;
 }
 
 #else

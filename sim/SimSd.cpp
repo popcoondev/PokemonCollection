@@ -9,8 +9,7 @@ namespace fs = std::filesystem;
 namespace {
 std::string gRootPath;
 
-std::string findSdRoot() {
-  fs::path current = fs::current_path();
+std::string findSdRootFrom(fs::path current) {
   while (!current.empty()) {
     const fs::path candidate = current / "data" / "sd";
     if (fs::exists(candidate) && fs::is_directory(candidate)) {
@@ -29,10 +28,21 @@ std::string findSdRoot() {
 namespace SimSd {
 
 bool begin() {
+  return begin(nullptr);
+}
+
+bool begin(const char* anchorPath) {
   if (!gRootPath.empty()) {
     return true;
   }
-  gRootPath = findSdRoot();
+  gRootPath = findSdRootFrom(fs::current_path());
+  if (gRootPath.empty() && anchorPath != nullptr && anchorPath[0] != '\0') {
+    fs::path anchor(anchorPath);
+    if (!anchor.is_absolute()) {
+      anchor = fs::absolute(anchor);
+    }
+    gRootPath = findSdRootFrom(anchor.parent_path());
+  }
   return !gRootPath.empty();
 }
 
@@ -53,18 +63,19 @@ std::string resolvePath(const char* path) {
 
 }
 
-File::File(const std::string& path, bool writeMode) {
-  path_ = path;
-  isDirectory_ = fs::exists(path_) && fs::is_directory(path_);
+File::File(const std::string& actualPath, bool writeMode, const std::string& virtualPath) {
+  actualPath_ = actualPath;
+  virtualPath_ = virtualPath.empty() ? actualPath : virtualPath;
+  isDirectory_ = fs::exists(actualPath_) && fs::is_directory(actualPath_);
   if (isDirectory_) {
-    dirIter_ = std::make_shared<fs::directory_iterator>(path_);
+    dirIter_ = std::make_shared<fs::directory_iterator>(actualPath_);
     dirEnd_ = std::make_shared<fs::directory_iterator>();
     return;
   }
   std::ios::openmode mode = std::ios::binary;
   mode |= writeMode ? (std::ios::out | std::ios::trunc) : std::ios::in;
   stream_ = std::make_shared<std::fstream>();
-  stream_->open(path, mode);
+  stream_->open(actualPath, mode);
 }
 
 File::operator bool() const {
@@ -142,16 +153,25 @@ size_t File::position() {
 }
 
 String File::path() const {
-  return String(path_.string());
+  return String(virtualPath_);
 }
 
 File File::openNextFile() {
   if (!isDirectory_ || !dirIter_ || !dirEnd_ || *dirIter_ == *dirEnd_) {
     return File();
   }
-  const fs::path nextPath = dirIter_->operator*().path();
+  const fs::directory_entry entry = dirIter_->operator*();
+  const fs::path nextPath = entry.path();
   ++(*dirIter_);
-  return File(nextPath.string());
+  std::string childVirtualPath;
+  if (!virtualPath_.empty() && virtualPath_[0] == '/') {
+    childVirtualPath = virtualPath_;
+    if (!childVirtualPath.empty() && childVirtualPath.back() != '/') {
+      childVirtualPath += "/";
+    }
+    childVirtualPath += nextPath.filename().string();
+  }
+  return File(nextPath.string(), false, childVirtualPath);
 }
 
 void File::close() {
@@ -189,7 +209,7 @@ bool SimSDClass::exists(const char* path) const {
 
 File SimSDClass::open(const char* path, int mode) const {
   const std::string resolved = SimSd::resolvePath(path);
-  return File(resolved, mode == FILE_WRITE);
+  return File(resolved, mode == FILE_WRITE, path != nullptr ? path : "");
 }
 
 bool SimSDClass::mkdir(const char* path) const {
@@ -200,4 +220,9 @@ bool SimSDClass::mkdir(const char* path) const {
 bool SimSDClass::remove(const char* path) const {
   const std::string resolved = SimSd::resolvePath(path);
   return !resolved.empty() && fs::remove(resolved);
+}
+
+std::filesystem::path SimSDClass::resolvePath(const char* path) const {
+  const std::string resolved = SimSd::resolvePath(path);
+  return resolved.empty() ? std::filesystem::path() : std::filesystem::path(resolved);
 }

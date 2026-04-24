@@ -15,6 +15,7 @@ public:
   String() = default;
   String(const char* value) : value_(value != nullptr ? value : "") {}
   String(const std::string& value) : value_(value) {}
+  String(char value) : value_(1, value) {}
   String(int value) : value_(std::to_string(value)) {}
   String(unsigned value) : value_(std::to_string(value)) {}
   String(long value) : value_(std::to_string(value)) {}
@@ -89,6 +90,13 @@ public:
     value_ += (rhs != nullptr ? rhs : "");
     return *this;
   }
+
+  String& operator+=(char rhs) {
+    value_ += rhs;
+    return *this;
+  }
+
+  bool empty() const { return value_.empty(); }
 
   bool operator==(const char* rhs) const {
     return value_ == (rhs != nullptr ? rhs : "");

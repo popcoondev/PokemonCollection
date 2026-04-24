@@ -17,7 +17,7 @@ constexpr int FILE_WRITE = 1;
 class File {
 public:
   File() = default;
-  explicit File(const std::string& path, bool writeMode = false);
+  explicit File(const std::string& actualPath, bool writeMode = false, const std::string& virtualPath = {});
   File(File&&) = default;
   File& operator=(File&&) = default;
   File(const File&) = default;
@@ -39,7 +39,8 @@ public:
   std::string contents();
 
 private:
-  std::filesystem::path path_;
+  std::filesystem::path actualPath_;
+  std::string virtualPath_;
   bool isDirectory_ = false;
   std::shared_ptr<std::fstream> stream_;
   std::shared_ptr<std::filesystem::directory_iterator> dirIter_;

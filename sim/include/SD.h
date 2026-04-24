@@ -10,7 +10,10 @@ public:
   File open(const char* path, int mode = FILE_READ) const;
   bool mkdir(const char* path) const;
   bool remove(const char* path) const;
+  std::filesystem::path resolvePath(const char* path) const;
 };
+
+using SDClass = SimSDClass;
 
 extern SimSDClass SD;
 

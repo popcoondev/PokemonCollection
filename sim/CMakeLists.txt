@@ -15,6 +15,12 @@ find_path(SDL2_TTF_INCLUDE_DIR SDL_ttf.h
 find_library(SDL2_TTF_LIBRARY SDL2_ttf
   HINTS /opt/homebrew/opt/sdl2_ttf/lib
 )
+find_path(SDL2_IMAGE_INCLUDE_DIR SDL_image.h
+  HINTS /opt/homebrew/opt/sdl2_image/include/SDL2
+)
+find_library(SDL2_IMAGE_LIBRARY SDL2_image
+  HINTS /opt/homebrew/opt/sdl2_image/lib
+)
 
 add_executable(pokemoncollection_sim
   main.cpp
@@ -44,6 +50,7 @@ target_compile_definitions(pokemoncollection_sim PRIVATE
 target_include_directories(pokemoncollection_sim PRIVATE
   ${SDL2_INCLUDE_DIRS}
   ${SDL2_TTF_INCLUDE_DIR}
+  ${SDL2_IMAGE_INCLUDE_DIR}
   include
   ../include
   ../.pio/libdeps/m5stack-cores3/ArduinoJson/src
@@ -52,4 +59,5 @@ target_include_directories(pokemoncollection_sim PRIVATE
 target_link_libraries(pokemoncollection_sim PRIVATE
   ${SDL2_LIBRARIES}
   ${SDL2_TTF_LIBRARY}
+  ${SDL2_IMAGE_LIBRARY}
 )

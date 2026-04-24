@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstring>
+#include <SDL_image.h>
 #include <SDL_ttf.h>
 
 namespace {
@@ -206,6 +208,50 @@ void drawText(const char* text, int32_t x, int32_t y, uint16_t color, int align)
   gFrameDirty = true;
   SDL_DestroyTexture(texture);
   SDL_FreeSurface(surface);
+}
+
+int32_t measureTextWidth(const char* text) {
+  if (text == nullptr || *text == '\0') {
+    return 0;
+  }
+  TTF_Font* font = ensureFont();
+  if (font == nullptr) {
+    return static_cast<int32_t>(std::strlen(text) * 8);
+  }
+  int width = 0;
+  int height = 0;
+  if (TTF_SizeUTF8(font, text, &width, &height) != 0) {
+    return static_cast<int32_t>(std::strlen(text) * 8);
+  }
+  return width;
+}
+
+bool drawPng(const char* resolvedPath, int32_t x, int32_t y, float scaleX, float scaleY) {
+  if (gRenderer == nullptr || resolvedPath == nullptr || resolvedPath[0] == '\0') {
+    return false;
+  }
+  SDL_Surface* surface = IMG_Load(resolvedPath);
+  if (surface == nullptr) {
+    return false;
+  }
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(gRenderer, surface);
+  if (texture == nullptr) {
+    SDL_FreeSurface(surface);
+    return false;
+  }
+  SDL_Rect dst = {
+      x,
+      y,
+      static_cast<int>(surface->w * scaleX),
+      static_cast<int>(surface->h * scaleY),
+  };
+  const int rc = SDL_RenderCopy(gRenderer, texture, nullptr, &dst);
+  if (rc == 0) {
+    gFrameDirty = true;
+  }
+  SDL_DestroyTexture(texture);
+  SDL_FreeSurface(surface);
+  return rc == 0;
 }
 
 void setTouchState(const SimTouchState& state) {
