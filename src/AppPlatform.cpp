@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <ctime>
 #else
+#include <esp_heap_caps.h>
 #include <esp_system.h>
 #endif
 
@@ -29,5 +30,21 @@ void appSeedRandom() {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
 #else
   randomSeed(static_cast<uint32_t>(esp_random()));
+#endif
+}
+
+uint32_t appRandomU32() {
+#ifdef POKEMONCOLLECTION_SIM
+  return static_cast<uint32_t>(std::rand());
+#else
+  return static_cast<uint32_t>(esp_random());
+#endif
+}
+
+void* appAllocateImageBuffer(size_t size) {
+#ifdef POKEMONCOLLECTION_SIM
+  return std::malloc(size);
+#else
+  return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 #endif
 }
