@@ -307,9 +307,23 @@ void PcRenderer::print(const char* text) {
 }
 
 void PcRenderer::wakeup() {
+#ifdef POKEMONCOLLECTION_SIM
+  SimPlatform::setDisplaySleeping(false);
+#endif
+  if (impl == nullptr || impl->renderer == nullptr) return;
+  SDL_SetRenderDrawColor(impl->renderer, 0, 0, 0, 255);
+  SDL_RenderClear(impl->renderer);
+  SDL_RenderPresent(impl->renderer);
 }
 
 void PcRenderer::sleep() {
+#ifdef POKEMONCOLLECTION_SIM
+  SimPlatform::setDisplaySleeping(true);
+#endif
+  if (impl == nullptr || impl->renderer == nullptr) return;
+  SDL_SetRenderDrawColor(impl->renderer, 0, 0, 0, 255);
+  SDL_RenderClear(impl->renderer);
+  SDL_RenderPresent(impl->renderer);
 }
 
 void PcRenderer::drawCircle(int32_t x, int32_t y, int32_t r, uint16_t color) {

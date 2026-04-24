@@ -2,16 +2,18 @@
 
 #ifdef POKEMONCOLLECTION_SIM
 
+#include "SimPlatform.h"
+
 void appSetVibration(uint8_t level) {
   (void)level;
 }
 
 int appGetBatteryLevel() {
-  return -1;
+  return SimPlatform::getBatteryLevel();
 }
 
 bool appIsCharging() {
-  return false;
+  return SimPlatform::isCharging();
 }
 
 #else

@@ -11,6 +11,14 @@ struct SimTouchState {
   int16_t y = 0;
 };
 
+struct SimControlState {
+  bool portBHold = false;
+  uint8_t portBClickFrames = 0;
+  bool charging = false;
+  int batteryLevel = 100;
+  uint16_t proximityValue = 0;
+};
+
 namespace SimPlatform {
 
 void setRenderer(SDL_Renderer* renderer);
@@ -30,6 +38,25 @@ SimTouchState getTouchState();
 
 void setDigitalButtonPressed(bool pressed);
 bool isDigitalButtonPressed();
+
+void triggerDigitalButtonClick();
+void beginInputFrame();
+void endInputFrame();
+
+void setCharging(bool charging);
+bool isCharging();
+void setBatteryLevel(int level);
+int getBatteryLevel();
+void setProximityValue(uint16_t value);
+uint16_t getProximityValue();
+void setControlState(const SimControlState& state);
+SimControlState getControlState();
+void requestRedraw();
+bool consumeRedrawRequest();
+void setDisplaySleeping(bool sleeping);
+bool isDisplaySleeping();
+void setDebugHitboxEnabled(bool enabled);
+bool isDebugHitboxEnabled();
 
 }
 

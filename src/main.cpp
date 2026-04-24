@@ -562,13 +562,14 @@ bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
 }
 
 #ifdef POKEMONCOLLECTION_SIM
+#include "SimPlatform.h"
 bool simDebugHitboxEnabled() {
   static int enabled = -1;
   if (enabled < 0) {
     const char* value = std::getenv("SIM_DEBUG_HITBOX");
     enabled = (value != nullptr && value[0] != '\0' && value[0] != '0') ? 1 : 0;
   }
-  return enabled == 1;
+  return enabled == 1 || SimPlatform::isDebugHitboxEnabled();
 }
 
 void drawDebugHitboxRect(int x, int y, int w, int h, int pad = 0, uint16_t outerColor = 0xF800, uint16_t innerColor = 0x07E0) {
@@ -3863,6 +3864,9 @@ void AppRuntime::tick() {
   serviceMusicStream();
   if (musicPlayback.visualDirty) {
     musicPlayback.visualDirty = false;
+    needsRedraw = true;
+  }
+  if (appConsumeExternalRedrawRequest()) {
     needsRedraw = true;
   }
 

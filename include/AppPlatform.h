@@ -8,5 +8,6 @@ void appDelay(uint32_t ms);
 void appSeedRandom();
 uint32_t appRandomU32();
 void* appAllocateImageBuffer(size_t size);
+bool appConsumeExternalRedrawRequest();
 
 #endif

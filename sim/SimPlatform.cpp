@@ -6,10 +6,15 @@
 
 namespace {
 SimTouchState gTouchState;
+SimControlState gControlState;
 bool gDigitalButtonPressed = false;
 SDL_Renderer* gRenderer = nullptr;
 TTF_Font* gFont = nullptr;
 bool gFrameDirty = false;
+bool gRedrawRequested = false;
+bool gDisplaySleeping = false;
+bool gDebugHitboxEnabled = false;
+uint32_t gDigitalButtonClickUntilMs = 0;
 
 SDL_Color colorFrom565(uint16_t color) {
   SDL_Color out;
@@ -76,6 +81,11 @@ bool beginRenderFrame() {
   }
   SDL_SetRenderDrawBlendMode(gRenderer, SDL_BLENDMODE_BLEND);
   gFrameDirty = false;
+  if (gDisplaySleeping) {
+    SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+    SDL_RenderClear(gRenderer);
+    gFrameDirty = true;
+  }
   return true;
 }
 
@@ -207,11 +217,89 @@ SimTouchState getTouchState() {
 }
 
 void setDigitalButtonPressed(bool pressed) {
-  gDigitalButtonPressed = pressed;
+  gControlState.portBHold = pressed;
 }
 
 bool isDigitalButtonPressed() {
   return gDigitalButtonPressed;
+}
+
+void triggerDigitalButtonClick() {
+  gDigitalButtonClickUntilMs = SDL_GetTicks() + 150;
+  gRedrawRequested = true;
+}
+
+void beginInputFrame() {
+  gDigitalButtonPressed = gControlState.portBHold || (SDL_GetTicks() < gDigitalButtonClickUntilMs);
+}
+
+void endInputFrame() {
+}
+
+void setCharging(bool charging) {
+  gControlState.charging = charging;
+  gRedrawRequested = true;
+}
+
+bool isCharging() {
+  return gControlState.charging;
+}
+
+void setBatteryLevel(int level) {
+  if (level < 0) level = 0;
+  if (level > 100) level = 100;
+  gControlState.batteryLevel = level;
+  gRedrawRequested = true;
+}
+
+int getBatteryLevel() {
+  return gControlState.batteryLevel;
+}
+
+void setProximityValue(uint16_t value) {
+  gControlState.proximityValue = value;
+  gRedrawRequested = true;
+}
+
+uint16_t getProximityValue() {
+  return gControlState.proximityValue;
+}
+
+void setControlState(const SimControlState& state) {
+  gControlState = state;
+  gRedrawRequested = true;
+}
+
+SimControlState getControlState() {
+  return gControlState;
+}
+
+void requestRedraw() {
+  gRedrawRequested = true;
+}
+
+bool consumeRedrawRequest() {
+  const bool requested = gRedrawRequested;
+  gRedrawRequested = false;
+  return requested;
+}
+
+void setDisplaySleeping(bool sleeping) {
+  gDisplaySleeping = sleeping;
+  gRedrawRequested = true;
+}
+
+bool isDisplaySleeping() {
+  return gDisplaySleeping;
+}
+
+void setDebugHitboxEnabled(bool enabled) {
+  gDebugHitboxEnabled = enabled;
+  gRedrawRequested = true;
+}
+
+bool isDebugHitboxEnabled() {
+  return gDebugHitboxEnabled;
 }
 
 }
