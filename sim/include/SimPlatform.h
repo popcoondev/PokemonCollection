@@ -32,6 +32,8 @@ void drawLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint16_t color);
 void drawCircle(int32_t cx, int32_t cy, int32_t r, uint16_t color);
 void fillCircle(int32_t cx, int32_t cy, int32_t r, uint16_t color);
 void drawText(const char* text, int32_t x, int32_t y, uint16_t color, int align);
+int32_t measureTextWidth(const char* text);
+bool drawPng(const char* resolvedPath, int32_t x, int32_t y, float scaleX, float scaleY);
 
 void setTouchState(const SimTouchState& state);
 SimTouchState getTouchState();

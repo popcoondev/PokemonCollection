@@ -254,14 +254,6 @@ const lgfx::IFont* PcRenderer::getFont() const {
   return impl != nullptr ? impl->logicalFont : &fonts::efontJA_12;
 }
 
-size_t PcRenderer::textWidth(const String& text) const {
-  if (impl == nullptr || impl->font == nullptr || text.empty()) return 0;
-  int width = 0;
-  int height = 0;
-  if (TTF_SizeUTF8(impl->font, text.c_str(), &width, &height) != 0) return 0;
-  return static_cast<size_t>(width);
-}
-
 void PcRenderer::drawString(const String& text, int32_t x, int32_t y) {
   if (impl == nullptr || impl->renderer == nullptr || impl->font == nullptr || text.empty()) return;
   SDL_Surface* surface = TTF_RenderUTF8_Blended(impl->font, text.c_str(), impl->textColor);
@@ -350,43 +342,6 @@ void PcRenderer::drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) 
 
 void PcRenderer::drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) {
   drawLine(x, y, x, y + h, color);
-}
-
-bool PcRenderer::drawPngFile(const SDClass& fs,
-                             const char* path,
-                             int32_t x,
-                             int32_t y,
-                             int32_t sx,
-                             int32_t sy,
-                             int32_t sw,
-                             int32_t sh,
-                             float scaleX,
-                             float scaleY) {
-  (void)fs;
-  (void)sx;
-  (void)sy;
-  (void)sw;
-  (void)sh;
-  if (impl == nullptr || impl->renderer == nullptr || path == nullptr) return false;
-  const auto resolved = fs.resolvePath(path);
-  if (resolved.empty()) return false;
-  SDL_Surface* surface = IMG_Load(resolved.string().c_str());
-  if (surface == nullptr) return false;
-  SDL_Texture* texture = SDL_CreateTextureFromSurface(impl->renderer, surface);
-  if (texture == nullptr) {
-    SDL_FreeSurface(surface);
-    return false;
-  }
-  SDL_Rect dst = {
-      x,
-      y,
-      static_cast<int>(surface->w * scaleX),
-      static_cast<int>(surface->h * scaleY),
-  };
-  SDL_FreeSurface(surface);
-  const int rc = SDL_RenderCopy(impl->renderer, texture, nullptr, &dst);
-  SDL_DestroyTexture(texture);
-  return rc == 0;
 }
 
 #else

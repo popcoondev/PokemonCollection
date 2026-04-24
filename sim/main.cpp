@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <SDL_ttf.h>
 
 #include <cstdlib>
@@ -99,7 +100,13 @@ int main(int argc, char** argv) {
     SDL_Quit();
     return 1;
   }
-  if (!SimSd::begin()) {
+  if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) == 0) {
+    TTF_Quit();
+    SDL_Quit();
+    return 1;
+  }
+  if (!SimSd::begin((argc > 0) ? argv[0] : nullptr)) {
+    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
     return 1;
@@ -113,6 +120,7 @@ int main(int argc, char** argv) {
       kLogicalHeight * kWindowScale,
       SDL_WINDOW_SHOWN);
   if (window == nullptr) {
+    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
     return 1;
@@ -121,6 +129,7 @@ int main(int argc, char** argv) {
   SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (renderer == nullptr) {
     SDL_DestroyWindow(window);
+    IMG_Quit();
     TTF_Quit();
     SDL_Quit();
     return 1;
@@ -336,6 +345,7 @@ int main(int argc, char** argv) {
   if (TTF_WasInit()) {
     TTF_Quit();
   }
+  IMG_Quit();
   SDL_Quit();
   return 0;
 }

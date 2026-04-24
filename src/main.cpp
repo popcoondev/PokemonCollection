@@ -3,6 +3,7 @@
 #include <FS.h>
 #include <SD.h>
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <math.h>
 #include <vector>
@@ -561,6 +562,14 @@ bool hitTest(int tx, int ty, int x, int y, int w, int h, int pad = 0) {
       && ty >= (y - pad) && ty <= (y + h + pad);
 }
 
+bool parseJsonDocumentFromFile(JsonDocument& doc, File& file) {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  return deserializeJson(doc, file.contents().c_str()) == DeserializationError::Ok;
+#else
+  return deserializeJson(doc, file) == DeserializationError::Ok;
+#endif
+}
+
 #ifdef POKEMONCOLLECTION_SIM
 #include "SimPlatform.h"
 bool simDebugHitboxEnabled() {
@@ -920,6 +929,9 @@ std::vector<MusicListEntry> scanMusicDirectoryEntries(const String& directoryPat
 
 void refreshMusicTrackList() {
   musicListOffset = 0;
+  if (musicLibraryDirectoryPath.length() == 0 || musicLibraryDirectoryPath == kMusicDirectoryPath) {
+    musicLibraryDirectoryPath = musicCurrentDirectoryPath;
+  }
   musicListEntries = scanMusicDirectoryEntries(musicCurrentDirectoryPath);
 }
 
@@ -1688,7 +1700,7 @@ bool loadAchievementStats() {
   if (!file) return true;
 
   JsonDocument doc;
-  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+  if (!parseJsonDocumentFromFile(doc, file)) {
     file.close();
     return false;
   }
@@ -1800,7 +1812,7 @@ bool loadLockOnAchievements() {
   }
 
   JsonDocument doc;
-  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+  if (!parseJsonDocumentFromFile(doc, file)) {
     file.close();
     return false;
   }
@@ -2746,9 +2758,9 @@ bool loadGuideLocations() {
   }
 
   JsonDocument doc;
-  const DeserializationError error = deserializeJson(doc, file);
+  const bool jsonLoaded = parseJsonDocumentFromFile(doc, file);
   file.close();
-  if (error || !doc.is<JsonArray>()) {
+  if (!jsonLoaded || !doc.is<JsonArray>()) {
     return false;
   }
 
@@ -2883,9 +2895,9 @@ bool loadGuidePokemonDetail(uint16_t pokemonId) {
   }
 
   JsonDocument doc;
-  const DeserializationError error = deserializeJson(doc, file);
+  const bool jsonLoaded = parseJsonDocumentFromFile(doc, file);
   file.close();
-  if (error || !doc.is<JsonObject>()) {
+  if (!jsonLoaded || !doc.is<JsonObject>()) {
     return false;
   }
 
@@ -3152,7 +3164,7 @@ bool loadGuideCaughtFlags() {
     return true;
   }
   JsonDocument doc;
-  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+  if (!parseJsonDocumentFromFile(doc, file)) {
     file.close();
     return false;
   }
@@ -3201,7 +3213,7 @@ bool loadLockOnSecretIds() {
   }
 
   JsonDocument doc;
-  if (deserializeJson(doc, file) != DeserializationError::Ok) {
+  if (!parseJsonDocumentFromFile(doc, file)) {
     file.close();
     return false;
   }
@@ -3245,7 +3257,7 @@ void loadSettings() {
   }
 
   JsonDocument doc;
-  if (deserializeJson(doc, file) == DeserializationError::Ok) {
+  if (parseJsonDocumentFromFile(doc, file)) {
     appLanguage = parseAppLanguageKey(doc["app_language"] | "ja");
     quizVolumeSetting = parseQuizVolumeKey(doc["quiz_volume"] | "medium");
     preview3dEnabled = doc["preview_3d"] | false;
@@ -3718,7 +3730,13 @@ AppRuntime& appRuntimeInstance() {
 }
 
 void appBoot() {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  std::fprintf(stderr, "[sim] appBoot() enter\n");
+#endif
   appRuntime.boot();
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  std::fprintf(stderr, "[sim] appBoot() leave\n");
+#endif
 }
 
 void appTick() {
@@ -3726,44 +3744,69 @@ void appTick() {
 }
 
 void AppRuntime::boot() {
+#ifdef POKEMONCOLLECTION_SIM_NATIVE
+  auto simBootLog = [](const char* step) {
+    std::fprintf(stderr, "[sim] boot: %s\n", step);
+  };
+#else
+  auto simBootLog = [](const char*) {};
+#endif
+  simBootLog("appDeviceBegin");
   appDeviceBegin();
+  simBootLog("appSeedRandom");
   appSeedRandom();
+  simBootLog("display setup");
   displayRenderer().setRotation(1);
   displayRenderer().setTextFont(2);
+  simBootLog("audio begin");
   appAudioBegin(44100);
   audioSetMasterVolume(128);
   audioSetBusVolume(AUDIO_BUS_BGM, musicBgmVolume);
   displayRenderer().setBrightness(kDisplayBrightnessOn);
 
+  simBootLog("appStorageBegin");
   if (!appStorageBegin()) {
     displayRenderer().print("SD Init Error");
     while(1) appDelay(100);
   }
 
+  simBootLog("dataMgr.begin");
   if (!dataMgr.begin()) {
     displayRenderer().print("SD Error");
     while(1) appDelay(100);
   }
+  simBootLog("loadQuizSound");
   loadQuizSound(kUiConfirmSoundPath, uiConfirmSound);
+  simBootLog("loadLockOnSecretIds");
   loadLockOnSecretIds();
+  simBootLog("loadGuideLocations");
   loadGuideLocations();
+  simBootLog("ui.setRenderer");
   ui.setRenderer(&displayRenderer());
 
+  simBootLog("ui.begin");
   if (!ui.begin()) {
     displayRenderer().print("UI Error");
     while(1) appDelay(100);
   }
 
+  simBootLog("loadSettings");
   loadSettings();
   ui.setTheme(uiThemeStyle);
+  simBootLog("loadGuideCaughtFlags");
   loadGuideCaughtFlags();
+  simBootLog("loadLockOnAchievements");
   loadLockOnAchievements();
+  simBootLog("loadAchievementStats");
   loadAchievementStats();
+  simBootLog("initCoverProximitySensor");
   coverProximityReady = initCoverProximitySensor();
+  simBootLog("initPortBBackButton");
   initPortBBackButton();
   wakeSplashActive = true;
   wakeSplashStartedAt = appMillis();
 
+  simBootLog("create image pipeline objects");
   appearancePipeline.requestQueue = appQueueCreate(1, sizeof(AppearanceImageRequest));
   appearancePipeline.resultQueue = appQueueCreate(4, sizeof(AppearanceImageResult));
   appearancePipeline.spriteMutex = appMutexCreate();
@@ -5565,6 +5608,9 @@ void AppRuntime::tick() {
               ? (visualControl - PRESS_SEARCH_INPUT_KEY_0)
               : -1);
     } else if (screenMode == SCREEN_PREVIEW) {
+#ifdef POKEMONCOLLECTION_SIM
+      ui.drawFullscreenPreview(true, currentId);
+#else
       ui.drawFullscreenPreview(false, currentId);
       if (previewPipeline.cacheReady
           && previewPipeline.cachedId == currentId
@@ -5576,6 +5622,7 @@ void AppRuntime::tick() {
       } else {
         queuePreviewImageRequest(currentId);
       }
+#endif
       if (previewCaptionEnabled) {
         ui.drawPreviewCaption(currentId, dataMgr.getPokemonName(currentId));
       }
@@ -5619,6 +5666,12 @@ void AppRuntime::tick() {
       ui.drawHeader(pk, visualControl == PRESS_SEARCH_HEADER);
 
       if (currentTab == TAB_APPEARANCE) {
+#ifdef POKEMONCOLLECTION_SIM
+        ui.drawAppearanceTab(pk, true);
+        if (visualControl == PRESS_APPEARANCE_PREVIEW) {
+          ui.drawAppearancePreviewFeedback();
+        }
+#else
         ui.drawAppearanceTab(pk, false);
         if (appearancePipeline.cacheReady
             && appearancePipeline.cachedId == currentId
@@ -5633,6 +5686,7 @@ void AppRuntime::tick() {
         if (visualControl == PRESS_APPEARANCE_PREVIEW) {
           ui.drawAppearancePreviewFeedback();
         }
+#endif
       } else if (currentTab == TAB_DESCRIPTION) {
         ui.drawDescriptionTab(pk);
       } else if (currentTab == TAB_BODY) {

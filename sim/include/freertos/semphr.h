@@ -3,17 +3,38 @@
 
 #include "freertos/FreeRTOS.h"
 
-using SemaphoreHandle_t = void*;
+#include <chrono>
+#include <mutex>
+
+struct SimMutex {
+  std::timed_mutex mutex;
+};
+
+using SemaphoreHandle_t = SimMutex*;
 
 inline SemaphoreHandle_t xSemaphoreCreateMutex() {
-  return reinterpret_cast<SemaphoreHandle_t>(1);
+  return new SimMutex();
 }
 
-inline int xSemaphoreTake(SemaphoreHandle_t, TickType_t) {
-  return pdTRUE;
+inline int xSemaphoreTake(SemaphoreHandle_t handle, TickType_t ticks) {
+  if (handle == nullptr) {
+    return 0;
+  }
+  if (ticks == 0) {
+    return handle->mutex.try_lock() ? pdTRUE : 0;
+  }
+  if (ticks == portMAX_DELAY) {
+    handle->mutex.lock();
+    return pdTRUE;
+  }
+  return handle->mutex.try_lock_for(std::chrono::milliseconds(ticks)) ? pdTRUE : 0;
 }
 
-inline int xSemaphoreGive(SemaphoreHandle_t) {
+inline int xSemaphoreGive(SemaphoreHandle_t handle) {
+  if (handle == nullptr) {
+    return 0;
+  }
+  handle->mutex.unlock();
   return pdTRUE;
 }
 
