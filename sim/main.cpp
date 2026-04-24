@@ -6,6 +6,7 @@
 
 #include "AppRuntime.h"
 #include "SimPlatform.h"
+#include "SimSd.h"
 
 namespace {
 constexpr int kLogicalWidth = 320;
@@ -77,14 +78,7 @@ int main(int argc, char** argv) {
     SDL_Quit();
     return 1;
   }
-  if (!SimSd::begin(argc > 0 ? argv[0] : nullptr)) {
-    TTF_Quit();
-    SDL_Quit();
-    return 1;
-  }
-
-  DataManager dataMgr;
-  if (!dataMgr.begin() || !dataMgr.loadPokemonDetail(1)) {
+  if (!SimSd::begin()) {
     TTF_Quit();
     SDL_Quit();
     return 1;
@@ -139,26 +133,6 @@ int main(int argc, char** argv) {
   }
 
   appBoot();
-
-  PcRenderer pcRenderer;
-  if (!pcRenderer.beginNative(renderer, kUiFontPath, 14)) {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
-    return 1;
-  }
-
-  UIController ui;
-  ui.setRenderer(&pcRenderer);
-  if (!ui.begin()) {
-    pcRenderer.endNative();
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
-    return 1;
-  }
 
   bool running = true;
   bool mouseDown = false;

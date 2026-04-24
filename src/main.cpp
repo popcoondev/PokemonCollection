@@ -2,18 +2,13 @@
 #include <ArduinoJson.h>
 #include <FS.h>
 #include <SD.h>
-#include <esp_system.h>
-#include <esp_heap_caps.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/queue.h>
-#include <freertos/semphr.h>
-#include <freertos/task.h>
 #include <algorithm>
 #include <cstdlib>
 #include <math.h>
 #include <vector>
 #include "Config.h"
 #include "AppAudio.h"
+#include "AppConcurrency.h"
 #include "AppDevice.h"
 #include "AppRuntime.h"
 #include "AppInput.h"
@@ -397,68 +392,82 @@ const char* getParallaxBackgroundPathForType(const String& type) {
   return "/pokemon/parallax/bg_normal.png";
 }
 
-QueueHandle_t appearanceRequestQueue = nullptr;
-QueueHandle_t appearanceResultQueue = nullptr;
-SemaphoreHandle_t appearanceSpriteMutex = nullptr;
-TaskHandle_t appearanceWorkerTaskHandle = nullptr;
-LGFX_Sprite* appearanceImageSprite = nullptr;
-ImageLoader appearanceImageLoader;
-uint16_t appearanceCachedId = 0;
-uint32_t appearanceCachedGeneration = 0;
-bool appearanceCacheReady = false;
-uint16_t appearanceRequestedId = 0;
-uint32_t appearanceRequestedGeneration = 0;
+struct AppearancePipelineState {
+  QueueHandle_t requestQueue = nullptr;
+  QueueHandle_t resultQueue = nullptr;
+  SemaphoreHandle_t spriteMutex = nullptr;
+  LGFX_Sprite* imageSprite = nullptr;
+  ImageLoader imageLoader;
+  uint16_t cachedId = 0;
+  uint32_t cachedGeneration = 0;
+  bool cacheReady = false;
+  uint16_t requestedId = 0;
+  uint32_t requestedGeneration = 0;
+};
 
-QueueHandle_t previewRequestQueue = nullptr;
-QueueHandle_t previewResultQueue = nullptr;
-SemaphoreHandle_t previewSpriteMutex = nullptr;
-TaskHandle_t previewWorkerTaskHandle = nullptr;
-LGFX_Sprite* previewImageSprite = nullptr;
-ImageLoader previewImageLoader;
-uint16_t previewCachedId = 0;
-uint32_t previewCachedGeneration = 0;
-bool previewCacheReady = false;
-uint16_t previewRequestedId = 0;
-uint32_t previewRequestedGeneration = 0;
-LGFX_Sprite* previewPocShadowSprite = nullptr;
-LGFX_Sprite* previewPocIconSprite = nullptr;
-LGFX_Sprite* previewPocBackgroundSprite = nullptr;
-ImageLoader previewPocImageLoader;
-bool previewPocCacheReady = false;
-uint16_t previewPocCachedId = 0;
-String previewPocCachedType = "";
+AppearancePipelineState appearancePipeline;
 
-QueueHandle_t evolutionRequestQueue = nullptr;
-QueueHandle_t evolutionResultQueue = nullptr;
-SemaphoreHandle_t evolutionSpriteMutex = nullptr;
-TaskHandle_t evolutionWorkerTaskHandle = nullptr;
-LGFX_Sprite* evolutionImageSprites[kMaxEvolutionCards] = {};
-ImageLoader evolutionImageLoader;
-uint16_t evolutionSourcePokemonId = 0;
-uint32_t evolutionRequestedGeneration = 0;
-uint16_t evolutionRequestedIds[kMaxEvolutionCards] = {};
-uint16_t evolutionRenderedIds[kMaxEvolutionCards] = {};
-uint32_t evolutionRenderedGeneration = 0;
+struct PreviewPipelineState {
+  QueueHandle_t requestQueue = nullptr;
+  QueueHandle_t resultQueue = nullptr;
+  SemaphoreHandle_t spriteMutex = nullptr;
+  LGFX_Sprite* imageSprite = nullptr;
+  ImageLoader imageLoader;
+  uint16_t cachedId = 0;
+  uint32_t cachedGeneration = 0;
+  bool cacheReady = false;
+  uint16_t requestedId = 0;
+  uint32_t requestedGeneration = 0;
+  LGFX_Sprite* pocShadowSprite = nullptr;
+  LGFX_Sprite* pocIconSprite = nullptr;
+  LGFX_Sprite* pocBackgroundSprite = nullptr;
+  ImageLoader pocImageLoader;
+  bool pocCacheReady = false;
+  uint16_t pocCachedId = 0;
+  String pocCachedType = "";
+};
+
+PreviewPipelineState previewPipeline;
+
+struct EvolutionPipelineState {
+  QueueHandle_t requestQueue = nullptr;
+  QueueHandle_t resultQueue = nullptr;
+  SemaphoreHandle_t spriteMutex = nullptr;
+  LGFX_Sprite* imageSprites[kMaxEvolutionCards] = {};
+  ImageLoader imageLoader;
+  uint16_t sourcePokemonId = 0;
+  uint32_t requestedGeneration = 0;
+  uint16_t requestedIds[kMaxEvolutionCards] = {};
+  uint16_t renderedIds[kMaxEvolutionCards] = {};
+  uint32_t renderedGeneration = 0;
+};
+
+EvolutionPipelineState evolutionPipeline;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizSoundCache uiConfirmSound;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 std::vector<MusicListEntry> musicListEntries;
 size_t musicListOffset = 0;
-MusicStreamState musicStreamState;
-String musicNowPlayingPath = "";
-String musicNowPlayingLabel = "";
 String musicCurrentDirectoryPath = kMusicDirectoryPath;
 String musicLibraryDirectoryPath = kMusicDirectoryPath;
-String musicPlaybackDirectoryPath = kMusicDirectoryPath;
 std::vector<String> musicPlaylistPaths;
 MusicViewMode musicViewMode = MUSIC_VIEW_LIBRARY;
-MusicPlaybackSource musicPlaybackSource = MUSIC_PLAYBACK_NONE;
 bool musicPlaylistShuffleEnabled = false;
 bool musicPlaylistRepeatEnabled = false;
 uint8_t musicBgmVolume = 192;
-bool musicPlaybackVisualDirty = false;
-uint8_t musicStreamBuffers[kMusicStreamBufferCount][kMusicStreamBufferBytes] = {};
+
+struct MusicPlaybackState {
+  MusicStreamState stream;
+  String nowPlayingPath = "";
+  String nowPlayingLabel = "";
+  String playbackDirectoryPath = kMusicDirectoryPath;
+  MusicPlaybackSource playbackSource = MUSIC_PLAYBACK_NONE;
+  bool visualDirty = false;
+  uint8_t streamBuffers[kMusicStreamBufferCount][kMusicStreamBufferBytes] = {};
+};
+
+MusicPlaybackState musicPlayback;
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 std::vector<uint16_t> lockOnSecretIds;
@@ -719,7 +728,7 @@ void recordLockOnCapture(unsigned long now) {
 }
 
 LockOnRarity chooseLockOnRarity(bool feverActive) {
-  const uint32_t roll = esp_random() % 100;
+  const uint32_t roll = appRandomU32() % 100;
   if (feverActive) {
     if (roll < 9) return LOCKON_RARITY_SECRET;
     if (roll < 34) return LOCKON_RARITY_MYTHIC;
@@ -819,31 +828,31 @@ String getLastPathSegment(const String& path) {
 
 void stopMusicStream(bool clearNowPlaying = false) {
   audioStopBus(AUDIO_BUS_BGM);
-  if (musicStreamState.file) {
-    musicStreamState.file.close();
+  if (musicPlayback.stream.file) {
+    musicPlayback.stream.file.close();
   }
-  musicStreamState.active = false;
-  musicStreamState.stereo = false;
-  musicStreamState.sampleRate = 44100;
-  musicStreamState.dataRemainingBytes = 0;
-  musicStreamState.dataSizeBytes = 0;
-  musicStreamState.dataStartOffset = 0;
-  musicStreamState.path = "";
-  musicStreamState.queuedBufferIndex = 0;
+  musicPlayback.stream.active = false;
+  musicPlayback.stream.stereo = false;
+  musicPlayback.stream.sampleRate = 44100;
+  musicPlayback.stream.dataRemainingBytes = 0;
+  musicPlayback.stream.dataSizeBytes = 0;
+  musicPlayback.stream.dataStartOffset = 0;
+  musicPlayback.stream.path = "";
+  musicPlayback.stream.queuedBufferIndex = 0;
   if (clearNowPlaying) {
-    musicNowPlayingPath = "";
-    musicNowPlayingLabel = "";
-    musicPlaybackSource = MUSIC_PLAYBACK_NONE;
-    musicPlaybackVisualDirty = true;
+    musicPlayback.nowPlayingPath = "";
+    musicPlayback.nowPlayingLabel = "";
+    musicPlayback.playbackSource = MUSIC_PLAYBACK_NONE;
+    musicPlayback.visualDirty = true;
   }
 }
 
 void syncMusicListOffsetToNowPlaying() {
-  if (musicNowPlayingPath.length() == 0 || musicListEntries.empty()) {
+  if (musicPlayback.nowPlayingPath.length() == 0 || musicListEntries.empty()) {
     return;
   }
   for (size_t i = 0; i < musicListEntries.size(); ++i) {
-    if (musicListEntries[i].path == musicNowPlayingPath) {
+    if (musicListEntries[i].path == musicPlayback.nowPlayingPath) {
       musicListOffset = (i / kMusicRowsPerPage) * kMusicRowsPerPage;
       return;
     }
@@ -1016,43 +1025,43 @@ bool beginMusicStream(const String& path) {
     return false;
   }
 
-  musicStreamState.file = file;
-  musicStreamState.active = true;
-  musicStreamState.stereo = true;
-  musicStreamState.sampleRate = fmt.sampleRate;
-  musicStreamState.dataRemainingBytes = dataSize;
-  musicStreamState.dataSizeBytes = dataSize;
-  musicStreamState.dataStartOffset = dataOffset;
-  musicStreamState.path = path;
-  musicStreamState.queuedBufferIndex = 0;
-  musicNowPlayingPath = path;
-  musicNowPlayingLabel = getMusicTrackLabelFromPath(path);
+  musicPlayback.stream.file = file;
+  musicPlayback.stream.active = true;
+  musicPlayback.stream.stereo = true;
+  musicPlayback.stream.sampleRate = fmt.sampleRate;
+  musicPlayback.stream.dataRemainingBytes = dataSize;
+  musicPlayback.stream.dataSizeBytes = dataSize;
+  musicPlayback.stream.dataStartOffset = dataOffset;
+  musicPlayback.stream.path = path;
+  musicPlayback.stream.queuedBufferIndex = 0;
+  musicPlayback.nowPlayingPath = path;
+  musicPlayback.nowPlayingLabel = getMusicTrackLabelFromPath(path);
   syncMusicListOffsetToNowPlaying();
-  musicPlaybackVisualDirty = true;
+  musicPlayback.visualDirty = true;
   audioStopBus(AUDIO_BUS_BGM);
   serviceMusicStream();
   return true;
 }
 
 bool startLibraryMusicTrack(const String& path) {
-  musicPlaybackSource = MUSIC_PLAYBACK_LIBRARY;
-  musicPlaybackDirectoryPath = musicCurrentDirectoryPath;
+  musicPlayback.playbackSource = MUSIC_PLAYBACK_LIBRARY;
+  musicPlayback.playbackDirectoryPath = musicCurrentDirectoryPath;
   return beginMusicStream(path);
 }
 
 bool startPlaylistMusicTrack(const String& path) {
-  musicPlaybackSource = MUSIC_PLAYBACK_PLAYLIST;
+  musicPlayback.playbackSource = MUSIC_PLAYBACK_PLAYLIST;
   return beginMusicStream(path);
 }
 
 String getNextMusicTrackPath() {
-  switch (musicPlaybackSource) {
+  switch (musicPlayback.playbackSource) {
     case MUSIC_PLAYBACK_TYPE_MATCHUP:
-      return musicStreamState.path;
+      return musicPlayback.stream.path;
     case MUSIC_PLAYBACK_LIBRARY: {
-      const auto paths = getPlayableMusicPathsForDirectory(musicPlaybackDirectoryPath);
+      const auto paths = getPlayableMusicPathsForDirectory(musicPlayback.playbackDirectoryPath);
       if (paths.empty()) return "";
-      auto it = std::find(paths.begin(), paths.end(), musicStreamState.path);
+      auto it = std::find(paths.begin(), paths.end(), musicPlayback.stream.path);
       if (it == paths.end()) return paths.front();
       size_t index = static_cast<size_t>(it - paths.begin());
       return paths[(index + 1) % paths.size()];
@@ -1063,16 +1072,16 @@ String getNextMusicTrackPath() {
         if (musicPlaylistPaths.size() == 1) {
           return musicPlaylistRepeatEnabled ? musicPlaylistPaths.front() : "";
         }
-        String nextPath = musicStreamState.path;
-        for (int attempt = 0; attempt < 8 && nextPath == musicStreamState.path; ++attempt) {
+        String nextPath = musicPlayback.stream.path;
+        for (int attempt = 0; attempt < 8 && nextPath == musicPlayback.stream.path; ++attempt) {
           nextPath = musicPlaylistPaths[static_cast<size_t>(random(0, static_cast<int>(musicPlaylistPaths.size())))];
         }
-        if (nextPath == musicStreamState.path && !musicPlaylistRepeatEnabled) {
+        if (nextPath == musicPlayback.stream.path && !musicPlaylistRepeatEnabled) {
           return "";
         }
         return nextPath;
       }
-      auto it = std::find(musicPlaylistPaths.begin(), musicPlaylistPaths.end(), musicStreamState.path);
+      auto it = std::find(musicPlaylistPaths.begin(), musicPlaylistPaths.end(), musicPlayback.stream.path);
       if (it == musicPlaylistPaths.end()) return musicPlaylistPaths.front();
       size_t index = static_cast<size_t>(it - musicPlaylistPaths.begin());
       if ((index + 1) < musicPlaylistPaths.size()) {
@@ -1087,52 +1096,53 @@ String getNextMusicTrackPath() {
 }
 
 void serviceMusicStream() {
-  if (!musicStreamState.active || !musicStreamState.file) {
+  if (!musicPlayback.stream.active || !musicPlayback.stream.file) {
     return;
   }
 
   const uint8_t channel = getAudioChannelForBus(AUDIO_BUS_BGM);
-  while (musicStreamState.active && appAudioQueuedCount(channel) < 2) {
-    if (musicStreamState.dataRemainingBytes == 0) {
+  while (musicPlayback.stream.active && appAudioQueuedCount(channel) < 2) {
+    if (musicPlayback.stream.dataRemainingBytes == 0) {
       const String nextPath = getNextMusicTrackPath();
       if (nextPath.length() == 0) {
         stopMusicStream(false);
         return;
       }
-      if (nextPath != musicStreamState.path) {
-        if (musicPlaybackSource == MUSIC_PLAYBACK_PLAYLIST) {
+      if (nextPath != musicPlayback.stream.path) {
+        if (musicPlayback.playbackSource == MUSIC_PLAYBACK_PLAYLIST) {
           startPlaylistMusicTrack(nextPath);
-        } else if (musicPlaybackSource == MUSIC_PLAYBACK_LIBRARY) {
+        } else if (musicPlayback.playbackSource == MUSIC_PLAYBACK_LIBRARY) {
           startLibraryMusicTrack(nextPath);
         } else {
           beginMusicStream(nextPath);
         }
         return;
       }
-      if (!musicStreamState.file.seek(musicStreamState.dataStartOffset)) {
+      if (!musicPlayback.stream.file.seek(musicPlayback.stream.dataStartOffset)) {
         stopMusicStream(false);
         return;
       }
-      musicStreamState.dataRemainingBytes = musicStreamState.dataSizeBytes;
+      musicPlayback.stream.dataRemainingBytes = musicPlayback.stream.dataSizeBytes;
     }
 
-    size_t len = std::min<size_t>(musicStreamState.dataRemainingBytes, kMusicStreamBufferBytes);
-    len = musicStreamState.file.read(musicStreamBuffers[musicStreamState.queuedBufferIndex], len);
+    size_t len = std::min<size_t>(musicPlayback.stream.dataRemainingBytes, kMusicStreamBufferBytes);
+    len = musicPlayback.stream.file.read(musicPlayback.streamBuffers[musicPlayback.stream.queuedBufferIndex], len);
     if (len == 0) {
       stopMusicStream(false);
       return;
     }
 
-    musicStreamState.dataRemainingBytes -= len;
+    musicPlayback.stream.dataRemainingBytes -= len;
     audioPlayRaw16(
         AUDIO_BUS_BGM,
-        reinterpret_cast<const int16_t*>(musicStreamBuffers[musicStreamState.queuedBufferIndex]),
+        reinterpret_cast<const int16_t*>(musicPlayback.streamBuffers[musicPlayback.stream.queuedBufferIndex]),
         len / sizeof(int16_t),
-        musicStreamState.sampleRate,
-        musicStreamState.stereo,
+        musicPlayback.stream.sampleRate,
+        musicPlayback.stream.stereo,
         1,
         false);
-    musicStreamState.queuedBufferIndex = (musicStreamState.queuedBufferIndex + 1) % kMusicStreamBufferCount;
+    musicPlayback.stream.queuedBufferIndex =
+        (musicPlayback.stream.queuedBufferIndex + 1) % kMusicStreamBufferCount;
   }
 }
 
@@ -1166,7 +1176,7 @@ uint16_t chooseRandomPokemonIdExcluding(uint16_t excludedId) {
   }
 
   for (int attempt = 0; attempt < 64; ++attempt) {
-    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (esp_random() % (maxPokemonId - MIN_POKEMON_ID + 1)));
+    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (appRandomU32() % (maxPokemonId - MIN_POKEMON_ID + 1)));
     if (candidate == excludedId) continue;
     if (dataMgr.getPokemonName(candidate).length() == 0) continue;
     return candidate;
@@ -1182,7 +1192,7 @@ uint16_t chooseRandomNormalPokemonId(uint16_t excludedId) {
   }
 
   for (int attempt = 0; attempt < 128; ++attempt) {
-    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (esp_random() % (maxPokemonId - MIN_POKEMON_ID + 1)));
+    const uint16_t candidate = static_cast<uint16_t>(MIN_POKEMON_ID + (appRandomU32() % (maxPokemonId - MIN_POKEMON_ID + 1)));
     if (candidate == excludedId) continue;
     if (isLockOnSpecialPokemonId(candidate)) continue;
     if (dataMgr.getPokemonName(candidate).length() == 0) continue;
@@ -1197,7 +1207,7 @@ uint16_t choosePokemonIdFromTable(const uint16_t* ids, size_t count, uint16_t ex
     return chooseRandomPokemonIdExcluding(excludedId);
   }
   for (int attempt = 0; attempt < 64; ++attempt) {
-    const uint16_t candidate = ids[esp_random() % count];
+    const uint16_t candidate = ids[appRandomU32() % count];
     if (candidate == excludedId) continue;
     if (dataMgr.getPokemonName(candidate).length() == 0) continue;
     return candidate;
@@ -1210,7 +1220,7 @@ uint16_t choosePokemonIdFromTableExcludingSecret(const uint16_t* ids, size_t cou
     return chooseRandomPokemonIdExcluding(excludedId);
   }
   for (int attempt = 0; attempt < 64; ++attempt) {
-    const uint16_t candidate = ids[esp_random() % count];
+    const uint16_t candidate = ids[appRandomU32() % count];
     if (candidate == excludedId) continue;
     if (isPokemonIdInVector(candidate, lockOnSecretIds)) continue;
     if (dataMgr.getPokemonName(candidate).length() == 0) continue;
@@ -1224,7 +1234,7 @@ uint16_t choosePokemonIdFromVector(const std::vector<uint16_t>& ids, uint16_t ex
     return chooseRandomPokemonIdExcluding(excludedId);
   }
   for (int attempt = 0; attempt < 64; ++attempt) {
-    const uint16_t candidate = ids[esp_random() % ids.size()];
+    const uint16_t candidate = ids[appRandomU32() % ids.size()];
     if (candidate == excludedId) continue;
     if (dataMgr.getPokemonName(candidate).length() == 0) continue;
     return candidate;
@@ -3273,7 +3283,7 @@ bool loadQuizSound(const char* path, QuizSoundCache& cache) {
     return false;
   }
 
-  uint8_t* buffer = static_cast<uint8_t*>(heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  uint8_t* buffer = static_cast<uint8_t*>(appAllocateImageBuffer(size));
   if (buffer == nullptr) {
     buffer = static_cast<uint8_t*>(malloc(size));
   }
@@ -3370,7 +3380,7 @@ void playUiConfirmSound() {
 
 void playQuizSound(QuizPhase phase) {
   if (phase == QUIZ_A_SIDE) {
-    recordQuizQuestionViewed(millis());
+    recordQuizQuestionViewed(appMillis());
   }
   QuizSoundCache& cache = (phase == QUIZ_A_SIDE) ? quizAsideSound : quizBsideSound;
   String path = getQuizSoundPath(phase, appLanguage);
@@ -3393,7 +3403,7 @@ void playQuizSound(QuizPhase phase) {
 }
 
 void playTypeMatchupBgm() {
-  musicPlaybackSource = MUSIC_PLAYBACK_TYPE_MATCHUP;
+  musicPlayback.playbackSource = MUSIC_PLAYBACK_TYPE_MATCHUP;
   beginMusicStream(kTypeMatchupBgmPath);
 }
 
@@ -3417,23 +3427,25 @@ void resetQuizState(QuizPhase& quizPhase, uint32_t& quizPhaseStartedAt, uint16_t
 }
 
 void renderAppearanceImage(LGFX_Sprite& target, uint16_t pokemonId) {
+  auto& pipeline = appearancePipeline;
   target.fillRect(0, 0, kAppearanceImageW, kAppearanceImageH, ui.getBackgroundColor());
-  appearanceImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
+  pipeline.imageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, kAppearanceImageW, kAppearanceImageH, false);
 }
 
 void appearanceImageWorker(void*) {
+  auto& pipeline = appearancePipeline;
   AppearanceImageRequest request;
 
   for (;;) {
-    if (xQueueReceive(appearanceRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+    if (appQueueReceive(pipeline.requestQueue, &request, portMAX_DELAY) != pdTRUE) {
       continue;
     }
 
     bool success = false;
-    if (appearanceImageSprite != nullptr
-        && xSemaphoreTake(appearanceSpriteMutex, portMAX_DELAY) == pdTRUE) {
-      renderAppearanceImage(*appearanceImageSprite, request.pokemonId);
-      xSemaphoreGive(appearanceSpriteMutex);
+    if (pipeline.imageSprite != nullptr
+        && appMutexTake(pipeline.spriteMutex, portMAX_DELAY) == pdTRUE) {
+      renderAppearanceImage(*pipeline.imageSprite, request.pokemonId);
+      appMutexGive(pipeline.spriteMutex);
       success = true;
     }
 
@@ -3442,47 +3454,48 @@ void appearanceImageWorker(void*) {
       request.generation,
       success,
     };
-    xQueueSend(appearanceResultQueue, &result, 0);
+    appQueueSend(pipeline.resultQueue, &result, 0);
   }
 }
 
 void queueAppearanceImageRequest(uint16_t pokemonId) {
-  if (appearanceRequestQueue == nullptr) {
+  auto& pipeline = appearancePipeline;
+  if (pipeline.requestQueue == nullptr) {
     return;
   }
-  if (appearanceRequestedId == pokemonId && appearanceRequestedGeneration != 0) {
+  if (pipeline.requestedId == pokemonId && pipeline.requestedGeneration != 0) {
     return;
   }
 
-  appearanceRequestedId = pokemonId;
-  appearanceRequestedGeneration += 1;
+  pipeline.requestedId = pokemonId;
+  pipeline.requestedGeneration += 1;
   const AppearanceImageRequest request = {
     pokemonId,
-    appearanceRequestedGeneration,
+    pipeline.requestedGeneration,
   };
-  xQueueOverwrite(appearanceRequestQueue, &request);
+  appQueueOverwrite(pipeline.requestQueue, &request);
 }
 
 void renderPreviewImage(LGFX_Sprite& target, uint16_t pokemonId) {
   target.fillScreen(TFT_BLACK);
-  previewImageLoader.loadAndDisplayPNG(target, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT, false);
+  previewPipeline.imageLoader.loadAndDisplayPNG(target, pokemonId, -18, 0, SCREEN_WIDTH + 36, SCREEN_HEIGHT, false);
 }
 
 bool ensurePreviewSpriteReady() {
-  if (previewImageSprite != nullptr) {
+  if (previewPipeline.imageSprite != nullptr) {
     return true;
   }
 
-  previewImageSprite = new LGFX_Sprite(&displayRenderer().device());
-  if (previewImageSprite == nullptr) {
+  previewPipeline.imageSprite = new LGFX_Sprite(&displayRenderer().device());
+  if (previewPipeline.imageSprite == nullptr) {
     return false;
   }
 
-  previewImageSprite->setColorDepth(16);
-  previewImageSprite->setPsram(true);
-  if (!previewImageSprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT)) {
-    delete previewImageSprite;
-    previewImageSprite = nullptr;
+  previewPipeline.imageSprite->setColorDepth(16);
+  previewPipeline.imageSprite->setPsram(true);
+  if (!previewPipeline.imageSprite->createSprite(SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    delete previewPipeline.imageSprite;
+    previewPipeline.imageSprite = nullptr;
     return false;
   }
 
@@ -3493,15 +3506,15 @@ void previewImageWorker(void*) {
   PreviewImageRequest request;
 
   for (;;) {
-    if (xQueueReceive(previewRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+    if (appQueueReceive(previewPipeline.requestQueue, &request, portMAX_DELAY) != pdTRUE) {
       continue;
     }
 
     bool success = false;
     if (ensurePreviewSpriteReady()
-        && xSemaphoreTake(previewSpriteMutex, portMAX_DELAY) == pdTRUE) {
-      renderPreviewImage(*previewImageSprite, request.pokemonId);
-      xSemaphoreGive(previewSpriteMutex);
+        && appMutexTake(previewPipeline.spriteMutex, portMAX_DELAY) == pdTRUE) {
+      renderPreviewImage(*previewPipeline.imageSprite, request.pokemonId);
+      appMutexGive(previewPipeline.spriteMutex);
       success = true;
     }
 
@@ -3510,84 +3523,84 @@ void previewImageWorker(void*) {
       request.generation,
       success,
     };
-    xQueueSend(previewResultQueue, &result, 0);
+    appQueueSend(previewPipeline.resultQueue, &result, 0);
   }
 }
 
 void queuePreviewImageRequest(uint16_t pokemonId) {
-  if (previewRequestQueue == nullptr) {
+  if (previewPipeline.requestQueue == nullptr) {
     return;
   }
-  if (previewRequestedId == pokemonId && previewRequestedGeneration != 0) {
+  if (previewPipeline.requestedId == pokemonId && previewPipeline.requestedGeneration != 0) {
     return;
   }
 
-  previewRequestedId = pokemonId;
-  previewRequestedGeneration += 1;
+  previewPipeline.requestedId = pokemonId;
+  previewPipeline.requestedGeneration += 1;
   const PreviewImageRequest request = {
     pokemonId,
-    previewRequestedGeneration,
+    previewPipeline.requestedGeneration,
   };
-  xQueueOverwrite(previewRequestQueue, &request);
+  appQueueOverwrite(previewPipeline.requestQueue, &request);
 }
 
 bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
-  if (previewPocCacheReady
-      && previewPocCachedId == pokemonId
-      && previewPocCachedType == primaryType) {
+  if (previewPipeline.pocCacheReady
+      && previewPipeline.pocCachedId == pokemonId
+      && previewPipeline.pocCachedType == primaryType) {
     return true;
   }
 
-  if (!previewPocImageLoader.begin()) {
+  if (!previewPipeline.pocImageLoader.begin()) {
     return false;
   }
 
-  if (previewPocShadowSprite == nullptr) {
-    previewPocShadowSprite = new LGFX_Sprite(&displayRenderer().device());
-    if (previewPocShadowSprite == nullptr) {
+  if (previewPipeline.pocShadowSprite == nullptr) {
+    previewPipeline.pocShadowSprite = new LGFX_Sprite(&displayRenderer().device());
+    if (previewPipeline.pocShadowSprite == nullptr) {
       return false;
     }
-    previewPocShadowSprite->setColorDepth(16);
-    previewPocShadowSprite->setPsram(true);
-    if (!previewPocShadowSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
-      delete previewPocShadowSprite;
-      previewPocShadowSprite = nullptr;
-      return false;
-    }
-  }
-
-  if (previewPocIconSprite == nullptr) {
-    previewPocIconSprite = new LGFX_Sprite(&displayRenderer().device());
-    if (previewPocIconSprite == nullptr) {
-      return false;
-    }
-    previewPocIconSprite->setColorDepth(16);
-    previewPocIconSprite->setPsram(true);
-    if (!previewPocIconSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
-      delete previewPocIconSprite;
-      previewPocIconSprite = nullptr;
+    previewPipeline.pocShadowSprite->setColorDepth(16);
+    previewPipeline.pocShadowSprite->setPsram(true);
+    if (!previewPipeline.pocShadowSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
+      delete previewPipeline.pocShadowSprite;
+      previewPipeline.pocShadowSprite = nullptr;
       return false;
     }
   }
 
-  if (previewPocBackgroundSprite == nullptr) {
-    previewPocBackgroundSprite = new LGFX_Sprite(&displayRenderer().device());
-    if (previewPocBackgroundSprite != nullptr) {
-      previewPocBackgroundSprite->setColorDepth(16);
-      previewPocBackgroundSprite->setPsram(true);
-      if (!previewPocBackgroundSprite->createSprite(
+  if (previewPipeline.pocIconSprite == nullptr) {
+    previewPipeline.pocIconSprite = new LGFX_Sprite(&displayRenderer().device());
+    if (previewPipeline.pocIconSprite == nullptr) {
+      return false;
+    }
+    previewPipeline.pocIconSprite->setColorDepth(16);
+    previewPipeline.pocIconSprite->setPsram(true);
+    if (!previewPipeline.pocIconSprite->createSprite(kPreviewPocImageSize, kPreviewPocImageSize)) {
+      delete previewPipeline.pocIconSprite;
+      previewPipeline.pocIconSprite = nullptr;
+      return false;
+    }
+  }
+
+  if (previewPipeline.pocBackgroundSprite == nullptr) {
+    previewPipeline.pocBackgroundSprite = new LGFX_Sprite(&displayRenderer().device());
+    if (previewPipeline.pocBackgroundSprite != nullptr) {
+      previewPipeline.pocBackgroundSprite->setColorDepth(16);
+      previewPipeline.pocBackgroundSprite->setPsram(true);
+      if (!previewPipeline.pocBackgroundSprite->createSprite(
               SCREEN_WIDTH + (kPreviewPocBackgroundMargin * 2),
               SCREEN_HEIGHT + (kPreviewPocBackgroundMargin * 2))) {
-        delete previewPocBackgroundSprite;
-        previewPocBackgroundSprite = nullptr;
+        delete previewPipeline.pocBackgroundSprite;
+        previewPipeline.pocBackgroundSprite = nullptr;
       }
     }
   }
 
-  previewPocShadowSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
-  previewPocIconSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
-  if (previewPocBackgroundSprite != nullptr) {
-    previewPocBackgroundSprite->fillScreen(TFT_WHITE);
+  previewPipeline.pocShadowSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
+  previewPipeline.pocIconSprite->fillRect(0, 0, kPreviewPocImageSize, kPreviewPocImageSize, kPreviewPocTransparentColor);
+  if (previewPipeline.pocBackgroundSprite != nullptr) {
+    previewPipeline.pocBackgroundSprite->fillScreen(TFT_WHITE);
   }
 
   char silhouettePath[64];
@@ -3595,26 +3608,26 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
   snprintf(silhouettePath, sizeof(silhouettePath), "/pokemon/silhouettes/%04d.png", pokemonId);
   snprintf(iconPath, sizeof(iconPath), "/pokemon/icons/%04d.png", pokemonId);
 
-  const bool shadowReady = previewPocImageLoader.loadAndDisplayPNGPath(
-      *previewPocShadowSprite,
+  const bool shadowReady = previewPipeline.pocImageLoader.loadAndDisplayPNGPath(
+      *previewPipeline.pocShadowSprite,
       silhouettePath,
       0,
       0,
       kPreviewPocImageSize,
       kPreviewPocImageSize,
       false);
-  const bool iconReady = previewPocImageLoader.loadAndDisplayPNGPath(
-      *previewPocIconSprite,
+  const bool iconReady = previewPipeline.pocImageLoader.loadAndDisplayPNGPath(
+      *previewPipeline.pocIconSprite,
       iconPath,
       0,
       0,
       kPreviewPocImageSize,
       kPreviewPocImageSize,
       false);
-  const bool backgroundReady = (previewPocBackgroundSprite == nullptr)
+  const bool backgroundReady = (previewPipeline.pocBackgroundSprite == nullptr)
       ? false
-      : previewPocImageLoader.loadAndDisplayPNGPath(
-            *previewPocBackgroundSprite,
+      : previewPipeline.pocImageLoader.loadAndDisplayPNGPath(
+            *previewPipeline.pocBackgroundSprite,
             getParallaxBackgroundPathForType(primaryType),
             0,
             0,
@@ -3622,40 +3635,40 @@ bool ensurePreviewPocCacheReady(uint16_t pokemonId, const String& primaryType) {
             SCREEN_HEIGHT + (kPreviewPocBackgroundMargin * 2),
             false);
 
-  previewPocCacheReady = shadowReady && iconReady;
-  if (previewPocCacheReady) {
-    previewPocCachedId = pokemonId;
-    previewPocCachedType = primaryType;
+  previewPipeline.pocCacheReady = shadowReady && iconReady;
+  if (previewPipeline.pocCacheReady) {
+    previewPipeline.pocCachedId = pokemonId;
+    previewPipeline.pocCachedType = primaryType;
   }
-  if (!backgroundReady && previewPocBackgroundSprite != nullptr) {
-    previewPocBackgroundSprite->fillScreen(TFT_WHITE);
+  if (!backgroundReady && previewPipeline.pocBackgroundSprite != nullptr) {
+    previewPipeline.pocBackgroundSprite->fillScreen(TFT_WHITE);
   }
-  return previewPocCacheReady;
+  return previewPipeline.pocCacheReady;
 }
 
 void renderEvolutionImage(LGFX_Sprite& target, uint16_t pokemonId, uint16_t renderW, uint16_t renderH) {
   target.fillRect(0, 0, kEvolutionImageW, kEvolutionImageH, ui.getBackgroundColor());
-  evolutionImageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, renderW, renderH, false);
+  evolutionPipeline.imageLoader.loadAndDisplayPNG(target, pokemonId, 0, 0, renderW, renderH, false);
 }
 
 void evolutionImageWorker(void*) {
   EvolutionImageRequest request;
 
   for (;;) {
-    if (xQueueReceive(evolutionRequestQueue, &request, portMAX_DELAY) != pdTRUE) {
+    if (appQueueReceive(evolutionPipeline.requestQueue, &request, portMAX_DELAY) != pdTRUE) {
       continue;
     }
 
     bool success = false;
     if (request.imageIndex < kMaxEvolutionCards
-        && evolutionImageSprites[request.imageIndex] != nullptr
-        && xSemaphoreTake(evolutionSpriteMutex, portMAX_DELAY) == pdTRUE) {
+        && evolutionPipeline.imageSprites[request.imageIndex] != nullptr
+        && appMutexTake(evolutionPipeline.spriteMutex, portMAX_DELAY) == pdTRUE) {
       renderEvolutionImage(
-          *evolutionImageSprites[request.imageIndex],
+          *evolutionPipeline.imageSprites[request.imageIndex],
           request.pokemonId,
           request.renderW,
           request.renderH);
-      xSemaphoreGive(evolutionSpriteMutex);
+      appMutexGive(evolutionPipeline.spriteMutex);
       success = true;
     }
 
@@ -3666,33 +3679,33 @@ void evolutionImageWorker(void*) {
       request.generation,
       success,
     };
-    xQueueSend(evolutionResultQueue, &result, 0);
+    appQueueSend(evolutionPipeline.resultQueue, &result, 0);
   }
 }
 
 void queueEvolutionImageRequests(const PokemonDetail& pk) {
-  if (evolutionRequestQueue == nullptr) {
+  if (evolutionPipeline.requestQueue == nullptr) {
     return;
   }
-  evolutionSourcePokemonId = pk.id;
-  evolutionRequestedGeneration += 1;
-  evolutionRenderedGeneration = 0;
+  evolutionPipeline.sourcePokemonId = pk.id;
+  evolutionPipeline.requestedGeneration += 1;
+  evolutionPipeline.renderedGeneration = 0;
   for (int i = 0; i < kMaxEvolutionCards; ++i) {
-    evolutionRequestedIds[i] = 0;
-    evolutionRenderedIds[i] = 0;
+    evolutionPipeline.requestedIds[i] = 0;
+    evolutionPipeline.renderedIds[i] = 0;
   }
 
   for (size_t i = 0; i < pk.evolutions.size() && i < kMaxEvolutionCards; ++i) {
-    evolutionRequestedIds[i] = pk.evolutions[i].id;
+    evolutionPipeline.requestedIds[i] = pk.evolutions[i].id;
     const EvolutionImageRequest request = {
       pk.evolutions[i].id,
       pk.id,
       static_cast<uint8_t>(i),
       kEvolutionImageW,
       kEvolutionImageH,
-      evolutionRequestedGeneration,
+      evolutionPipeline.requestedGeneration,
     };
-    xQueueSend(evolutionRequestQueue, &request, 0);
+    appQueueSend(evolutionPipeline.requestQueue, &request, 0);
   }
 }
 }
@@ -3748,52 +3761,52 @@ void AppRuntime::boot() {
   coverProximityReady = initCoverProximitySensor();
   initPortBBackButton();
   wakeSplashActive = true;
-  wakeSplashStartedAt = millis();
+  wakeSplashStartedAt = appMillis();
 
-  appearanceRequestQueue = xQueueCreate(1, sizeof(AppearanceImageRequest));
-  appearanceResultQueue = xQueueCreate(4, sizeof(AppearanceImageResult));
-  appearanceSpriteMutex = xSemaphoreCreateMutex();
-  appearanceImageSprite = new LGFX_Sprite(&displayRenderer().device());
-  previewRequestQueue = xQueueCreate(1, sizeof(PreviewImageRequest));
-  previewResultQueue = xQueueCreate(4, sizeof(PreviewImageResult));
-  previewSpriteMutex = xSemaphoreCreateMutex();
-  evolutionRequestQueue = xQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageRequest));
-  evolutionResultQueue = xQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageResult));
-  evolutionSpriteMutex = xSemaphoreCreateMutex();
-  for (auto& sprite : evolutionImageSprites) {
+  appearancePipeline.requestQueue = appQueueCreate(1, sizeof(AppearanceImageRequest));
+  appearancePipeline.resultQueue = appQueueCreate(4, sizeof(AppearanceImageResult));
+  appearancePipeline.spriteMutex = appMutexCreate();
+  appearancePipeline.imageSprite = new LGFX_Sprite(&displayRenderer().device());
+  previewPipeline.requestQueue = appQueueCreate(1, sizeof(PreviewImageRequest));
+  previewPipeline.resultQueue = appQueueCreate(4, sizeof(PreviewImageResult));
+  previewPipeline.spriteMutex = appMutexCreate();
+  evolutionPipeline.requestQueue = appQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageRequest));
+  evolutionPipeline.resultQueue = appQueueCreate(kMaxEvolutionCards, sizeof(EvolutionImageResult));
+  evolutionPipeline.spriteMutex = appMutexCreate();
+  for (auto& sprite : evolutionPipeline.imageSprites) {
     sprite = new LGFX_Sprite(&displayRenderer().device());
   }
 
-  if (appearanceRequestQueue == nullptr
-      || appearanceResultQueue == nullptr
-      || appearanceSpriteMutex == nullptr
-      || appearanceImageSprite == nullptr
-      || previewRequestQueue == nullptr
-      || previewResultQueue == nullptr
-      || previewSpriteMutex == nullptr
-      || evolutionRequestQueue == nullptr
-      || evolutionResultQueue == nullptr
-      || evolutionSpriteMutex == nullptr
-      || !appearanceImageLoader.begin()
-      || !previewImageLoader.begin()
-      || !evolutionImageLoader.begin()) {
+  if (appearancePipeline.requestQueue == nullptr
+      || appearancePipeline.resultQueue == nullptr
+      || appearancePipeline.spriteMutex == nullptr
+      || appearancePipeline.imageSprite == nullptr
+      || previewPipeline.requestQueue == nullptr
+      || previewPipeline.resultQueue == nullptr
+      || previewPipeline.spriteMutex == nullptr
+      || evolutionPipeline.requestQueue == nullptr
+      || evolutionPipeline.resultQueue == nullptr
+      || evolutionPipeline.spriteMutex == nullptr
+      || !appearancePipeline.imageLoader.begin()
+      || !previewPipeline.imageLoader.begin()
+      || !evolutionPipeline.imageLoader.begin()) {
     displayRenderer().print("Image Queue Error");
     while(1) appDelay(100);
   }
 
-  for (auto* sprite : evolutionImageSprites) {
+  for (auto* sprite : evolutionPipeline.imageSprites) {
     if (sprite == nullptr) {
       displayRenderer().print("Image Queue Error");
       while(1) appDelay(100);
     }
   }
 
-  appearanceImageSprite->setColorDepth(16);
-  if (!appearanceImageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
+  appearancePipeline.imageSprite->setColorDepth(16);
+  if (!appearancePipeline.imageSprite->createSprite(kAppearanceImageW, kAppearanceImageH)) {
     displayRenderer().print("Image Sprite Error");
     while(1) appDelay(100);
   }
-  for (auto& sprite : evolutionImageSprites) {
+  for (auto& sprite : evolutionPipeline.imageSprites) {
     sprite->setColorDepth(16);
     if (!sprite->createSprite(kEvolutionImageW, kEvolutionImageH)) {
       displayRenderer().print("Evolution Sprite Error");
@@ -3801,29 +3814,29 @@ void AppRuntime::boot() {
     }
   }
 
-  xTaskCreatePinnedToCore(
+  appTaskCreatePinnedToCore(
       appearanceImageWorker,
       "appearanceImage",
       6144,
       nullptr,
       1,
-      &appearanceWorkerTaskHandle,
+      nullptr,
       0);
-  xTaskCreatePinnedToCore(
+  appTaskCreatePinnedToCore(
       previewImageWorker,
       "previewImage",
       8192,
       nullptr,
       1,
-      &previewWorkerTaskHandle,
+      nullptr,
       0);
-  xTaskCreatePinnedToCore(
+  appTaskCreatePinnedToCore(
       evolutionImageWorker,
       "evolutionImage",
       6144,
       nullptr,
       1,
-      &evolutionWorkerTaskHandle,
+      nullptr,
       0);
 
   dataMgr.loadPokemonDetail(currentId);
@@ -3848,8 +3861,8 @@ void AppRuntime::tick() {
   const unsigned long now = appMillis();
   updateLockOnBadgeFeverState(now);
   serviceMusicStream();
-  if (musicPlaybackVisualDirty) {
-    musicPlaybackVisualDirty = false;
+  if (musicPlayback.visualDirty) {
+    musicPlayback.visualDirty = false;
     needsRedraw = true;
   }
 
@@ -4571,7 +4584,7 @@ void AppRuntime::tick() {
         if (guidePokemonSelectedId >= 1 && guidePokemonSelectedId <= 386) {
           guideCaughtFlags[guidePokemonSelectedId] = !guideCaughtFlags[guidePokemonSelectedId];
           guideCaughtDirty = true;
-          guideCaughtSaveAt = millis() + 250;
+          guideCaughtSaveAt = appMillis() + 250;
         }
         break;
       case ACTION_NEXT_GUIDE_PAGE: {
@@ -4627,10 +4640,10 @@ void AppRuntime::tick() {
       case ACTION_OPEN_SLIDESHOW:
         screenMode = SCREEN_SLIDESHOW;
         slideshowPokemonId = MIN_POKEMON_ID;
-        slideshowPhaseStartedAt = millis();
+        slideshowPhaseStartedAt = appMillis();
         dataMgr.loadPokemonDetail(slideshowPokemonId);
         if (preview3dEnabled) {
-          previewPocCacheReady = false;
+          previewPipeline.pocCacheReady = false;
           ensurePreviewPocCacheReady(slideshowPokemonId, getPrimaryTypeOrNormal(dataMgr.getCurrentPokemon()));
         }
         break;
@@ -4709,8 +4722,8 @@ void AppRuntime::tick() {
             searchNameQuery = "";
             searchNameOffset = 0;
             settingsDirty = true;
-            settingsSaveAt = millis() + 250;
-            searchFlashUntil = millis() + 180;
+            settingsSaveAt = appMillis() + 250;
+            searchFlashUntil = appMillis() + 180;
           }
           screenMode = SCREEN_SEARCH;
         }
@@ -4835,7 +4848,7 @@ void AppRuntime::tick() {
         break;
       case ACTION_PREVIEW_OPEN:
         if (preview3dEnabled) {
-          previewPocCacheReady = false;
+          previewPipeline.pocCacheReady = false;
           {
             const auto& pk = dataMgr.getCurrentPokemon();
             const String previewType = pk.types.empty() ? String("ノーマル") : pk.types[0];
@@ -4952,14 +4965,14 @@ void AppRuntime::tick() {
 
   if (!wakeSplashActive && screenMode == SCREEN_SLIDESHOW && pendingAction.type == ACTION_NONE) {
     recordSlideshowAchievementView(slideshowPokemonId, now);
-    const uint32_t elapsed = millis() - slideshowPhaseStartedAt;
+    const uint32_t elapsed = appMillis() - slideshowPhaseStartedAt;
     if (elapsed >= kSlideshowSlideDurationMs) {
       const uint16_t maxPokemonId = getAvailableMaxPokemonId();
       slideshowPokemonId = (slideshowPokemonId >= maxPokemonId) ? MIN_POKEMON_ID : (slideshowPokemonId + 1);
-      slideshowPhaseStartedAt = millis();
+      slideshowPhaseStartedAt = appMillis();
       dataMgr.loadPokemonDetail(slideshowPokemonId);
       if (preview3dEnabled) {
-        previewPocCacheReady = false;
+        previewPipeline.pocCacheReady = false;
         ensurePreviewPocCacheReady(slideshowPokemonId, getPrimaryTypeOrNormal(dataMgr.getCurrentPokemon()));
       }
       needsRedraw = true;
@@ -5108,75 +5121,76 @@ void AppRuntime::tick() {
   }
 
   AppearanceImageResult imageResult;
-  while (appearanceResultQueue != nullptr && xQueueReceive(appearanceResultQueue, &imageResult, 0) == pdTRUE) {
+  while (appearancePipeline.resultQueue != nullptr && appQueueReceive(appearancePipeline.resultQueue, &imageResult, 0) == pdTRUE) {
     if (!imageResult.success) {
-      if (imageResult.generation == appearanceRequestedGeneration) {
-        appearanceRequestedId = 0;
+      if (imageResult.generation == appearancePipeline.requestedGeneration) {
+        appearancePipeline.requestedId = 0;
       }
       continue;
     }
-    if (imageResult.generation != appearanceRequestedGeneration) {
+    if (imageResult.generation != appearancePipeline.requestedGeneration) {
       continue;
     }
 
-    appearanceCacheReady = true;
-    appearanceCachedId = imageResult.pokemonId;
-    appearanceCachedGeneration = imageResult.generation;
+    appearancePipeline.cacheReady = true;
+    appearancePipeline.cachedId = imageResult.pokemonId;
+    appearancePipeline.cachedGeneration = imageResult.generation;
 
     if (screenMode == SCREEN_DETAIL
         && currentTab == TAB_APPEARANCE
         && currentId == imageResult.pokemonId
-        && appearanceImageSprite != nullptr
-        && xSemaphoreTake(appearanceSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-      ui.blitAppearanceImageToCanvas(*appearanceImageSprite);
-      ui.pushAppearanceImageToDisplay(*appearanceImageSprite);
+        && appearancePipeline.imageSprite != nullptr
+        && appMutexTake(appearancePipeline.spriteMutex, appMsToTicks(5)) == pdTRUE) {
+      ui.blitAppearanceImageToCanvas(*appearancePipeline.imageSprite);
+      ui.pushAppearanceImageToDisplay(*appearancePipeline.imageSprite);
       ui.redrawDetailNavigationToDisplay();
-      xSemaphoreGive(appearanceSpriteMutex);
+      appMutexGive(appearancePipeline.spriteMutex);
     }
   }
 
   PreviewImageResult previewResult;
-  while (previewResultQueue != nullptr && xQueueReceive(previewResultQueue, &previewResult, 0) == pdTRUE) {
+  while (previewPipeline.resultQueue != nullptr && appQueueReceive(previewPipeline.resultQueue, &previewResult, 0) == pdTRUE) {
     if (!previewResult.success) {
-      if (previewResult.generation == previewRequestedGeneration) {
-        previewRequestedId = 0;
+      if (previewResult.generation == previewPipeline.requestedGeneration) {
+        previewPipeline.requestedId = 0;
       }
       continue;
     }
-    if (previewResult.generation != previewRequestedGeneration) {
+    if (previewResult.generation != previewPipeline.requestedGeneration) {
       continue;
     }
 
-    previewCacheReady = true;
-    previewCachedId = previewResult.pokemonId;
-    previewCachedGeneration = previewResult.generation;
+    previewPipeline.cacheReady = true;
+    previewPipeline.cachedId = previewResult.pokemonId;
+    previewPipeline.cachedGeneration = previewResult.generation;
 
     if (screenMode == SCREEN_PREVIEW
         && currentId == previewResult.pokemonId
-        && previewImageSprite != nullptr
-        && xSemaphoreTake(previewSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-      ui.blitPreviewImageToCanvas(*previewImageSprite);
-      ui.pushPreviewImageToDisplay(*previewImageSprite);
+        && previewPipeline.imageSprite != nullptr
+        && appMutexTake(previewPipeline.spriteMutex, appMsToTicks(5)) == pdTRUE) {
+      ui.blitPreviewImageToCanvas(*previewPipeline.imageSprite);
+      ui.pushPreviewImageToDisplay(*previewPipeline.imageSprite);
       if (previewCaptionEnabled) {
         ui.redrawPreviewCaptionToDisplay(previewResult.pokemonId, dataMgr.getPokemonName(previewResult.pokemonId));
       }
-      xSemaphoreGive(previewSpriteMutex);
+      appMutexGive(previewPipeline.spriteMutex);
     }
   }
 
   EvolutionImageResult evolutionResult;
-  while (evolutionResultQueue != nullptr && xQueueReceive(evolutionResultQueue, &evolutionResult, 0) == pdTRUE) {
+  while (evolutionPipeline.resultQueue != nullptr
+         && appQueueReceive(evolutionPipeline.resultQueue, &evolutionResult, 0) == pdTRUE) {
     if (!evolutionResult.success) {
       continue;
     }
-    if (evolutionResult.generation != evolutionRequestedGeneration
-        || evolutionResult.sourcePokemonId != evolutionSourcePokemonId
+    if (evolutionResult.generation != evolutionPipeline.requestedGeneration
+        || evolutionResult.sourcePokemonId != evolutionPipeline.sourcePokemonId
         || evolutionResult.imageIndex >= kMaxEvolutionCards) {
       continue;
     }
 
-    evolutionRenderedIds[evolutionResult.imageIndex] = evolutionResult.pokemonId;
-    evolutionRenderedGeneration = evolutionResult.generation;
+    evolutionPipeline.renderedIds[evolutionResult.imageIndex] = evolutionResult.pokemonId;
+    evolutionPipeline.renderedGeneration = evolutionResult.generation;
     if (screenMode == SCREEN_DETAIL
         && currentTab == TAB_EVOLUTION
         && currentId == evolutionResult.sourcePokemonId) {
@@ -5257,7 +5271,7 @@ void AppRuntime::tick() {
       actionActiveFlags.reserve(endIndex - musicListOffset);
       for (size_t i = musicListOffset; i < endIndex; ++i) {
         String label = musicListEntries[i].label;
-        if (!musicListEntries[i].isDirectory && musicListEntries[i].path == musicNowPlayingPath) {
+        if (!musicListEntries[i].isDirectory && musicListEntries[i].path == musicPlayback.nowPlayingPath) {
           label = String("▶ ") + label;
         }
         pageLabels.push_back(label);
@@ -5507,7 +5521,7 @@ void AppRuntime::tick() {
               : -1,
           visualControl == PRESS_SEARCH_NAME_PAGE_PREV,
           visualControl == PRESS_SEARCH_NAME_PAGE_NEXT,
-          millis() < searchFlashUntil,
+          appMillis() < searchFlashUntil,
           visualControl == PRESS_SEARCH_NAME_QUERY,
           false);
     } else if (screenMode == SCREEN_SEARCH_NUMBER) {
@@ -5548,13 +5562,13 @@ void AppRuntime::tick() {
               : -1);
     } else if (screenMode == SCREEN_PREVIEW) {
       ui.drawFullscreenPreview(false, currentId);
-      if (previewCacheReady
-          && previewCachedId == currentId
-          && previewCachedGeneration == previewRequestedGeneration
-          && previewImageSprite != nullptr
-          && xSemaphoreTake(previewSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-        ui.blitPreviewImageToCanvas(*previewImageSprite);
-        xSemaphoreGive(previewSpriteMutex);
+      if (previewPipeline.cacheReady
+          && previewPipeline.cachedId == currentId
+          && previewPipeline.cachedGeneration == previewPipeline.requestedGeneration
+          && previewPipeline.imageSprite != nullptr
+          && appMutexTake(previewPipeline.spriteMutex, appMsToTicks(5)) == pdTRUE) {
+        ui.blitPreviewImageToCanvas(*previewPipeline.imageSprite);
+        appMutexGive(previewPipeline.spriteMutex);
       } else {
         queuePreviewImageRequest(currentId);
       }
@@ -5563,11 +5577,11 @@ void AppRuntime::tick() {
       }
     } else if (screenMode == SCREEN_PREVIEW_POC) {
       const String previewType = pk.types.empty() ? String("ノーマル") : pk.types[0];
-      if (ensurePreviewPocCacheReady(currentId, previewType) && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
+      if (ensurePreviewPocCacheReady(currentId, previewType) && previewPipeline.pocShadowSprite != nullptr && previewPipeline.pocIconSprite != nullptr) {
         ui.drawPreviewPocScreenLayered(
-            previewPocBackgroundSprite,
-            *previewPocShadowSprite,
-            *previewPocIconSprite,
+            previewPipeline.pocBackgroundSprite,
+            *previewPipeline.pocShadowSprite,
+            *previewPipeline.pocIconSprite,
             previewPocShiftX,
             previewPocShiftY,
             kPreviewPocTransparentColor);
@@ -5580,11 +5594,11 @@ void AppRuntime::tick() {
     } else if (screenMode == SCREEN_SLIDESHOW) {
       if (preview3dEnabled) {
         const String previewType = getPrimaryTypeOrNormal(pk);
-        if (ensurePreviewPocCacheReady(slideshowPokemonId, previewType) && previewPocShadowSprite != nullptr && previewPocIconSprite != nullptr) {
+        if (ensurePreviewPocCacheReady(slideshowPokemonId, previewType) && previewPipeline.pocShadowSprite != nullptr && previewPipeline.pocIconSprite != nullptr) {
           ui.drawPreviewPocScreenLayered(
-              previewPocBackgroundSprite,
-              *previewPocShadowSprite,
-              *previewPocIconSprite,
+              previewPipeline.pocBackgroundSprite,
+              *previewPipeline.pocShadowSprite,
+              *previewPipeline.pocIconSprite,
               previewPocShiftX,
               previewPocShiftY,
               kPreviewPocTransparentColor);
@@ -5602,13 +5616,13 @@ void AppRuntime::tick() {
 
       if (currentTab == TAB_APPEARANCE) {
         ui.drawAppearanceTab(pk, false);
-        if (appearanceCacheReady
-            && appearanceCachedId == currentId
-            && appearanceCachedGeneration == appearanceRequestedGeneration
-            && appearanceImageSprite != nullptr
-            && xSemaphoreTake(appearanceSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-          ui.blitAppearanceImageToCanvas(*appearanceImageSprite);
-          xSemaphoreGive(appearanceSpriteMutex);
+        if (appearancePipeline.cacheReady
+            && appearancePipeline.cachedId == currentId
+            && appearancePipeline.cachedGeneration == appearancePipeline.requestedGeneration
+            && appearancePipeline.imageSprite != nullptr
+            && appMutexTake(appearancePipeline.spriteMutex, appMsToTicks(5)) == pdTRUE) {
+          ui.blitAppearanceImageToCanvas(*appearancePipeline.imageSprite);
+          appMutexGive(appearancePipeline.spriteMutex);
         } else {
           queueAppearanceImageRequest(currentId);
         }
@@ -5630,17 +5644,17 @@ void AppRuntime::tick() {
                 ? (visualControl - PRESS_EVOLUTION_0)
                 : -1,
             false);
-        if (evolutionSourcePokemonId != pk.id) {
+        if (evolutionPipeline.sourcePokemonId != pk.id) {
           queueEvolutionImageRequests(pk);
         }
         for (int i = 0; i < totalEvolutionCount; ++i) {
-          if (evolutionRequestedIds[i] != 0
-              && evolutionRenderedGeneration == evolutionRequestedGeneration
-              && evolutionRenderedIds[i] == evolutionRequestedIds[i]
-              && evolutionImageSprites[i] != nullptr
-              && xSemaphoreTake(evolutionSpriteMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
-            ui.blitEvolutionImageToCanvas(*evolutionImageSprites[i], i, totalEvolutionCount);
-            xSemaphoreGive(evolutionSpriteMutex);
+          if (evolutionPipeline.requestedIds[i] != 0
+              && evolutionPipeline.renderedGeneration == evolutionPipeline.requestedGeneration
+              && evolutionPipeline.renderedIds[i] == evolutionPipeline.requestedIds[i]
+              && evolutionPipeline.imageSprites[i] != nullptr
+              && appMutexTake(evolutionPipeline.spriteMutex, appMsToTicks(5)) == pdTRUE) {
+            ui.blitEvolutionImageToCanvas(*evolutionPipeline.imageSprites[i], i, totalEvolutionCount);
+            appMutexGive(evolutionPipeline.spriteMutex);
           }
         }
       }

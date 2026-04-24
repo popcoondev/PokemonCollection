@@ -894,13 +894,13 @@
   - Renderer 実装以外で新規 `M5.Lcd` 直呼びをしないルールにできている
 
 ### 0087. `AppRuntime` を共通ライフサイクルとして実機と sim の両方から起動できるようにしたい
-- 状態: open
+- 状態: done
 - 発生日: 2026-04-23
 - 画面/機能: アプリ実行基盤 / ライフサイクル
 - 再現手順: 実機と sim の起動入口を比較する
 - 期待結果: 実機は `setup()/loop()`、sim は SDL ループから、どちらも同じ `AppRuntime` の `boot/tick` を呼んでアプリ本体を動かせる
-- 実際の結果: 現在は `AppRuntime` の入口共有は始まっているが、sim はまだ最小ウィンドウ起動器のままで、アプリ本体の状態機械は回していない
-- 対応メモ: `sim/main.cpp` は simulator 専用 UI や専用 hit test を持たず、`appBoot(); while (...) appTick();` を呼ぶ薄い起動器だけにする。M5Stack 向けの座標系と画面遷移は既存アプリ側のまま維持する。完了条件は、トップメニューから起動する共通 runtime が sim でも回ること
+- 実際の結果: 実機は `setup()/loop()`、sim は SDL ループから、どちらも `appBoot()/appTick()` を呼んで同じ `AppRuntime` を回せる状態になった
+- 対応メモ: `sim/main.cpp` は SDL/TTF 初期化、`SimSd::begin()`、`SimPlatform::setRenderer()`、イベントポーリング、`appBoot()/appTick()` 呼び出しだけを持つ薄い起動器に整理した。sim 専用 UI、sim 専用画面遷移、sim 専用 hit test は持たない。トップメニューから既存アプリが起動し、クリック入力は `AppInput` の sim backend 経由で既存の押下判定へ流れる
 
 ### 0088. sim 用の M5 下位 API shim を揃えて既存 `DataManager` と `ImageLoader` をそのまま使えるようにしたい
 - 状態: open
@@ -912,10 +912,19 @@
 - 対応メモ: sim 側では `/pokemon/...` を `data/sd/pokemon/...` に解決する。独自の図鑑ローダや画像ローダは作らず、既存実装がコンパイル・動作できるだけの shim を補う。必要なら `ArduinoJson` 向けの最小分岐を許容するが、ロジックの再実装はしない
 
 ### 0089. sim 用 backend として入力・時間・ストレージ・音・電源の責務境界を固めたい
-- 状態: open
+- 状態: done
 - 発生日: 2026-04-23
 - 画面/機能: プラットフォーム層 / backend 差し替え
 - 再現手順: `main.cpp` の実機依存 API を確認する
 - 期待結果: アプリ本体は M5 向けの API と座標系のまま書かれていても、下位 backend を差し替えるだけで sim でも同じ runtime を回せる
-- 実際の結果: 現在は `AppInput`、`AppPlatform`、`AppStorage` の分離は始まっているが、`M5.begin`、`M5.Speaker`、`M5.Power`、`M5.In_I2C`、worker task / queue / semaphore などの依存が残っている
-- 対応メモ: 目標は M5 全体の完全エミュレーションではなく、このアプリが依存している下位 API のみを adapter 化すること。sim 専用の画面ロジックや画面遷移は作らない。優先順位は `入力 -> 時間 -> ストレージ -> 描画 -> 音 -> 電源/センサー -> worker 実行基盤` の順で切る
+- 実際の結果: `AppInput`、`AppPlatform`、`AppStorage`、`AppDevice`、`AppAudio`、`AppPower`、`AppMotion`、`AppSensors`、`AppConcurrency` まで分離し、`main.cpp` から `M5.*` と FreeRTOS の直呼びは backend 側に閉じた。sim でも `DataManager` と `ImageLoader` を既存実装のまま載せられ、`appBoot()/appTick()` で runtime を回せる
+- 対応メモ: 目標は M5 全体の完全エミュレーションではなく、このアプリが依存している下位 API のみを adapter 化すること。sim 専用の画面ロジックや画面遷移は作らない。`appearance / preview / evolution` の画像 worker state と `music` の再生 service state も専用構造へ寄せて、backend と実行 state の責務境界を整理した
+
+### 0090. sim で擬似ハードイベントを注入する制御ウィンドウを追加したい
+- 状態: open
+- 発生日: 2026-04-24
+- 画面/機能: PCシミュレータ / 制御ウィンドウ / 擬似ハードイベント
+- 再現手順: sim でアプリを起動し、近接センサーや充電状態など実機依存イベントを確認したい
+- 期待結果: アプリ本体 UI とは別に sim 用の制御ウィンドウがあり、近接センサー close/open、Port.B 押下、充電中/非充電、バッテリー残量、必要なら加速度やスリープ復帰などを擬似的に切り替えられる
+- 実際の結果: 現在の sim には実機イベントを自然発生させる仕組みがなく、近接センサーや電源状態のような依存機能を再現しづらい
+- 対応メモ: これは sim の開発用制御面であり、本体アプリ UI や画面遷移の独自実装ではない。`0090` は `0087/0089` の上に乗る別課題として扱い、sim backend に擬似イベントを注入する UI を追加する。初期対象は `near/far`、`Port.B click/down`、`charging on/off`、`battery level`。必要ならあとで `accel`、`sleep/wake`、`RTC/time override` を追加する

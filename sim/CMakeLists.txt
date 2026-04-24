@@ -21,6 +21,7 @@ add_executable(pokemoncollection_sim
   SimPlatform.cpp
   SimSd.cpp
   ../src/AppAudio.cpp
+  ../src/AppConcurrency.cpp
   ../src/AppDevice.cpp
   ../src/AppInput.cpp
   ../src/AppMotion.cpp

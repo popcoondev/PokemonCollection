@@ -31,6 +31,8 @@ public:
   void sleep() override;
 
 private:
+  struct Impl;
+  Impl* impl = nullptr;
   uint16_t currentTextColor_ = 0xFFFF;
 };
 
