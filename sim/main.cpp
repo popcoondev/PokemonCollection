@@ -38,22 +38,6 @@ void mapWindowToLogical(SDL_Window* window, int windowX, int windowY, int16_t& l
   logicalY = static_cast<int16_t>((windowY * kLogicalHeight) / windowH);
 }
 
-const char* pickDebugFontPath() {
-  static const char* kCandidates[] = {
-      "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-      "/System/Library/Fonts/Helvetica.ttc",
-  };
-  for (const char* path : kCandidates) {
-    if (path != nullptr) {
-      if (FILE* fp = std::fopen(path, "rb")) {
-        std::fclose(fp);
-        return path;
-      }
-    }
-  }
-  return nullptr;
-}
-
 void drawDebugText(SDL_Renderer* renderer, TTF_Font* font, const char* text, int x, int y) {
   if (renderer == nullptr || font == nullptr || text == nullptr || text[0] == '\0') {
     return;
@@ -137,7 +121,7 @@ int main(int argc, char** argv) {
 
   SDL_RenderSetLogicalSize(renderer, kLogicalWidth, kLogicalHeight);
   SimPlatform::setRenderer(renderer);
-  if (const char* fontPath = pickDebugFontPath()) {
+  if (const char* fontPath = SimPlatform::pickUIFontPath()) {
     reinterpret_cast<PcRenderer*>(&M5Renderer::instance())->beginNative(renderer, fontPath, 14);
   }
 
@@ -162,7 +146,7 @@ int main(int argc, char** argv) {
       if (TTF_WasInit() == 0) {
         TTF_Init();
       }
-      if (const char* fontPath = pickDebugFontPath()) {
+      if (const char* fontPath = SimPlatform::pickUIFontPath()) {
         debugFont = TTF_OpenFont(fontPath, 14);
       }
     }
@@ -182,7 +166,7 @@ int main(int argc, char** argv) {
     if (TTF_WasInit() == 0) {
       TTF_Init();
     }
-    if (const char* fontPath = pickDebugFontPath()) {
+    if (const char* fontPath = SimPlatform::pickUIFontPath()) {
       controlFont = TTF_OpenFont(fontPath, 14);
     }
   }

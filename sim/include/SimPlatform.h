@@ -21,6 +21,8 @@ struct SimControlState {
 
 namespace SimPlatform {
 
+const char* pickUIFontPath();
+
 void setRenderer(SDL_Renderer* renderer);
 SDL_Renderer* getRenderer();
 bool beginRenderFrame();
