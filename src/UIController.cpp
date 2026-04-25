@@ -1112,6 +1112,8 @@ void UIController::drawTypeMatchupScreen(
     const char* defenseTypeLabel,
     uint16_t attackPokemonId,
     uint16_t defensePokemonId,
+    LGFX_Sprite* attackPokemonSprite,
+    LGFX_Sprite* defensePokemonSprite,
     bool showPokemon,
     int encounterEffectId,
     float encounterProgress,
@@ -1197,13 +1199,31 @@ void UIController::drawTypeMatchupScreen(
     const int targetX = leftPanelX + 24;
     const int startX = SCREEN_WIDTH;
     const int drawX = targetX + static_cast<int>((1.0f - clampedSlide) * (startX - targetX));
-    imageLoader.loadAndDisplayPNG(*sprite, attackPokemonId, drawX, battleTopY + 28, 82, 64, false);
+    if (attackPokemonSprite != nullptr && attackPokemonSprite->getBuffer() != nullptr) {
+      sprite->pushImage(
+          drawX,
+          battleTopY + 28,
+          82,
+          64,
+          static_cast<const uint16_t*>(attackPokemonSprite->getBuffer()));
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, attackPokemonId, drawX, battleTopY + 28, 82, 64, false);
+    }
   }
   if (showPokemon && defensePokemonId >= MIN_POKEMON_ID) {
     const int targetX = rightPanelX + 24;
     const int startX = -82;
     const int drawX = startX + static_cast<int>(clampedSlide * (targetX - startX));
-    imageLoader.loadAndDisplayPNG(*sprite, defensePokemonId, drawX, battleTopY + 8, 82, 64, false);
+    if (defensePokemonSprite != nullptr && defensePokemonSprite->getBuffer() != nullptr) {
+      sprite->pushImage(
+          drawX,
+          battleTopY + 8,
+          82,
+          64,
+          static_cast<const uint16_t*>(defensePokemonSprite->getBuffer()));
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, defensePokemonId, drawX, battleTopY + 8, 82, 64, false);
+    }
   }
 
   sprite->drawRoundRect(textBoxX, lowerY, textBoxW, lowerH, 10, frameColor);

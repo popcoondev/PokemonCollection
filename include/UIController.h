@@ -77,6 +77,8 @@ public:
       const char* defenseTypeLabel,
       uint16_t attackPokemonId,
       uint16_t defensePokemonId,
+      LGFX_Sprite* attackPokemonSprite,
+      LGFX_Sprite* defensePokemonSprite,
       bool showPokemon,
       int encounterEffectId,
       float encounterProgress,
