@@ -260,6 +260,98 @@ String truncateUtf8Label(const String& text, int maxChars) {
   return out;
 }
 
+void drawEncounterEffectOverlay(
+    LGFX_Sprite* sprite,
+    int effectId,
+    float progress) {
+  if (sprite == nullptr || progress <= 0.0f) {
+    return;
+  }
+
+  progress = constrain(progress, 0.0f, 1.0f);
+  const int w = SCREEN_WIDTH;
+  const int h = SCREEN_HEIGHT;
+  const int cx = w / 2;
+  const int cy = h / 2;
+  const uint16_t c = TFT_BLACK;
+
+  switch (effectId % 8) {
+    case 0: {
+      const int r = static_cast<int>((w * 0.9f) * progress);
+      sprite->fillCircle(-20, -10, r, c);
+      sprite->fillCircle(w + 20, -10, r, c);
+      sprite->fillCircle(-20, h + 10, r, c);
+      sprite->fillCircle(w + 20, h + 10, r, c);
+      break;
+    }
+    case 1: {
+      const int r = static_cast<int>((w * 1.2f) * progress);
+      sprite->fillCircle(cx, cy, r, c);
+      break;
+    }
+    case 2: {
+      const int bars = 6;
+      for (int i = 0; i < bars; ++i) {
+        const int y = (h * i) / bars;
+        const int thickness = (h / bars) - 4;
+        const int half = static_cast<int>((w / 2.0f) * progress);
+        sprite->fillRect(0, y, half, thickness, c);
+        sprite->fillRect(w - half, y + 2, half, thickness, c);
+      }
+      break;
+    }
+    case 3: {
+      const int bars = 7;
+      for (int i = 0; i < bars; ++i) {
+        const int x = (w * i) / bars;
+        const int thickness = (w / bars) - 4;
+        const int half = static_cast<int>((h / 2.0f) * progress);
+        sprite->fillRect(x, 0, thickness, half, c);
+        sprite->fillRect(x + 2, h - half, thickness, half, c);
+      }
+      break;
+    }
+    case 4: {
+      const int steps = 10;
+      for (int i = 0; i < steps; ++i) {
+        const float t = (static_cast<float>(i) + 1.0f) / static_cast<float>(steps);
+        if (t > progress) break;
+        const int inset = static_cast<int>((w / 2.0f) * t * 0.9f);
+        sprite->drawRect(inset, inset * h / w, w - (inset * 2), h - ((inset * h / w) * 2), c);
+      }
+      break;
+    }
+    case 5: {
+      const int steps = 10;
+      for (int i = steps; i >= 1; --i) {
+        const float t = (static_cast<float>(i)) / static_cast<float>(steps);
+        if ((1.0f - t) > progress) continue;
+        const int inset = static_cast<int>((w / 2.0f) * t * 0.9f);
+        sprite->drawRect(inset, inset * h / w, w - (inset * 2), h - ((inset * h / w) * 2), c);
+      }
+      break;
+    }
+    case 6: {
+      const int side = static_cast<int>((w / 2.0f) * progress);
+      const int top = static_cast<int>((h / 2.0f) * progress);
+      sprite->fillRect(0, 0, side, h, c);
+      sprite->fillRect(w - side, 0, side, h, c);
+      sprite->fillRect(0, 0, w, top, c);
+      sprite->fillRect(0, h - top, w, top, c);
+      break;
+    }
+    case 7: {
+      const int halfW = static_cast<int>((w / 2.0f) * progress);
+      const int halfH = static_cast<int>((h / 2.0f) * progress);
+      sprite->fillRect(cx - halfW, 0, halfW, cy, c);
+      sprite->fillRect(cx, 0, halfW, cy, c);
+      sprite->fillRect(0, cy - halfH, cx, halfH, c);
+      sprite->fillRect(cx, cy, cx, halfH, c);
+      break;
+    }
+  }
+}
+
 String getQuizBackgroundPath(AppLanguage language) {
   const char* dir = (language == APP_LANGUAGE_EN) ? kQuizBackgroundDirEn : kQuizBackgroundDirJa;
   return String(dir) + "/quiz_bg.png";
@@ -1018,7 +1110,17 @@ void UIController::drawMenuScreen(
 void UIController::drawTypeMatchupScreen(
     const char* attackTypeLabel,
     const char* defenseTypeLabel,
+    uint16_t attackPokemonId,
+    uint16_t defensePokemonId,
+    LGFX_Sprite* attackPokemonSprite,
+    LGFX_Sprite* defensePokemonSprite,
+    bool showPokemon,
+    int encounterEffectId,
+    float encounterProgress,
+    float typeLabelVisibility,
+    float pokemonSlideProgress,
     const char* resultText,
+    const char* actionLabel,
     bool attackPressed,
     bool defensePressed,
     bool confirmPressed,
@@ -1048,24 +1150,31 @@ void UIController::drawTypeMatchupScreen(
   constexpr int lowerH = 78;
   constexpr int actionBoxX = 230;
   constexpr int actionBoxW = 78;
+  const bool showTypeSelectors = typeLabelVisibility > 0.01f;
 
   const uint16_t frameColor = blend565(theme.border, theme.text, 140);
   const uint16_t boxFill = blend565(theme.surface, theme.bg, 220);
 
-  sprite->setFont(&fonts::efontJA_12);
-  sprite->setTextColor(theme.sub);
-  sprite->drawCenterString(tr("こうげき", "Attack"), leftPanelX + (panelW / 2), panelY + 26);
-  sprite->drawCenterString(tr("ぼうぎょ", "Defense"), rightPanelX + (panelW / 2), panelY - 6);
-  sprite->setFont(&fonts::efontJA_16_b);
-  sprite->setTextColor(theme.accent);
-  sprite->drawCenterString(">", SCREEN_WIDTH / 2, panelY + 32);
+  if (showTypeSelectors) {
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->setTextColor(theme.sub);
+    sprite->drawCenterString(tr("こうげき", "Attack"), leftPanelX + (panelW / 2), panelY + 26);
+    sprite->drawCenterString(tr("ぼうぎょ", "Defense"), rightPanelX + (panelW / 2), panelY - 6);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->setTextColor(theme.accent);
+    sprite->drawCenterString(">", SCREEN_WIDTH / 2, panelY + 32);
+  }
 
   auto drawTypeSelector = [&](int x, const char* label, bool pressed, int yOffset) {
     const String colorKey = String(label);
     const bool unselected = (strcmp(label, tr("みせってい", "-")) == 0);
-    const uint16_t fill = unselected ? theme.surface : typeBadgeColor(colorKey);
-    const uint16_t border = unselected ? theme.border : blend565(fill, theme.border, 120);
-    const uint16_t textColor = unselected ? theme.text : readableTextColor(fill);
+    const uint16_t baseFill = unselected ? theme.surface : typeBadgeColor(colorKey);
+    const uint16_t baseBorder = unselected ? theme.border : blend565(baseFill, theme.border, 120);
+    const uint16_t baseTextColor = unselected ? theme.text : readableTextColor(baseFill);
+    const uint8_t alpha = static_cast<uint8_t>(constrain(static_cast<int>(typeLabelVisibility * 255.0f), 0, 255));
+    const uint16_t fill = blend565(baseFill, theme.bg, alpha);
+    const uint16_t border = blend565(baseBorder, theme.bg, alpha);
+    const uint16_t textColor = blend565(baseTextColor, theme.bg, alpha);
     const int buttonX = x + 6;
     const int buttonY = panelY + 24 + yOffset;
     const int buttonW = panelW - 12;
@@ -1080,8 +1189,42 @@ void UIController::drawTypeMatchupScreen(
     sprite->drawCenterString(label, buttonX + (buttonW / 2), buttonY + 6);
   };
 
-  drawTypeSelector(leftPanelX, attackTypeLabel, attackPressed, 20);
-  drawTypeSelector(rightPanelX, defenseTypeLabel, defensePressed, -20);
+  if (showTypeSelectors) {
+    drawTypeSelector(leftPanelX, attackTypeLabel, attackPressed, 20);
+    drawTypeSelector(rightPanelX, defenseTypeLabel, defensePressed, -20);
+  }
+
+  const float clampedSlide = constrain(pokemonSlideProgress, 0.0f, 1.0f);
+  if (showPokemon && attackPokemonId >= MIN_POKEMON_ID) {
+    const int targetX = leftPanelX + 24;
+    const int startX = SCREEN_WIDTH;
+    const int drawX = targetX + static_cast<int>((1.0f - clampedSlide) * (startX - targetX));
+    if (attackPokemonSprite != nullptr && attackPokemonSprite->getBuffer() != nullptr) {
+      sprite->pushImage(
+          drawX,
+          battleTopY + 28,
+          82,
+          64,
+          static_cast<const uint16_t*>(attackPokemonSprite->getBuffer()));
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, attackPokemonId, drawX, battleTopY + 28, 82, 64, false);
+    }
+  }
+  if (showPokemon && defensePokemonId >= MIN_POKEMON_ID) {
+    const int targetX = rightPanelX + 24;
+    const int startX = -82;
+    const int drawX = startX + static_cast<int>(clampedSlide * (targetX - startX));
+    if (defensePokemonSprite != nullptr && defensePokemonSprite->getBuffer() != nullptr) {
+      sprite->pushImage(
+          drawX,
+          battleTopY + 8,
+          82,
+          64,
+          static_cast<const uint16_t*>(defensePokemonSprite->getBuffer()));
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, defensePokemonId, drawX, battleTopY + 8, 82, 64, false);
+    }
+  }
 
   sprite->drawRoundRect(textBoxX, lowerY, textBoxW, lowerH, 10, frameColor);
   sprite->drawRoundRect(textBoxX + 4, lowerY + 4, textBoxW - 8, lowerH - 8, 8, frameColor);
@@ -1097,12 +1240,16 @@ void UIController::drawTypeMatchupScreen(
       lowerY + 18,
       actionBoxW - 16,
       38,
-      tr("こうげき", "Attack"),
+      actionLabel,
       theme.surface,
       theme.text,
       confirmPressed,
       theme.buttonPressedFill,
       theme.border);
+
+  if (encounterProgress > 0.0f) {
+    drawEncounterEffectOverlay(sprite, encounterEffectId, encounterProgress);
+  }
 }
 
 void UIController::drawTypePickerScreen(
@@ -1328,6 +1475,8 @@ void UIController::drawSettingsScreen(
     int pressedThemeIndex,
     int selectedLanguageIndex,
     int pressedLanguageIndex,
+    bool typeMatchupRandomPokemonEnabled,
+    bool typeMatchupRandomPokemonPressed,
     int selectedVolumeIndex,
     int pressedVolumeIndex) {
   const auto& theme = getThemePalette(currentTheme);
@@ -1410,7 +1559,23 @@ void UIController::drawSettingsScreen(
     }
 
     sprite->setTextColor(theme.sub);
-    sprite->drawString(tr("おんりょう", "Volume"), 24, 140);
+    sprite->drawString(tr("たたかう", "Battle"), 24, 124);
+    drawActionButton(
+        164,
+        128,
+        128,
+        30,
+        typeMatchupRandomPokemonEnabled
+            ? tr("ランダム ON", "Random ON")
+            : tr("ランダム OFF", "Random OFF"),
+        typeMatchupRandomPokemonEnabled ? theme.highlight : theme.surface,
+        typeMatchupRandomPokemonEnabled ? theme.invertedText : theme.text,
+        typeMatchupRandomPokemonPressed,
+        theme.buttonPressedFill,
+        typeMatchupRandomPokemonEnabled ? theme.highlight : theme.border);
+
+    sprite->setTextColor(theme.sub);
+    sprite->drawString(tr("おんりょう", "Volume"), 24, 164);
     const char* volumeLabels[4] = {
         tr("大", "High"),
         tr("中", "Med"),
@@ -1426,7 +1591,7 @@ void UIController::drawSettingsScreen(
       const uint16_t border = selected ? theme.highlight : theme.border;
       drawActionButton(
           x,
-          152,
+          176,
           58,
           28,
           volumeLabels[i],

@@ -75,7 +75,17 @@ public:
   void drawTypeMatchupScreen(
       const char* attackTypeLabel,
       const char* defenseTypeLabel,
+      uint16_t attackPokemonId,
+      uint16_t defensePokemonId,
+      LGFX_Sprite* attackPokemonSprite,
+      LGFX_Sprite* defensePokemonSprite,
+      bool showPokemon,
+      int encounterEffectId,
+      float encounterProgress,
+      float typeLabelVisibility,
+      float pokemonSlideProgress,
       const char* resultText,
+      const char* actionLabel,
       bool attackPressed,
       bool defensePressed,
       bool confirmPressed,
@@ -125,6 +135,8 @@ public:
       int pressedThemeIndex,
       int selectedLanguageIndex,
       int pressedLanguageIndex,
+      bool typeMatchupRandomPokemonEnabled,
+      bool typeMatchupRandomPokemonPressed,
       int selectedVolumeIndex,
       int pressedVolumeIndex);
   void drawGuideMenuScreen(bool pokemonPressed, bool locationPressed, bool backPressed);
