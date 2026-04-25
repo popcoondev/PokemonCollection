@@ -1026,8 +1026,8 @@ bool beginMusicStream(const String& path) {
   if (!foundFmt
       || !foundData
       || fmt.audioFmt != 1
-      || fmt.channels != 2
-      || fmt.sampleRate != 44100
+      || (fmt.channels != 1 && fmt.channels != 2)
+      || fmt.sampleRate == 0
       || fmt.bitPerSample != 16) {
     file.close();
     return false;
@@ -1040,7 +1040,7 @@ bool beginMusicStream(const String& path) {
 
   musicPlayback.stream.file = file;
   musicPlayback.stream.active = true;
-  musicPlayback.stream.stereo = true;
+  musicPlayback.stream.stereo = (fmt.channels == 2);
   musicPlayback.stream.sampleRate = fmt.sampleRate;
   musicPlayback.stream.dataRemainingBytes = dataSize;
   musicPlayback.stream.dataSizeBytes = dataSize;
