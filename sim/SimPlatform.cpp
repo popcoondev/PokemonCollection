@@ -29,7 +29,11 @@ SDL_Color colorFrom565(uint16_t color) {
 
 const char* pickFontPath() {
   static const char* kCandidates[] = {
+      "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+      "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
       "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+      "/System/Library/Fonts/PingFang.ttc",
+      "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
       "/System/Library/Fonts/Helvetica.ttc",
   };
   for (const char* path : kCandidates) {
@@ -68,6 +72,10 @@ void setRenderColor(uint16_t color) {
 }
 
 namespace SimPlatform {
+
+const char* pickUIFontPath() {
+  return pickFontPath();
+}
 
 void setRenderer(SDL_Renderer* renderer) {
   gRenderer = renderer;
