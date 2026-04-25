@@ -293,6 +293,39 @@ int appAudioQueuedCount(int channel) {
 #else
 
 #include <M5Unified.h>
+#include <deque>
+
+namespace {
+constexpr int kAudioChannelCount = 8;
+std::deque<uint32_t> gChannelEndTimes[kAudioChannelCount];
+
+int clampRealChannelIndex(int channel) {
+  if (channel < 0) return 0;
+  if (channel >= kAudioChannelCount) return kAudioChannelCount - 1;
+  return channel;
+}
+
+void clearExpiredChannelEntries(int channel) {
+  const int idx = clampRealChannelIndex(channel);
+  const uint32_t now = millis();
+  auto& entries = gChannelEndTimes[idx];
+  while (!entries.empty() && static_cast<int32_t>(now - entries.front()) >= 0) {
+    entries.pop_front();
+  }
+}
+
+void trackQueuedDurationMs(int channel, uint32_t durationMs, uint32_t repeat) {
+  const int idx = clampRealChannelIndex(channel);
+  clearExpiredChannelEntries(idx);
+  const uint32_t now = millis();
+  uint32_t tail = gChannelEndTimes[idx].empty() ? now : gChannelEndTimes[idx].back();
+  const uint32_t count = (repeat == 0) ? 1 : repeat;
+  for (uint32_t i = 0; i < count; ++i) {
+    tail += durationMs;
+    gChannelEndTimes[idx].push_back(tail);
+  }
+}
+}  // namespace
 
 void appAudioBegin(uint32_t sampleRate) {
   auto spkCfg = M5.Speaker.config();
@@ -303,10 +336,14 @@ void appAudioBegin(uint32_t sampleRate) {
 
 void appAudioStopAll() {
   M5.Speaker.stop();
+  for (auto& entries : gChannelEndTimes) {
+    entries.clear();
+  }
 }
 
 void appAudioStopChannel(int channel) {
   M5.Speaker.stop(channel);
+  gChannelEndTimes[clampRealChannelIndex(channel)].clear();
 }
 
 void appAudioSetMasterVolume(uint8_t volume) {
@@ -318,7 +355,14 @@ void appAudioSetChannelVolume(int channel, uint8_t volume) {
 }
 
 bool appAudioPlayTone(float frequency, uint32_t durationMs, int channel, bool stopCurrentSound) {
-  return M5.Speaker.tone(frequency, durationMs, channel, stopCurrentSound);
+  const bool ok = M5.Speaker.tone(frequency, durationMs, channel, stopCurrentSound);
+  if (ok) {
+    if (stopCurrentSound) {
+      gChannelEndTimes[clampRealChannelIndex(channel)].clear();
+    }
+    trackQueuedDurationMs(channel, durationMs, 1);
+  }
+  return ok;
 }
 
 bool appAudioPlayRaw16(
@@ -329,7 +373,7 @@ bool appAudioPlayRaw16(
     uint32_t repeat,
     int channel,
     bool stopCurrentSound) {
-  return M5.Speaker.playRaw(
+  const bool ok = M5.Speaker.playRaw(
       rawData,
       sampleCount,
       sampleRate,
@@ -337,10 +381,25 @@ bool appAudioPlayRaw16(
       repeat,
       channel,
       stopCurrentSound);
+  if (ok) {
+    if (stopCurrentSound) {
+      gChannelEndTimes[clampRealChannelIndex(channel)].clear();
+    }
+    const uint32_t channels = stereo ? 2U : 1U;
+    const uint32_t frameCount = (channels == 0) ? 0U : static_cast<uint32_t>(sampleCount / channels);
+    const uint32_t durationMs = (sampleRate == 0) ? 0U : static_cast<uint32_t>((static_cast<uint64_t>(frameCount) * 1000ULL) / sampleRate);
+    trackQueuedDurationMs(channel, durationMs, repeat);
+  }
+  return ok;
 }
 
 int appAudioQueuedCount(int channel) {
-  return M5.Speaker.isPlaying(channel);
+  clearExpiredChannelEntries(channel);
+  const int idx = clampRealChannelIndex(channel);
+  if (gChannelEndTimes[idx].empty() && M5.Speaker.isPlaying(channel)) {
+    return 1;
+  }
+  return static_cast<int>(gChannelEndTimes[idx].size());
 }
 
 #endif
