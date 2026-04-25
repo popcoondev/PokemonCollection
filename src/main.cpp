@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <FS.h>
 #include <SD.h>
+#include <array>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -57,6 +58,11 @@ enum ScreenMode {
 
 enum TypeMatchupMessagePhase {
   TYPE_MATCHUP_MESSAGE_IDLE = 0,
+  TYPE_MATCHUP_MESSAGE_ENCOUNTER,
+  TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK,
+  TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE,
+  TYPE_MATCHUP_MESSAGE_SLIDE_IN,
+  TYPE_MATCHUP_MESSAGE_WILD,
   TYPE_MATCHUP_MESSAGE_ATTACK,
   TYPE_MATCHUP_MESSAGE_RESULT,
 };
@@ -132,7 +138,15 @@ constexpr uint32_t kLockOnReadyDurationMs = 400;
 constexpr uint32_t kLockOnConfirmFreezeMs = 140;
 constexpr uint32_t kLockOnSuccessDisplayMs = 4000;
 constexpr uint32_t kLockOnFailDisplayMs = 3000;
+constexpr uint32_t kTypeMatchupIdleDurationMs = 3000;
+constexpr uint32_t kTypeMatchupEncounterDurationMs = 700;
+constexpr uint32_t kTypeMatchupRouletteAttackDurationMs = 700;
+constexpr uint32_t kTypeMatchupRouletteDefenseDurationMs = 700;
+constexpr uint32_t kTypeMatchupSlideInDurationMs = 850;
 constexpr uint32_t kTypeMatchupAttackMessageDurationMs = 800;
+constexpr uint32_t kTypeMatchupWildMessageDurationMs = 3000;
+constexpr uint32_t kTypeMatchupResultLoopDelayMs = 3000;
+constexpr const char* kTypeMatchupPokemonIndexPath = "/pokemon/type_matchup_random_index.json";
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
 
@@ -510,6 +524,7 @@ bool preview3dEnabled = false;
 bool previewCaptionEnabled = true;
 bool guideHallOfFameEnabled = false;
 UIThemeStyle uiThemeStyle = UI_THEME_CLASSIC;
+bool typeMatchupRandomPokemonEnabled = false;
 int settingsTabIndex = 0;
 bool settingsDirty = false;
 unsigned long settingsSaveAt = 0;
@@ -550,10 +565,20 @@ size_t lockOnBadgeListOffset = 0;
 unsigned long vibrationStopAt = 0;
 int selectedAttackTypeIndex = -1;
 int selectedDefenseTypeIndex = -1;
+uint16_t typeMatchupAttackPokemonId = 0;
+uint16_t typeMatchupDefensePokemonId = 0;
+uint8_t typeMatchupEncounterEffectId = 0;
+int typeMatchupNextAttackTypeIndex = -1;
+int typeMatchupNextDefenseTypeIndex = -1;
+uint16_t typeMatchupNextAttackPokemonId = 0;
+uint16_t typeMatchupNextDefensePokemonId = 0;
+uint8_t typeMatchupNextEncounterEffectId = 0;
 TypeMatchupMessagePhase typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
 unsigned long typeMatchupMessageStartedAt = 0;
 TypeMatchupPickerTarget typeMatchupPickerTarget = TYPE_MATCHUP_PICKER_ATTACK;
 size_t typePickerOffset = 0;
+std::array<std::vector<uint16_t>, 18> typeMatchupPokemonIdsByType;
+bool typeMatchupPokemonPoolsReady = false;
 
 uint16_t getAvailableMaxPokemonId();
 
@@ -1414,16 +1439,32 @@ const char* getPokemonTypeLabel(int typeIndex, AppLanguage language) {
   return (language == APP_LANGUAGE_EN) ? kPokemonTypeNamesEn[typeIndex] : kPokemonTypeNamesJa[typeIndex];
 }
 
-String getTypeMatchupAttackText(int attackTypeIndex, AppLanguage language) {
+String getTypeMatchupAttackText(int attackTypeIndex, AppLanguage language, const String& attackerName = "") {
   if (attackTypeIndex < 0 || attackTypeIndex >= 18) {
     return (language == APP_LANGUAGE_EN) ? "Choose an attack type first." : "こうげきタイプを えらんでね";
   }
 
   const char* attackLabel = getPokemonTypeLabel(attackTypeIndex, language);
   if (language == APP_LANGUAGE_EN) {
+    if (attackerName.length() > 0) {
+      return attackerName + "'s " + String(attackLabel) + "-type move!";
+    }
     return String(attackLabel) + "-type move!";
   }
+  if (attackerName.length() > 0) {
+    return attackerName + " の " + String(attackLabel) + "タイプ わざ！";
+  }
   return String(attackLabel) + "タイプ わざ！";
+}
+
+String getTypeMatchupWildText(const String& defenderName, AppLanguage language) {
+  if (defenderName.length() == 0) {
+    return (language == APP_LANGUAGE_EN) ? "A wild Pokemon appeared!" : "あ！やせいの ポケモンが とびだしてきた！";
+  }
+  if (language == APP_LANGUAGE_EN) {
+    return "A wild " + defenderName + " appeared!";
+  }
+  return "あ！やせいの " + defenderName + " が とびだしてきた！";
 }
 
 String getTypeMatchupEffectText(int attackTypeIndex, int defenseTypeIndex, AppLanguage language, bool checked) {
@@ -1449,6 +1490,16 @@ String getTypeMatchupEffectText(int attackTypeIndex, int defenseTypeIndex, AppLa
   return "ふつうに きいた！";
 }
 
+const char* getTypeRouletteLabel(unsigned long now, unsigned long startedAt, uint32_t durationMs, AppLanguage language, int fallbackTypeIndex, int seedOffset) {
+  if (durationMs == 0) {
+    return getPokemonTypeLabel(fallbackTypeIndex, language);
+  }
+  const unsigned long elapsed = now - startedAt;
+  const int stepCount = 18;
+  const int step = static_cast<int>(((elapsed * stepCount * 3UL) / durationMs) % stepCount);
+  return getPokemonTypeLabel((step + seedOffset) % stepCount, language);
+}
+
 std::vector<String> getTypePickerLabels(AppLanguage language, size_t offset, size_t limit) {
   std::vector<String> labels;
   const size_t end = std::min<size_t>(18, offset + limit);
@@ -1465,6 +1516,144 @@ std::vector<String> getTypePickerColorKeys(size_t offset, size_t limit) {
     labels.push_back(kPokemonTypeNamesJa[i]);
   }
   return labels;
+}
+
+void clearTypeMatchupRandomPokemonSelection() {
+  typeMatchupAttackPokemonId = 0;
+  typeMatchupDefensePokemonId = 0;
+  typeMatchupEncounterEffectId = 0;
+  typeMatchupNextAttackTypeIndex = -1;
+  typeMatchupNextDefenseTypeIndex = -1;
+  typeMatchupNextAttackPokemonId = 0;
+  typeMatchupNextDefensePokemonId = 0;
+  typeMatchupNextEncounterEffectId = 0;
+}
+
+void ensureTypeMatchupPokemonPools() {
+  if (typeMatchupPokemonPoolsReady) {
+    return;
+  }
+
+  for (auto& ids : typeMatchupPokemonIdsByType) {
+    ids.clear();
+  }
+
+  File file = SD.open(kTypeMatchupPokemonIndexPath, FILE_READ);
+  if (!file) {
+    return;
+  }
+
+  JsonDocument doc;
+  const bool ok = parseJsonDocumentFromFile(doc, file);
+  file.close();
+  if (!ok) {
+    return;
+  }
+
+  JsonArray types = doc["types"].as<JsonArray>();
+  if (types.isNull()) {
+    return;
+  }
+
+  for (size_t typeIndex = 0; typeIndex < 18 && typeIndex < types.size(); ++typeIndex) {
+    JsonArray ids = types[typeIndex].as<JsonArray>();
+    if (ids.isNull()) {
+      continue;
+    }
+    auto& out = typeMatchupPokemonIdsByType[typeIndex];
+    for (JsonVariant v : ids) {
+      const int id = v.as<int>();
+      if (id >= MIN_POKEMON_ID && id <= dataMgr.getMaxPokemonId()) {
+        out.push_back(static_cast<uint16_t>(id));
+      }
+    }
+  }
+
+  typeMatchupPokemonPoolsReady = true;
+}
+
+uint16_t chooseTypeMatchupPokemonId(int typeIndex) {
+  if (typeIndex < 0 || typeIndex >= 18) {
+    return 0;
+  }
+  ensureTypeMatchupPokemonPools();
+  const auto& candidates = typeMatchupPokemonIdsByType[static_cast<size_t>(typeIndex)];
+  if (candidates.empty()) {
+    return 0;
+  }
+  const size_t index = static_cast<size_t>(random(0, static_cast<int>(candidates.size())));
+  return candidates[index];
+}
+
+int chooseTypeMatchupTypeIndex() {
+  ensureTypeMatchupPokemonPools();
+
+  std::vector<int> availableTypes;
+  availableTypes.reserve(18);
+  for (int i = 0; i < 18; ++i) {
+    if (!typeMatchupPokemonIdsByType[static_cast<size_t>(i)].empty()) {
+      availableTypes.push_back(i);
+    }
+  }
+  if (availableTypes.empty()) {
+    return -1;
+  }
+  const size_t index = static_cast<size_t>(random(0, static_cast<int>(availableTypes.size())));
+  return availableTypes[index];
+}
+
+bool prepareTypeMatchupRound(int& attackTypeIndex, int& defenseTypeIndex, uint16_t& attackPokemonId, uint16_t& defensePokemonId, uint8_t& encounterEffectId) {
+  const int nextAttackType = chooseTypeMatchupTypeIndex();
+  const int nextDefenseType = chooseTypeMatchupTypeIndex();
+  if (nextAttackType < 0 || nextDefenseType < 0) {
+    return false;
+  }
+
+  const uint16_t nextAttackPokemonId = chooseTypeMatchupPokemonId(nextAttackType);
+  const uint16_t nextDefensePokemonId = chooseTypeMatchupPokemonId(nextDefenseType);
+  if (nextAttackPokemonId < MIN_POKEMON_ID || nextDefensePokemonId < MIN_POKEMON_ID) {
+    return false;
+  }
+
+  attackTypeIndex = nextAttackType;
+  defenseTypeIndex = nextDefenseType;
+  attackPokemonId = nextAttackPokemonId;
+  defensePokemonId = nextDefensePokemonId;
+  encounterEffectId = static_cast<uint8_t>(random(0, 8));
+  return true;
+}
+
+void primeNextTypeMatchupRound() {
+  prepareTypeMatchupRound(
+      typeMatchupNextAttackTypeIndex,
+      typeMatchupNextDefenseTypeIndex,
+      typeMatchupNextAttackPokemonId,
+      typeMatchupNextDefensePokemonId,
+      typeMatchupNextEncounterEffectId);
+}
+
+void activateTypeMatchupRoundFromNext() {
+  if (typeMatchupNextAttackTypeIndex < 0
+      || typeMatchupNextDefenseTypeIndex < 0
+      || typeMatchupNextAttackPokemonId < MIN_POKEMON_ID
+      || typeMatchupNextDefensePokemonId < MIN_POKEMON_ID) {
+    if (!prepareTypeMatchupRound(
+            selectedAttackTypeIndex,
+            selectedDefenseTypeIndex,
+            typeMatchupAttackPokemonId,
+            typeMatchupDefensePokemonId,
+            typeMatchupEncounterEffectId)) {
+      return;
+    }
+  } else {
+    selectedAttackTypeIndex = typeMatchupNextAttackTypeIndex;
+    selectedDefenseTypeIndex = typeMatchupNextDefenseTypeIndex;
+    typeMatchupAttackPokemonId = typeMatchupNextAttackPokemonId;
+    typeMatchupDefensePokemonId = typeMatchupNextDefensePokemonId;
+    typeMatchupEncounterEffectId = typeMatchupNextEncounterEffectId;
+  }
+
+  primeNextTypeMatchupRound();
 }
 
 const char* trApp(const char* ja, const char* en) {
@@ -2141,6 +2330,7 @@ enum PressedControl {
   PRESS_MENU_THEME_1,
   PRESS_MENU_LANG_JA,
   PRESS_MENU_LANG_EN,
+  PRESS_MENU_TYPE_MATCHUP_RANDOM,
   PRESS_MENU_VOL_LARGE,
   PRESS_MENU_VOL_MEDIUM,
   PRESS_MENU_VOL_SMALL,
@@ -2273,10 +2463,11 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
     } else {
       if (hitTest(tx, ty, 24, 84, 128, 30, 0)) return PRESS_MENU_LANG_JA;
       if (hitTest(tx, ty, 164, 84, 128, 30, 0)) return PRESS_MENU_LANG_EN;
-      if (hitTest(tx, ty, 24, 152, 58, 28, 0)) return PRESS_MENU_VOL_LARGE;
-      if (hitTest(tx, ty, 94, 152, 58, 28, 0)) return PRESS_MENU_VOL_MEDIUM;
-      if (hitTest(tx, ty, 164, 152, 58, 28, 0)) return PRESS_MENU_VOL_SMALL;
-      if (hitTest(tx, ty, 234, 152, 58, 28, 0)) return PRESS_MENU_VOL_MUTE;
+      if (hitTest(tx, ty, 164, 128, 128, 30, 0)) return PRESS_MENU_TYPE_MATCHUP_RANDOM;
+      if (hitTest(tx, ty, 24, 176, 58, 28, 0)) return PRESS_MENU_VOL_LARGE;
+      if (hitTest(tx, ty, 94, 176, 58, 28, 0)) return PRESS_MENU_VOL_MEDIUM;
+      if (hitTest(tx, ty, 164, 176, 58, 28, 0)) return PRESS_MENU_VOL_SMALL;
+      if (hitTest(tx, ty, 234, 176, 58, 28, 0)) return PRESS_MENU_VOL_MUTE;
     }
     return PRESS_NONE;
   }
@@ -2520,6 +2711,7 @@ enum PendingActionType {
   ACTION_CLOSE_QUIZ,
   ACTION_TOGGLE_PREVIEW_3D,
   ACTION_TOGGLE_PREVIEW_CAPTION,
+  ACTION_TOGGLE_TYPE_MATCHUP_RANDOM_POKEMON,
   ACTION_SET_SETTINGS_TAB,
   ACTION_SET_UI_THEME,
   ACTION_SET_APP_LANGUAGE,
@@ -3144,6 +3336,7 @@ bool saveSettings() {
   doc["preview_caption"] = previewCaptionEnabled;
   doc["guide_hall_of_fame"] = guideHallOfFameEnabled;
   doc["ui_theme"] = getUIThemeKey(uiThemeStyle);
+  doc["type_matchup_random_pokemon"] = typeMatchupRandomPokemonEnabled;
 
   if (SD.exists(kSettingsPath)) {
     SD.remove(kSettingsPath);
@@ -3246,6 +3439,7 @@ void loadSettings() {
   previewCaptionEnabled = true;
   guideHallOfFameEnabled = false;
   uiThemeStyle = UI_THEME_CLASSIC;
+  typeMatchupRandomPokemonEnabled = false;
 
   File file = SD.open(kSettingsPath, FILE_READ);
   if (!file) {
@@ -3264,6 +3458,7 @@ void loadSettings() {
     previewCaptionEnabled = doc["preview_caption"] | true;
     guideHallOfFameEnabled = doc["guide_hall_of_fame"] | false;
     uiThemeStyle = parseUIThemeKey(doc["ui_theme"] | "classic");
+    typeMatchupRandomPokemonEnabled = doc["type_matchup_random_pokemon"] | false;
   }
   file.close();
   dataMgr.setLanguage(appLanguage);
@@ -4191,6 +4386,8 @@ void AppRuntime::tick() {
           pendingAction = makePendingAction(ACTION_SET_UI_THEME, pressedControl - PRESS_MENU_THEME_0);
         } else if (pressedControl == PRESS_MENU_LANG_JA || pressedControl == PRESS_MENU_LANG_EN) {
           pendingAction = makePendingAction(ACTION_SET_APP_LANGUAGE, pressedControl - PRESS_MENU_LANG_JA);
+        } else if (pressedControl == PRESS_MENU_TYPE_MATCHUP_RANDOM) {
+          pendingAction = makePendingAction(ACTION_TOGGLE_TYPE_MATCHUP_RANDOM_POKEMON);
         } else if (pressedControl >= PRESS_MENU_VOL_LARGE && pressedControl <= PRESS_MENU_VOL_MUTE) {
           pendingAction = makePendingAction(ACTION_SET_QUIZ_VOLUME, pressedControl - PRESS_MENU_VOL_LARGE);
         }
@@ -4245,9 +4442,9 @@ void AppRuntime::tick() {
       } else if (screenMode == SCREEN_TYPE_MATCHUP) {
         if (pressedControl == PRESS_GUIDE_BACK) {
           pendingAction = makePendingAction(ACTION_CLOSE_TYPE_MATCHUP);
-        } else if (pressedControl == PRESS_TYPE_MATCHUP_ATTACK) {
+        } else if (pressedControl == PRESS_TYPE_MATCHUP_ATTACK && !typeMatchupRandomPokemonEnabled) {
           pendingAction = makePendingAction(ACTION_OPEN_TYPE_PICKER_ATTACK);
-        } else if (pressedControl == PRESS_TYPE_MATCHUP_DEFENSE) {
+        } else if (pressedControl == PRESS_TYPE_MATCHUP_DEFENSE && !typeMatchupRandomPokemonEnabled) {
           pendingAction = makePendingAction(ACTION_OPEN_TYPE_PICKER_DEFENSE);
         } else if (pressedControl == PRESS_TYPE_MATCHUP_CONFIRM) {
           pendingAction = makePendingAction(ACTION_CHECK_TYPE_MATCHUP);
@@ -4406,12 +4603,20 @@ void AppRuntime::tick() {
       case ACTION_OPEN_TYPE_MATCHUP:
         screenMode = SCREEN_TYPE_MATCHUP;
         playTypeMatchupBgm();
-        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
-        typeMatchupMessageStartedAt = 0;
+        clearTypeMatchupRandomPokemonSelection();
+        if (typeMatchupRandomPokemonEnabled) {
+          primeNextTypeMatchupRound();
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+          typeMatchupMessageStartedAt = now;
+        } else {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+          typeMatchupMessageStartedAt = now;
+        }
         break;
       case ACTION_CLOSE_TYPE_MATCHUP:
         stopMusicStream(true);
         screenMode = SCREEN_MENU;
+        clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
         break;
@@ -4443,6 +4648,7 @@ void AppRuntime::tick() {
       }
       case ACTION_SET_ATTACK_TYPE:
         selectedAttackTypeIndex = pendingAction.value;
+        clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
         playUiConfirmSound();
@@ -4450,6 +4656,7 @@ void AppRuntime::tick() {
         break;
       case ACTION_SET_DEFENSE_TYPE:
         selectedDefenseTypeIndex = pendingAction.value;
+        clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
         playUiConfirmSound();
@@ -4458,17 +4665,31 @@ void AppRuntime::tick() {
       case ACTION_CHECK_TYPE_MATCHUP:
         playUiConfirmSound();
         if (selectedAttackTypeIndex >= 0 && selectedDefenseTypeIndex >= 0) {
-          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
-          typeMatchupMessageStartedAt = now;
+          if (typeMatchupRandomPokemonEnabled) {
+            if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD) {
+              typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
+              typeMatchupMessageStartedAt = now;
+            }
+          } else {
+            clearTypeMatchupRandomPokemonSelection();
+            typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
+            typeMatchupMessageStartedAt = now;
+          }
         } else {
+          clearTypeMatchupRandomPokemonSelection();
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
           typeMatchupMessageStartedAt = 0;
         }
         needsRedraw = true;
         break;
       case ACTION_ADVANCE_TYPE_MATCHUP_TEXT:
-        typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
-        typeMatchupMessageStartedAt = 0;
+        if (typeMatchupRandomPokemonEnabled) {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
+          typeMatchupMessageStartedAt = now;
+        } else {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
+          typeMatchupMessageStartedAt = 0;
+        }
         needsRedraw = true;
         break;
       case ACTION_OPEN_ACHIEVEMENTS_MENU:
@@ -4707,6 +4928,19 @@ void AppRuntime::tick() {
         break;
       case ACTION_TOGGLE_PREVIEW_CAPTION:
         previewCaptionEnabled = !previewCaptionEnabled;
+        saveSettings();
+        break;
+      case ACTION_TOGGLE_TYPE_MATCHUP_RANDOM_POKEMON:
+        typeMatchupRandomPokemonEnabled = !typeMatchupRandomPokemonEnabled;
+        clearTypeMatchupRandomPokemonSelection();
+        if (typeMatchupRandomPokemonEnabled && screenMode == SCREEN_TYPE_MATCHUP) {
+          primeNextTypeMatchupRound();
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+          typeMatchupMessageStartedAt = now;
+        } else {
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
+          typeMatchupMessageStartedAt = now;
+        }
         saveSettings();
         break;
       case ACTION_SET_SETTINGS_TAB:
@@ -5153,10 +5387,83 @@ void AppRuntime::tick() {
   }
 
   if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupRandomPokemonEnabled
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_IDLE
+      && typeMatchupMessageStartedAt != 0
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupIdleDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_WILD;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupEncounterDurationMs) {
+    activateTypeMatchupRoundFromNext();
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER) {
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupRouletteAttackDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupRouletteDefenseDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_SLIDE_IN;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupSlideInDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_WILD;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK
+          || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE
+          || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN)) {
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupWildMessageDurationMs) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
       && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupAttackMessageDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
-    typeMatchupMessageStartedAt = 0;
+    typeMatchupMessageStartedAt = now;
+    needsRedraw = true;
+  }
+
+  if (screenMode == SCREEN_TYPE_MATCHUP
+      && typeMatchupRandomPokemonEnabled
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT
+      && (now - typeMatchupMessageStartedAt) >= kTypeMatchupResultLoopDelayMs) {
+    primeNextTypeMatchupRound();
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+    typeMatchupMessageStartedAt = now;
     needsRedraw = true;
   }
 
@@ -5359,19 +5666,72 @@ void AppRuntime::tick() {
           musicViewMode == MUSIC_VIEW_PLAYLIST ? musicPlaylistRepeatEnabled : false);
     } else if (screenMode == SCREEN_TYPE_MATCHUP) {
       String resultText = "";
-      if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {
-        resultText = getTypeMatchupAttackText(selectedAttackTypeIndex, appLanguage);
+      const bool showRandomPokemon = typeMatchupRandomPokemonEnabled
+          && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN
+              || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD
+              || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK
+              || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT);
+      const float encounterProgress = (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER)
+          ? static_cast<float>(constrain(static_cast<int>((((now - typeMatchupMessageStartedAt) * 1000UL) / kTypeMatchupEncounterDurationMs)), 0, 1000)) / 1000.0f
+          : 0.0f;
+      const float slideProgress = (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN)
+          ? static_cast<float>(constrain(static_cast<int>((((now - typeMatchupMessageStartedAt) * 1000UL) / kTypeMatchupSlideInDurationMs)), 0, 1000)) / 1000.0f
+          : (showRandomPokemon ? 1.0f : 0.0f);
+      const float typeLabelVisibility = (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN)
+          ? (1.0f - slideProgress)
+          : ((typeMatchupRandomPokemonEnabled
+                && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER)
+                ? 0.0f
+                : ((typeMatchupRandomPokemonEnabled
+                && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD
+                    || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK
+                    || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT))
+                ? 0.0f
+                : 1.0f));
+      const char* actionLabel = typeMatchupRandomPokemonEnabled
+          ? trApp("こうげき", "Attack")
+          : ((typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_IDLE)
+                ? trApp("たたかう", "Battle")
+                : trApp("こうげき", "Attack"));
+      const char* attackLabel = getPokemonTypeLabel(selectedAttackTypeIndex, appLanguage);
+      const char* defenseLabel = getPokemonTypeLabel(selectedDefenseTypeIndex, appLanguage);
+      if (typeMatchupRandomPokemonEnabled) {
+        if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK) {
+          attackLabel = getTypeRouletteLabel(now, typeMatchupMessageStartedAt, kTypeMatchupRouletteAttackDurationMs, appLanguage, selectedAttackTypeIndex, 0);
+          defenseLabel = getPokemonTypeLabel(-1, appLanguage);
+        } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE) {
+          defenseLabel = getTypeRouletteLabel(now, typeMatchupMessageStartedAt, kTypeMatchupRouletteDefenseDurationMs, appLanguage, selectedDefenseTypeIndex, 7);
+        }
+      }
+      if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD) {
+        resultText = getTypeMatchupWildText(dataMgr.getPokemonName(typeMatchupDefensePokemonId), appLanguage);
+      } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {
+        resultText = getTypeMatchupAttackText(
+            selectedAttackTypeIndex,
+            appLanguage,
+            dataMgr.getPokemonName(typeMatchupAttackPokemonId));
       } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT) {
-        resultText = getTypeMatchupAttackText(selectedAttackTypeIndex, appLanguage);
+        resultText = getTypeMatchupAttackText(
+            selectedAttackTypeIndex,
+            appLanguage,
+            dataMgr.getPokemonName(typeMatchupAttackPokemonId));
         resultText += "\n";
         resultText += getTypeMatchupEffectText(selectedAttackTypeIndex, selectedDefenseTypeIndex, appLanguage, true);
       }
       ui.drawTypeMatchupScreen(
-          getPokemonTypeLabel(selectedAttackTypeIndex, appLanguage),
-          getPokemonTypeLabel(selectedDefenseTypeIndex, appLanguage),
+          attackLabel,
+          defenseLabel,
+          typeMatchupAttackPokemonId,
+          typeMatchupDefensePokemonId,
+          showRandomPokemon,
+          typeMatchupEncounterEffectId,
+          encounterProgress,
+          typeLabelVisibility,
+          slideProgress,
           resultText.c_str(),
-          visualControl == PRESS_TYPE_MATCHUP_ATTACK,
-          visualControl == PRESS_TYPE_MATCHUP_DEFENSE,
+          actionLabel,
+          !typeMatchupRandomPokemonEnabled && visualControl == PRESS_TYPE_MATCHUP_ATTACK,
+          !typeMatchupRandomPokemonEnabled && visualControl == PRESS_TYPE_MATCHUP_DEFENSE,
           visualControl == PRESS_TYPE_MATCHUP_CONFIRM,
           visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_TYPE_PICKER) {
@@ -5408,6 +5768,8 @@ void AppRuntime::tick() {
           (visualControl >= PRESS_MENU_LANG_JA && visualControl <= PRESS_MENU_LANG_EN)
               ? (visualControl - PRESS_MENU_LANG_JA)
               : -1,
+          typeMatchupRandomPokemonEnabled,
+          visualControl == PRESS_MENU_TYPE_MATCHUP_RANDOM,
           static_cast<int>(quizVolumeSetting),
           (visualControl >= PRESS_MENU_VOL_LARGE && visualControl <= PRESS_MENU_VOL_MUTE)
               ? (visualControl - PRESS_MENU_VOL_LARGE)
