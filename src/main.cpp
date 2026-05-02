@@ -104,6 +104,8 @@ constexpr uint16_t kPreviewPocTransparentColor = 0x0001;
 constexpr uint32_t kSlideshowSlideDurationMs = 5000;
 constexpr int kEvolutionImageW = 50;
 constexpr int kEvolutionImageH = 32;
+constexpr int kTypeMatchupImageW = 82;
+constexpr int kTypeMatchupImageH = 64;
 constexpr uint32_t kQuizSideDurationMs = 7000;
 constexpr const char* kQuizSoundDirJa = "/pokemon/quiz/sounds/ja";
 constexpr const char* kQuizSoundDirEn = "/pokemon/quiz/sounds/en";
@@ -330,6 +332,14 @@ struct EvolutionImageResult {
   bool success;
 };
 
+enum TypeMatchupImageSlotId : uint8_t {
+  TYPE_MATCHUP_IMAGE_CURRENT_ATTACK = 0,
+  TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE,
+  TYPE_MATCHUP_IMAGE_NEXT_ATTACK,
+  TYPE_MATCHUP_IMAGE_NEXT_DEFENSE,
+  TYPE_MATCHUP_IMAGE_SLOT_COUNT,
+};
+
 struct QuizSoundCache {
   uint8_t* data = nullptr;
   size_t size = 0;
@@ -466,6 +476,16 @@ struct EvolutionPipelineState {
 };
 
 EvolutionPipelineState evolutionPipeline;
+
+struct TypeMatchupImagePipelineState {
+  std::array<LGFX_Sprite*, TYPE_MATCHUP_IMAGE_SLOT_COUNT> imageSprites = {};
+  ImageLoader imageLoader;
+  std::array<uint16_t, TYPE_MATCHUP_IMAGE_SLOT_COUNT> renderedIds = {};
+  std::array<bool, TYPE_MATCHUP_IMAGE_SLOT_COUNT> ready = {};
+  bool began = false;
+};
+
+TypeMatchupImagePipelineState typeMatchupImagePipeline;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizSoundCache uiConfirmSound;
@@ -616,6 +636,7 @@ uint16_t typeMatchupNextDefensePokemonId = 0;
 uint8_t typeMatchupNextEncounterEffectId = 0;
 TypeMatchupMessagePhase typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
 unsigned long typeMatchupMessageStartedAt = 0;
+unsigned long typeMatchupAnimationLastRedrawAt = 0;
 TypeMatchupPickerTarget typeMatchupPickerTarget = TYPE_MATCHUP_PICKER_ATTACK;
 size_t typePickerOffset = 0;
 std::array<std::vector<uint16_t>, 18> typeMatchupPokemonIdsByType;
@@ -885,6 +906,11 @@ bool hasWavExtension(const String& path) {
 }
 
 String getLastPathSegment(const String& path);
+bool ensureTypeMatchupImagePipelineReady();
+void clearTypeMatchupImageSlot(TypeMatchupImageSlotId slotId);
+bool renderTypeMatchupImageSlot(TypeMatchupImageSlotId slotId, uint16_t pokemonId);
+void primeTypeMatchupImageCache(bool currentRound);
+void activateTypeMatchupImageCacheFromNext();
 
 bool shouldHideMusicEntry(const String& path) {
   const String name = getLastPathSegment(path);
@@ -4198,6 +4224,95 @@ void queueEvolutionImageRequests(const PokemonDetail& pk) {
     appQueueSend(evolutionPipeline.requestQueue, &request, 0);
   }
 }
+
+bool ensureTypeMatchupImagePipelineReady() {
+  auto& pipeline = typeMatchupImagePipeline;
+  if (pipeline.began) {
+    return true;
+  }
+
+  if (!pipeline.imageLoader.begin()) {
+    return false;
+  }
+
+  for (auto& sprite : pipeline.imageSprites) {
+    if (sprite == nullptr) {
+      sprite = new LGFX_Sprite(&displayRenderer().device());
+      if (sprite == nullptr) {
+        return false;
+      }
+      sprite->setColorDepth(16);
+      if (!sprite->createSprite(kTypeMatchupImageW, kTypeMatchupImageH)) {
+        return false;
+      }
+    }
+  }
+
+  pipeline.began = true;
+  return true;
+}
+
+void clearTypeMatchupImageSlot(TypeMatchupImageSlotId slotId) {
+  auto& pipeline = typeMatchupImagePipeline;
+  pipeline.renderedIds[slotId] = 0;
+  pipeline.ready[slotId] = false;
+}
+
+bool renderTypeMatchupImageSlot(TypeMatchupImageSlotId slotId, uint16_t pokemonId) {
+  auto& pipeline = typeMatchupImagePipeline;
+  if (pokemonId < MIN_POKEMON_ID) {
+    clearTypeMatchupImageSlot(slotId);
+    return false;
+  }
+  if (!ensureTypeMatchupImagePipelineReady()) {
+    return false;
+  }
+  if (pipeline.ready[slotId] && pipeline.renderedIds[slotId] == pokemonId) {
+    return true;
+  }
+  LGFX_Sprite* target = pipeline.imageSprites[slotId];
+  if (target == nullptr) {
+    return false;
+  }
+  target->fillRect(0, 0, kTypeMatchupImageW, kTypeMatchupImageH, ui.getBackgroundColor());
+  const bool ok = pipeline.imageLoader.loadAndDisplayPNG(
+      *target,
+      pokemonId,
+      0,
+      0,
+      kTypeMatchupImageW,
+      kTypeMatchupImageH,
+      false);
+  pipeline.ready[slotId] = ok;
+  pipeline.renderedIds[slotId] = ok ? pokemonId : 0;
+  return ok;
+}
+
+void primeTypeMatchupImageCache(bool currentRound) {
+  if (currentRound) {
+    renderTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_CURRENT_ATTACK, typeMatchupAttackPokemonId);
+    renderTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE, typeMatchupDefensePokemonId);
+  } else {
+    renderTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_NEXT_ATTACK, typeMatchupNextAttackPokemonId);
+    renderTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_NEXT_DEFENSE, typeMatchupNextDefensePokemonId);
+  }
+}
+
+void activateTypeMatchupImageCacheFromNext() {
+  auto& pipeline = typeMatchupImagePipeline;
+  if (!pipeline.began) {
+    return;
+  }
+  const auto swapSlot = [&](TypeMatchupImageSlotId currentSlot, TypeMatchupImageSlotId nextSlot) {
+    std::swap(pipeline.imageSprites[currentSlot], pipeline.imageSprites[nextSlot]);
+    std::swap(pipeline.renderedIds[currentSlot], pipeline.renderedIds[nextSlot]);
+    std::swap(pipeline.ready[currentSlot], pipeline.ready[nextSlot]);
+  };
+  swapSlot(TYPE_MATCHUP_IMAGE_CURRENT_ATTACK, TYPE_MATCHUP_IMAGE_NEXT_ATTACK);
+  swapSlot(TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE, TYPE_MATCHUP_IMAGE_NEXT_DEFENSE);
+  clearTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_NEXT_ATTACK);
+  clearTypeMatchupImageSlot(TYPE_MATCHUP_IMAGE_NEXT_DEFENSE);
+}
 }
 
 AppRuntime appRuntime;
@@ -4902,6 +5017,7 @@ void AppRuntime::tick() {
         clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
+        typeMatchupAnimationLastRedrawAt = 0;
         break;
       case ACTION_OPEN_TYPE_PICKER_ATTACK:
         playUiConfirmSound();
@@ -4934,6 +5050,7 @@ void AppRuntime::tick() {
         clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
+        typeMatchupAnimationLastRedrawAt = 0;
         playUiConfirmSound();
         screenMode = SCREEN_TYPE_MATCHUP;
         break;
@@ -4942,6 +5059,7 @@ void AppRuntime::tick() {
         clearTypeMatchupRandomPokemonSelection();
         typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
         typeMatchupMessageStartedAt = 0;
+        typeMatchupAnimationLastRedrawAt = 0;
         playUiConfirmSound();
         screenMode = SCREEN_TYPE_MATCHUP;
         break;
@@ -4962,6 +5080,7 @@ void AppRuntime::tick() {
           clearTypeMatchupRandomPokemonSelection();
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
           typeMatchupMessageStartedAt = 0;
+          typeMatchupAnimationLastRedrawAt = 0;
         }
         needsRedraw = true;
         break;
