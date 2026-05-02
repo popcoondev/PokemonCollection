@@ -58,6 +58,7 @@ enum ScreenMode {
 
 enum TypeMatchupMessagePhase {
   TYPE_MATCHUP_MESSAGE_IDLE = 0,
+  TYPE_MATCHUP_MESSAGE_LOADING,
   TYPE_MATCHUP_MESSAGE_ENCOUNTER,
   TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK,
   TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE,
@@ -148,8 +149,14 @@ constexpr uint32_t kTypeMatchupSlideInDurationMs = 850;
 constexpr uint32_t kTypeMatchupAttackMessageDurationMs = 800;
 constexpr uint32_t kTypeMatchupWildMessageDurationMs = 3000;
 constexpr uint32_t kTypeMatchupResultLoopDelayMs = 3000;
-constexpr uint32_t kTypeMatchupAnimationFrameMs = 33;
 constexpr const char* kTypeMatchupPokemonIndexPath = "/pokemon/type_matchup_random_index.json";
+constexpr size_t kTypeMatchupRoundsPerBatch = 5;
+constexpr uint32_t kTypeMatchupPreloadStepIntervalMs = 16;
+constexpr int kTypeMatchupAttackSpriteW = 164;
+constexpr int kTypeMatchupAttackSpriteH = 128;
+constexpr int kTypeMatchupDefenseSpriteW = 123;
+constexpr int kTypeMatchupDefenseSpriteH = 96;
+constexpr uint16_t kTypeMatchupTransparentColor = 0xF81F;
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
 
@@ -482,6 +489,7 @@ TypeMatchupImagePipelineState typeMatchupImagePipeline;
 QuizSoundCache quizAsideSound;
 QuizSoundCache quizBsideSound;
 QuizSoundCache uiConfirmSound;
+QuizSoundCache typeMatchupBgmCache;
 QuizVolumeSetting quizVolumeSetting = QUIZ_VOLUME_MEDIUM;
 std::vector<MusicListEntry> musicListEntries;
 size_t musicListOffset = 0;
@@ -504,6 +512,38 @@ struct MusicPlaybackState {
 };
 
 MusicPlaybackState musicPlayback;
+
+struct TypeMatchupCachedRound {
+  int attackTypeIndex = -1;
+  int defenseTypeIndex = -1;
+  uint16_t attackPokemonId = 0;
+  uint16_t defensePokemonId = 0;
+  uint8_t encounterEffectId = 0;
+  bool ready = false;
+};
+
+struct TypeMatchupRoundBankState {
+  std::array<TypeMatchupCachedRound, kTypeMatchupRoundsPerBatch> rounds = {};
+  std::array<LGFX_Sprite*, kTypeMatchupRoundsPerBatch> attackSprites = {};
+  std::array<LGFX_Sprite*, kTypeMatchupRoundsPerBatch> defenseSprites = {};
+  std::array<bool, kTypeMatchupRoundsPerBatch> attackReady = {};
+  std::array<bool, kTypeMatchupRoundsPerBatch> defenseReady = {};
+  bool prepared = false;
+  size_t readyCount = 0;
+};
+
+ImageLoader typeMatchupPreloadImageLoader;
+bool typeMatchupPreloadImageLoaderReady = false;
+std::array<TypeMatchupRoundBankState, 2> typeMatchupRoundBanks = {};
+size_t typeMatchupActiveBankIndex = 0;
+size_t typeMatchupCurrentRoundIndex = 0;
+size_t typeMatchupLoadingBankIndex = 0;
+size_t typeMatchupLoadingRoundIndex = 0;
+uint8_t typeMatchupLoadingSideIndex = 0;
+unsigned long typeMatchupPreloadLastStepAt = 0;
+bool typeMatchupInitialLoadPending = false;
+bool typeMatchupPendingLoadPending = false;
+
 AppLanguage appLanguage = APP_LANGUAGE_JA;
 std::vector<GuideLocationEntry> guideLocations;
 std::vector<uint16_t> lockOnSecretIds;
@@ -845,6 +885,9 @@ bool audioPlayRaw16(
       getAudioChannelForBus(bus),
       stopCurrentSound);
 }
+
+bool loadQuizSound(const char* path, QuizSoundCache& cache);
+void playTypeMatchupBgm();
 
 String getMusicTrackLabelFromPath(const String& path) {
   const int slash = path.lastIndexOf('/');
@@ -1554,8 +1597,22 @@ void clearTypeMatchupRandomPokemonSelection() {
   typeMatchupNextAttackPokemonId = 0;
   typeMatchupNextDefensePokemonId = 0;
   typeMatchupNextEncounterEffectId = 0;
-  for (int i = 0; i < TYPE_MATCHUP_IMAGE_SLOT_COUNT; ++i) {
-    clearTypeMatchupImageSlot(static_cast<TypeMatchupImageSlotId>(i));
+  typeMatchupActiveBankIndex = 0;
+  typeMatchupCurrentRoundIndex = 0;
+  typeMatchupLoadingBankIndex = 0;
+  typeMatchupLoadingRoundIndex = 0;
+  typeMatchupLoadingSideIndex = 0;
+  typeMatchupPreloadLastStepAt = 0;
+  typeMatchupInitialLoadPending = false;
+  typeMatchupPendingLoadPending = false;
+  for (auto& bank : typeMatchupRoundBanks) {
+    bank.prepared = false;
+    bank.readyCount = 0;
+    for (size_t i = 0; i < kTypeMatchupRoundsPerBatch; ++i) {
+      bank.rounds[i] = {};
+      bank.attackReady[i] = false;
+      bank.defenseReady[i] = false;
+    }
   }
 }
 
@@ -1653,6 +1710,215 @@ bool prepareTypeMatchupRound(int& attackTypeIndex, int& defenseTypeIndex, uint16
   return true;
 }
 
+bool loadTypeMatchupBgmCache() {
+  return loadQuizSound(kTypeMatchupBgmPath, typeMatchupBgmCache);
+}
+
+bool ensureTypeMatchupPreloadInfrastructure() {
+  if (!typeMatchupPreloadImageLoaderReady) {
+    typeMatchupPreloadImageLoaderReady = typeMatchupPreloadImageLoader.begin();
+    if (!typeMatchupPreloadImageLoaderReady) {
+      return false;
+    }
+  }
+
+  for (auto& bank : typeMatchupRoundBanks) {
+    for (size_t i = 0; i < kTypeMatchupRoundsPerBatch; ++i) {
+      if (bank.attackSprites[i] == nullptr) {
+        bank.attackSprites[i] = new LGFX_Sprite(&displayRenderer().device());
+        if (bank.attackSprites[i] == nullptr) return false;
+        bank.attackSprites[i]->setColorDepth(16);
+        bank.attackSprites[i]->setPsram(true);
+        if (!bank.attackSprites[i]->createSprite(kTypeMatchupAttackSpriteW, kTypeMatchupAttackSpriteH)) return false;
+      }
+      if (bank.defenseSprites[i] == nullptr) {
+        bank.defenseSprites[i] = new LGFX_Sprite(&displayRenderer().device());
+        if (bank.defenseSprites[i] == nullptr) return false;
+        bank.defenseSprites[i]->setColorDepth(16);
+        bank.defenseSprites[i]->setPsram(true);
+        if (!bank.defenseSprites[i]->createSprite(kTypeMatchupDefenseSpriteW, kTypeMatchupDefenseSpriteH)) return false;
+      }
+    }
+  }
+  return true;
+}
+
+void resetTypeMatchupRoundBank(TypeMatchupRoundBankState& bank) {
+  bank.prepared = false;
+  bank.readyCount = 0;
+  for (size_t i = 0; i < kTypeMatchupRoundsPerBatch; ++i) {
+    bank.rounds[i] = {};
+    bank.attackReady[i] = false;
+    bank.defenseReady[i] = false;
+  }
+}
+
+bool prepareTypeMatchupRoundBank(TypeMatchupRoundBankState& bank) {
+  resetTypeMatchupRoundBank(bank);
+  for (size_t i = 0; i < kTypeMatchupRoundsPerBatch; ++i) {
+    if (!prepareTypeMatchupRound(
+            bank.rounds[i].attackTypeIndex,
+            bank.rounds[i].defenseTypeIndex,
+            bank.rounds[i].attackPokemonId,
+            bank.rounds[i].defensePokemonId,
+            bank.rounds[i].encounterEffectId)) {
+      return false;
+    }
+  }
+  bank.prepared = true;
+  return true;
+}
+
+bool typeMatchupRoundBankReady(const TypeMatchupRoundBankState& bank) {
+  return bank.prepared && bank.readyCount >= kTypeMatchupRoundsPerBatch;
+}
+
+bool loadTypeMatchupRoundSprite(TypeMatchupRoundBankState& bank, size_t roundIndex, bool attackSide) {
+  if (roundIndex >= kTypeMatchupRoundsPerBatch) {
+    return false;
+  }
+  const auto& round = bank.rounds[roundIndex];
+  const uint16_t pokemonId = attackSide ? round.attackPokemonId : round.defensePokemonId;
+  LGFX_Sprite* sprite = attackSide ? bank.attackSprites[roundIndex] : bank.defenseSprites[roundIndex];
+  if (pokemonId < MIN_POKEMON_ID || sprite == nullptr) {
+    return false;
+  }
+
+  const int targetW = attackSide ? kTypeMatchupAttackSpriteW : kTypeMatchupDefenseSpriteW;
+  const int targetH = attackSide ? kTypeMatchupAttackSpriteH : kTypeMatchupDefenseSpriteH;
+  sprite->fillRect(0, 0, targetW, targetH, kTypeMatchupTransparentColor);
+  const bool ok = typeMatchupPreloadImageLoader.loadAndDisplayPNG(*sprite, pokemonId, 0, 0, targetW, targetH, false);
+  if (ok && attackSide) {
+    auto* pixels = static_cast<uint16_t*>(sprite->getBuffer());
+    if (pixels != nullptr) {
+      for (int y = 0; y < targetH; ++y) {
+        uint16_t* row = pixels + (y * targetW);
+        for (int left = 0, right = targetW - 1; left < right; ++left, --right) {
+          const uint16_t tmp = row[left];
+          row[left] = row[right];
+          row[right] = tmp;
+        }
+      }
+    }
+  }
+  if (attackSide) {
+    bank.attackReady[roundIndex] = ok;
+  } else {
+    bank.defenseReady[roundIndex] = ok;
+  }
+  if (!bank.rounds[roundIndex].ready && bank.attackReady[roundIndex] && bank.defenseReady[roundIndex]) {
+    bank.rounds[roundIndex].ready = true;
+    bank.readyCount += 1;
+  }
+  return ok;
+}
+
+void beginTypeMatchupPreloadState() {
+  typeMatchupActiveBankIndex = 0;
+  typeMatchupCurrentRoundIndex = 0;
+  typeMatchupLoadingBankIndex = 0;
+  typeMatchupLoadingRoundIndex = 0;
+  typeMatchupLoadingSideIndex = 0;
+  typeMatchupPreloadLastStepAt = 0;
+  typeMatchupInitialLoadPending = true;
+  typeMatchupPendingLoadPending = false;
+  prepareTypeMatchupRoundBank(typeMatchupRoundBanks[0]);
+  prepareTypeMatchupRoundBank(typeMatchupRoundBanks[1]);
+}
+
+void activateTypeMatchupRoundFromBank(size_t bankIndex, size_t roundIndex) {
+  const auto& round = typeMatchupRoundBanks[bankIndex].rounds[roundIndex];
+  selectedAttackTypeIndex = round.attackTypeIndex;
+  selectedDefenseTypeIndex = round.defenseTypeIndex;
+  typeMatchupAttackPokemonId = round.attackPokemonId;
+  typeMatchupDefensePokemonId = round.defensePokemonId;
+  typeMatchupEncounterEffectId = round.encounterEffectId;
+}
+
+void startNextTypeMatchupRound(unsigned long now) {
+  const size_t nextRoundIndex = typeMatchupCurrentRoundIndex + 1;
+  if (nextRoundIndex < kTypeMatchupRoundsPerBatch) {
+    typeMatchupCurrentRoundIndex = nextRoundIndex;
+    activateTypeMatchupRoundFromBank(typeMatchupActiveBankIndex, typeMatchupCurrentRoundIndex);
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+    typeMatchupMessageStartedAt = now;
+    return;
+  }
+
+  const size_t pendingBankIndex = 1 - typeMatchupActiveBankIndex;
+  if (!typeMatchupRoundBankReady(typeMatchupRoundBanks[pendingBankIndex])) {
+    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_LOADING;
+    typeMatchupMessageStartedAt = now;
+    typeMatchupInitialLoadPending = false;
+    typeMatchupPendingLoadPending = true;
+    typeMatchupLoadingBankIndex = pendingBankIndex;
+    return;
+  }
+
+  typeMatchupActiveBankIndex = pendingBankIndex;
+  typeMatchupCurrentRoundIndex = 0;
+  activateTypeMatchupRoundFromBank(typeMatchupActiveBankIndex, typeMatchupCurrentRoundIndex);
+
+  const size_t refillBankIndex = 1 - typeMatchupActiveBankIndex;
+  prepareTypeMatchupRoundBank(typeMatchupRoundBanks[refillBankIndex]);
+  typeMatchupLoadingBankIndex = refillBankIndex;
+  typeMatchupLoadingRoundIndex = 0;
+  typeMatchupLoadingSideIndex = 0;
+  typeMatchupPendingLoadPending = true;
+
+  typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+  typeMatchupMessageStartedAt = now;
+}
+
+void serviceTypeMatchupPreload(unsigned long now) {
+  if (screenMode != SCREEN_TYPE_MATCHUP || !typeMatchupRandomPokemonEnabled) {
+    return;
+  }
+  if (!typeMatchupInitialLoadPending && !typeMatchupPendingLoadPending) {
+    return;
+  }
+  if (!ensureTypeMatchupPreloadInfrastructure()) {
+    return;
+  }
+  if (!typeMatchupBgmCache.ready && !loadTypeMatchupBgmCache()) {
+    return;
+  }
+  if ((now - typeMatchupPreloadLastStepAt) < kTypeMatchupPreloadStepIntervalMs) {
+    return;
+  }
+  typeMatchupPreloadLastStepAt = now;
+
+  auto& bank = typeMatchupRoundBanks[typeMatchupLoadingBankIndex];
+  if (!bank.prepared) {
+    return;
+  }
+  if (typeMatchupLoadingRoundIndex >= kTypeMatchupRoundsPerBatch) {
+    if (typeMatchupInitialLoadPending) {
+      typeMatchupInitialLoadPending = false;
+      typeMatchupPendingLoadPending = true;
+      typeMatchupLoadingBankIndex = 1;
+      typeMatchupLoadingRoundIndex = 0;
+      typeMatchupLoadingSideIndex = 0;
+      activateTypeMatchupRoundFromBank(typeMatchupActiveBankIndex, typeMatchupCurrentRoundIndex);
+      playTypeMatchupBgm();
+      typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+      typeMatchupMessageStartedAt = now;
+    } else {
+      typeMatchupPendingLoadPending = false;
+    }
+    return;
+  }
+
+  const bool attackSide = (typeMatchupLoadingSideIndex == 0);
+  loadTypeMatchupRoundSprite(bank, typeMatchupLoadingRoundIndex, attackSide);
+  if (attackSide) {
+    typeMatchupLoadingSideIndex = 1;
+  } else {
+    typeMatchupLoadingSideIndex = 0;
+    typeMatchupLoadingRoundIndex += 1;
+  }
+}
+
 void primeNextTypeMatchupRound() {
   prepareTypeMatchupRound(
       typeMatchupNextAttackTypeIndex,
@@ -1660,11 +1926,9 @@ void primeNextTypeMatchupRound() {
       typeMatchupNextAttackPokemonId,
       typeMatchupNextDefensePokemonId,
       typeMatchupNextEncounterEffectId);
-  primeTypeMatchupImageCache(false);
 }
 
 void activateTypeMatchupRoundFromNext() {
-  bool activatedFromNext = false;
   if (typeMatchupNextAttackTypeIndex < 0
       || typeMatchupNextDefenseTypeIndex < 0
       || typeMatchupNextAttackPokemonId < MIN_POKEMON_ID
@@ -1683,14 +1947,8 @@ void activateTypeMatchupRoundFromNext() {
     typeMatchupAttackPokemonId = typeMatchupNextAttackPokemonId;
     typeMatchupDefensePokemonId = typeMatchupNextDefensePokemonId;
     typeMatchupEncounterEffectId = typeMatchupNextEncounterEffectId;
-    activatedFromNext = true;
   }
 
-  if (activatedFromNext) {
-    activateTypeMatchupImageCacheFromNext();
-  } else {
-    primeTypeMatchupImageCache(true);
-  }
   primeNextTypeMatchupRound();
 }
 
@@ -3649,8 +3907,20 @@ void playQuizSound(QuizPhase phase) {
 }
 
 void playTypeMatchupBgm() {
+  stopMusicStream(false);
   musicPlayback.playbackSource = MUSIC_PLAYBACK_TYPE_MATCHUP;
-  beginMusicStream(kTypeMatchupBgmPath);
+  if (!typeMatchupBgmCache.ready && !loadTypeMatchupBgmCache()) {
+    return;
+  }
+  audioStopBus(AUDIO_BUS_BGM);
+  audioPlayRaw16(
+      AUDIO_BUS_BGM,
+      typeMatchupBgmCache.pcm16,
+      typeMatchupBgmCache.sampleCount,
+      typeMatchupBgmCache.sampleRate,
+      typeMatchupBgmCache.stereo,
+      0,
+      true);
 }
 
 uint16_t chooseNextQuizPokemonId(uint16_t lastId) {
@@ -4227,6 +4497,7 @@ void AppRuntime::tick() {
   const unsigned long now = appMillis();
   updateLockOnBadgeFeverState(now);
   serviceMusicStream();
+  serviceTypeMatchupPreload(now);
   if (musicPlayback.visualDirty) {
     musicPlayback.visualDirty = false;
     needsRedraw = true;
@@ -4729,14 +5000,13 @@ void AppRuntime::tick() {
         break;
       case ACTION_OPEN_TYPE_MATCHUP:
         screenMode = SCREEN_TYPE_MATCHUP;
-        playTypeMatchupBgm();
         clearTypeMatchupRandomPokemonSelection();
-        typeMatchupAnimationLastRedrawAt = 0;
         if (typeMatchupRandomPokemonEnabled) {
-          primeNextTypeMatchupRound();
-          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+          beginTypeMatchupPreloadState();
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_LOADING;
           typeMatchupMessageStartedAt = now;
         } else {
+          playTypeMatchupBgm();
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
           typeMatchupMessageStartedAt = now;
         }
@@ -4800,13 +5070,11 @@ void AppRuntime::tick() {
             if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD) {
               typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
               typeMatchupMessageStartedAt = now;
-              typeMatchupAnimationLastRedrawAt = 0;
             }
           } else {
             clearTypeMatchupRandomPokemonSelection();
             typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
             typeMatchupMessageStartedAt = now;
-            typeMatchupAnimationLastRedrawAt = 0;
           }
         } else {
           clearTypeMatchupRandomPokemonSelection();
@@ -4820,11 +5088,9 @@ void AppRuntime::tick() {
         if (typeMatchupRandomPokemonEnabled) {
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
           typeMatchupMessageStartedAt = now;
-          typeMatchupAnimationLastRedrawAt = 0;
         } else {
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
           typeMatchupMessageStartedAt = 0;
-          typeMatchupAnimationLastRedrawAt = 0;
         }
         needsRedraw = true;
         break;
@@ -5069,10 +5335,9 @@ void AppRuntime::tick() {
       case ACTION_TOGGLE_TYPE_MATCHUP_RANDOM_POKEMON:
         typeMatchupRandomPokemonEnabled = !typeMatchupRandomPokemonEnabled;
         clearTypeMatchupRandomPokemonSelection();
-        typeMatchupAnimationLastRedrawAt = 0;
         if (typeMatchupRandomPokemonEnabled && screenMode == SCREEN_TYPE_MATCHUP) {
-          primeNextTypeMatchupRound();
-          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
+          beginTypeMatchupPreloadState();
+          typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_LOADING;
           typeMatchupMessageStartedAt = now;
         } else {
           typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_IDLE;
@@ -5530,24 +5795,19 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupIdleDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_WILD;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
   if (screenMode == SCREEN_TYPE_MATCHUP
       && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupEncounterDurationMs) {
-    activateTypeMatchupRoundFromNext();
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
   if (screenMode == SCREEN_TYPE_MATCHUP
-      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER
-      && (now - typeMatchupAnimationLastRedrawAt) >= kTypeMatchupAnimationFrameMs) {
-    typeMatchupAnimationLastRedrawAt = now;
+      && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER) {
     needsRedraw = true;
   }
 
@@ -5556,7 +5816,6 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupRouletteAttackDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
@@ -5565,7 +5824,6 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupRouletteDefenseDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_SLIDE_IN;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
@@ -5574,16 +5832,13 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupSlideInDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_WILD;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
   if (screenMode == SCREEN_TYPE_MATCHUP
       && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_ATTACK
           || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ROULETTE_DEFENSE
-          || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN)
-      && (now - typeMatchupAnimationLastRedrawAt) >= kTypeMatchupAnimationFrameMs) {
-    typeMatchupAnimationLastRedrawAt = now;
+          || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN)) {
     needsRedraw = true;
   }
 
@@ -5592,7 +5847,6 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupWildMessageDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ATTACK;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
@@ -5601,7 +5855,6 @@ void AppRuntime::tick() {
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupAttackMessageDurationMs) {
     typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_RESULT;
     typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
     needsRedraw = true;
   }
 
@@ -5609,10 +5862,7 @@ void AppRuntime::tick() {
       && typeMatchupRandomPokemonEnabled
       && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT
       && (now - typeMatchupMessageStartedAt) >= kTypeMatchupResultLoopDelayMs) {
-    primeNextTypeMatchupRound();
-    typeMatchupMessagePhase = TYPE_MATCHUP_MESSAGE_ENCOUNTER;
-    typeMatchupMessageStartedAt = now;
-    typeMatchupAnimationLastRedrawAt = 0;
+    startNextTypeMatchupRound(now);
     needsRedraw = true;
   }
 
@@ -5815,6 +6065,8 @@ void AppRuntime::tick() {
           musicViewMode == MUSIC_VIEW_PLAYLIST ? musicPlaylistRepeatEnabled : false);
     } else if (screenMode == SCREEN_TYPE_MATCHUP) {
       String resultText = "";
+      LGFX_Sprite* attackPokemonSprite = nullptr;
+      LGFX_Sprite* defensePokemonSprite = nullptr;
       const bool showRandomPokemon = typeMatchupRandomPokemonEnabled
           && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_SLIDE_IN
               || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD
@@ -5832,16 +6084,31 @@ void AppRuntime::tick() {
                 && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ENCOUNTER)
                 ? 0.0f
                 : ((typeMatchupRandomPokemonEnabled
+                && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_LOADING)
+                ? 0.0f
+                : ((typeMatchupRandomPokemonEnabled
                 && (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD
                     || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK
                     || typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_RESULT))
                 ? 0.0f
-                : 1.0f));
+                : 1.0f)));
       const char* actionLabel = typeMatchupRandomPokemonEnabled
-          ? trApp("こうげき", "Attack")
+          ? ((typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_LOADING)
+                ? trApp("よみこみ中", "Loading")
+                : trApp("こうげき", "Attack"))
           : ((typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_IDLE)
                 ? trApp("たたかう", "Battle")
                 : trApp("こうげき", "Attack"));
+      float loadingProgress = 0.0f;
+      if (typeMatchupRandomPokemonEnabled && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_LOADING) {
+        const auto& loadingBank = typeMatchupRoundBanks[typeMatchupLoadingBankIndex];
+        int loadedParts = typeMatchupBgmCache.ready ? 1 : 0;
+        for (size_t i = 0; i < kTypeMatchupRoundsPerBatch; ++i) {
+          loadedParts += loadingBank.attackReady[i] ? 1 : 0;
+          loadedParts += loadingBank.defenseReady[i] ? 1 : 0;
+        }
+        loadingProgress = static_cast<float>(loadedParts) / 11.0f;
+      }
       const char* attackLabel = getPokemonTypeLabel(selectedAttackTypeIndex, appLanguage);
       const char* defenseLabel = getPokemonTypeLabel(selectedDefenseTypeIndex, appLanguage);
       if (typeMatchupRandomPokemonEnabled) {
@@ -5852,7 +6119,12 @@ void AppRuntime::tick() {
           defenseLabel = getTypeRouletteLabel(now, typeMatchupMessageStartedAt, kTypeMatchupRouletteDefenseDurationMs, appLanguage, selectedDefenseTypeIndex, 7);
         }
       }
-      if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD) {
+      if (typeMatchupRandomPokemonEnabled && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_LOADING) {
+        const auto& loadingBank = typeMatchupRoundBanks[typeMatchupLoadingBankIndex];
+        resultText = trApp("よみこみ中...", "Loading...");
+        resultText += "\n";
+        resultText += String(static_cast<int>(loadingBank.readyCount)) + "/" + String(static_cast<int>(kTypeMatchupRoundsPerBatch));
+      } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_WILD) {
         resultText = getTypeMatchupWildText(dataMgr.getPokemonName(typeMatchupDefensePokemonId), appLanguage);
       } else if (typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_ATTACK) {
         resultText = getTypeMatchupAttackText(
@@ -5867,17 +6139,14 @@ void AppRuntime::tick() {
         resultText += "\n";
         resultText += getTypeMatchupEffectText(selectedAttackTypeIndex, selectedDefenseTypeIndex, appLanguage, true);
       }
-      LGFX_Sprite* attackPokemonSprite = nullptr;
-      LGFX_Sprite* defensePokemonSprite = nullptr;
-      if (typeMatchupImagePipeline.began) {
-        if (typeMatchupImagePipeline.ready[TYPE_MATCHUP_IMAGE_CURRENT_ATTACK]
-            && typeMatchupImagePipeline.renderedIds[TYPE_MATCHUP_IMAGE_CURRENT_ATTACK] == typeMatchupAttackPokemonId) {
-          attackPokemonSprite = typeMatchupImagePipeline.imageSprites[TYPE_MATCHUP_IMAGE_CURRENT_ATTACK];
-        }
-        if (typeMatchupImagePipeline.ready[TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE]
-            && typeMatchupImagePipeline.renderedIds[TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE] == typeMatchupDefensePokemonId) {
-          defensePokemonSprite = typeMatchupImagePipeline.imageSprites[TYPE_MATCHUP_IMAGE_CURRENT_DEFENSE];
-        }
+      if (typeMatchupRandomPokemonEnabled && typeMatchupCurrentRoundIndex < kTypeMatchupRoundsPerBatch) {
+        auto& activeBank = typeMatchupRoundBanks[typeMatchupActiveBankIndex];
+        attackPokemonSprite = activeBank.attackReady[typeMatchupCurrentRoundIndex]
+            ? activeBank.attackSprites[typeMatchupCurrentRoundIndex]
+            : nullptr;
+        defensePokemonSprite = activeBank.defenseReady[typeMatchupCurrentRoundIndex]
+            ? activeBank.defenseSprites[typeMatchupCurrentRoundIndex]
+            : nullptr;
       }
       ui.drawTypeMatchupScreen(
           attackLabel,
@@ -5891,6 +6160,8 @@ void AppRuntime::tick() {
           encounterProgress,
           typeLabelVisibility,
           slideProgress,
+          typeMatchupRandomPokemonEnabled && typeMatchupMessagePhase == TYPE_MATCHUP_MESSAGE_LOADING,
+          loadingProgress,
           resultText.c_str(),
           actionLabel,
           !typeMatchupRandomPokemonEnabled && visualControl == PRESS_TYPE_MATCHUP_ATTACK,

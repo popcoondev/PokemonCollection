@@ -84,6 +84,8 @@ public:
       float encounterProgress,
       float typeLabelVisibility,
       float pokemonSlideProgress,
+      bool showLoadingScreen,
+      float loadingProgress,
       const char* resultText,
       const char* actionLabel,
       bool attackPressed,
