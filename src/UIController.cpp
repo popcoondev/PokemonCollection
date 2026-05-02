@@ -1112,11 +1112,15 @@ void UIController::drawTypeMatchupScreen(
     const char* defenseTypeLabel,
     uint16_t attackPokemonId,
     uint16_t defensePokemonId,
+    LGFX_Sprite* attackPokemonSprite,
+    LGFX_Sprite* defensePokemonSprite,
     bool showPokemon,
     int encounterEffectId,
     float encounterProgress,
     float typeLabelVisibility,
     float pokemonSlideProgress,
+    bool showLoadingScreen,
+    float loadingProgress,
     const char* resultText,
     const char* actionLabel,
     bool attackPressed,
@@ -1124,6 +1128,31 @@ void UIController::drawTypeMatchupScreen(
     bool confirmPressed,
     bool backPressed) {
   const auto& theme = getThemePalette(currentTheme);
+  if (showLoadingScreen) {
+    const int progress = constrain(static_cast<int>(loadingProgress * 100.0f), 0, 100);
+    sprite->fillScreen(TFT_WHITE);
+    sprite->setTextColor(TFT_BLACK);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->drawCenterString(tr("よみこみ中", "Loading"), SCREEN_WIDTH / 2, 72);
+    sprite->setFont(&fonts::efontJA_12);
+    sprite->drawCenterString(tr("たたかうの じゅんびを しています", "Preparing battle resources"), SCREEN_WIDTH / 2, 102);
+
+    constexpr int barX = 40;
+    constexpr int barY = 136;
+    constexpr int barW = SCREEN_WIDTH - 80;
+    constexpr int barH = 18;
+    sprite->drawRoundRect(barX, barY, barW, barH, 8, TFT_BLACK);
+    const int fillW = ((barW - 4) * progress) / 100;
+    if (fillW > 0) {
+      sprite->fillRoundRect(barX + 2, barY + 2, fillW, barH - 4, 6, theme.accent);
+    }
+    char progressText[16];
+    snprintf(progressText, sizeof(progressText), "%d%%", progress);
+    sprite->setFont(&fonts::efontJA_16_b);
+    sprite->drawCenterString(progressText, SCREEN_WIDTH / 2, 170);
+    return;
+  }
+
   sprite->fillScreen(theme.bg);
 
   sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
@@ -1142,7 +1171,7 @@ void UIController::drawTypeMatchupScreen(
   constexpr int rightPanelX = SCREEN_WIDTH - leftPanelX - panelW;
   constexpr int panelH = 70;
   constexpr int panelY = battleTopY + 8;
-  constexpr int lowerY = 146;
+  constexpr int lowerY = 138;
   constexpr int textBoxX = 12;
   constexpr int textBoxW = 208;
   constexpr int lowerH = 78;
@@ -1193,17 +1222,32 @@ void UIController::drawTypeMatchupScreen(
   }
 
   const float clampedSlide = constrain(pokemonSlideProgress, 0.0f, 1.0f);
+  constexpr uint16_t kPokemonTransparentColor = 0xF81F;
   if (showPokemon && attackPokemonId >= MIN_POKEMON_ID) {
-    const int targetX = leftPanelX + 24;
-    const int startX = SCREEN_WIDTH;
+    const int attackW = 164;
+    const int attackH = 128;
+    const int targetX = -6;
+    const int targetY = battleTopY + 16;
+    const int startX = SCREEN_WIDTH + 12;
     const int drawX = targetX + static_cast<int>((1.0f - clampedSlide) * (startX - targetX));
-    imageLoader.loadAndDisplayPNG(*sprite, attackPokemonId, drawX, battleTopY + 28, 82, 64, false);
+    if (attackPokemonSprite != nullptr && attackPokemonSprite->getBuffer() != nullptr) {
+      attackPokemonSprite->pushSprite(sprite, drawX, targetY, kPokemonTransparentColor);
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, attackPokemonId, drawX, targetY, attackW, attackH, false);
+    }
   }
   if (showPokemon && defensePokemonId >= MIN_POKEMON_ID) {
-    const int targetX = rightPanelX + 24;
-    const int startX = -82;
+    const int defenseW = 123;
+    const int defenseH = 96;
+    const int targetX = SCREEN_WIDTH - defenseW + 6;
+    const int targetY = battleTopY - 18;
+    const int startX = -defenseW - 16;
     const int drawX = startX + static_cast<int>(clampedSlide * (targetX - startX));
-    imageLoader.loadAndDisplayPNG(*sprite, defensePokemonId, drawX, battleTopY + 8, 82, 64, false);
+    if (defensePokemonSprite != nullptr && defensePokemonSprite->getBuffer() != nullptr) {
+      defensePokemonSprite->pushSprite(sprite, drawX, targetY, kPokemonTransparentColor);
+    } else {
+      imageLoader.loadAndDisplayPNG(*sprite, defensePokemonId, drawX, targetY, defenseW, defenseH, false);
+    }
   }
 
   sprite->drawRoundRect(textBoxX, lowerY, textBoxW, lowerH, 10, frameColor);
