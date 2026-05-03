@@ -1328,6 +1328,7 @@ void UIController::drawAchievementsMenuScreen(
     size_t guideCaughtCount,
     size_t slideshowViewedCount,
     bool lockOnPressed,
+    bool updateInfoPressed,
     bool backPressed) {
   const auto& theme = getThemePalette(currentTheme);
   sprite->fillScreen(theme.bg);
@@ -1348,7 +1349,8 @@ void UIController::drawAchievementsMenuScreen(
   sprite->drawString(String("こうりゃくでつかまえた数 : ") + static_cast<unsigned>(guideCaughtCount) + "ひき", 20, 100);
   sprite->drawString(String("スライドショーをみた数 : ") + static_cast<unsigned>(slideshowViewedCount) + "ひき", 20, 122);
 
-  drawActionButton(32, 160, SCREEN_WIDTH - 64, 42, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(32, 150, SCREEN_WIDTH - 64, 34, tr("ロックオンじっせき", "Lock-On Records"), theme.accent, theme.invertedText, lockOnPressed, theme.buttonPressedFill, theme.accent);
+  drawActionButton(32, 192, SCREEN_WIDTH - 64, 34, tr("アップデート情報", "Updates"), theme.surface, theme.text, updateInfoPressed, theme.buttonPressedFill, theme.border);
 }
 
 void UIController::drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool badgesPressed, bool backPressed) {
@@ -1415,6 +1417,82 @@ void UIController::drawLockOnAchievementsListScreen(
       sprite->drawString(truncateUtf8Label(labels[i], 24), itemX + 8, y + 5);
     }
   }
+}
+
+void UIController::drawUpdateInfoListScreen(
+    const std::vector<String>& labels,
+    bool backPressed,
+    bool prevPressed,
+    bool nextPressed,
+    int pressedItemIndex) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString("アップデート情報", SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  constexpr int itemX[2] = {44, 162};
+  constexpr int itemYStart = 48;
+  constexpr int itemW = 114;
+  constexpr int itemH = 24;
+  constexpr int itemGapY = 6;
+  sprite->setFont(&fonts::efontJA_12);
+  for (int i = 0; i < static_cast<int>(labels.size()); ++i) {
+    const int col = i % 2;
+    const int row = i / 2;
+    const int x = itemX[col];
+    const int y = itemYStart + (row * (itemH + itemGapY));
+    sprite->fillRoundRect(x, y, itemW, itemH, 8, theme.surface);
+    sprite->drawRoundRect(x, y, itemW, itemH, 8, theme.border);
+    if (pressedItemIndex == i) {
+      drawPressedOverlay(x, y, itemW, itemH, 8);
+    }
+    sprite->setTextColor(theme.text);
+    sprite->drawCenterString(truncateUtf8Label(labels[i], 14), x + (itemW / 2), y + 6);
+  }
+}
+
+void UIController::drawUpdateInfoDetailScreen(
+    const char* version,
+    const char* title,
+    const char* body,
+    bool backPressed,
+    bool prevPressed,
+    bool nextPressed) {
+  const auto& theme = getThemePalette(currentTheme);
+  sprite->fillScreen(theme.bg);
+
+  sprite->fillRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.surface);
+  sprite->drawRoundRect(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10, theme.border);
+  if (backPressed) {
+    drawPressedOverlay(MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 10);
+  }
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.text);
+  sprite->drawCenterString("アップデート情報", SCREEN_WIDTH / 2, 22);
+  drawDetailNavigation(prevPressed, nextPressed);
+
+  sprite->fillRoundRect(12, 48, SCREEN_WIDTH - 24, 180, 10, theme.surface);
+  sprite->drawRoundRect(12, 48, SCREEN_WIDTH - 24, 180, 10, theme.border);
+
+  sprite->setFont(&fonts::efontJA_16_b);
+  sprite->setTextColor(theme.accent);
+  sprite->drawString(version ? version : "", 22, 60);
+
+  sprite->setFont(&fonts::efontJA_12_b);
+  sprite->setTextColor(theme.text);
+  drawWrappedText(title ? String(title) : String(""), 22, 86, SCREEN_WIDTH - 44, 18, 2);
+
+  sprite->setFont(&fonts::efontJA_12);
+  sprite->setTextColor(theme.text);
+  drawWrappedText(body ? String(body) : String(""), 22, 124, SCREEN_WIDTH - 44, 18, 5);
 }
 
 void UIController::drawLockOnAchievementBadgesScreen(
