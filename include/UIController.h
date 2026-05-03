@@ -106,11 +106,25 @@ public:
       size_t guideCaughtCount,
       size_t slideshowViewedCount,
       bool lockOnPressed,
+      bool updateInfoPressed,
       bool backPressed);
   void drawLockOnAchievementsSummaryScreen(size_t caughtCount, bool listPressed, bool badgesPressed, bool backPressed);
   void drawLockOnAchievementsListScreen(
       const std::vector<String>& labels,
       const std::vector<bool>& headerFlags,
+      bool backPressed,
+      bool prevPressed,
+      bool nextPressed);
+  void drawUpdateInfoListScreen(
+      const std::vector<String>& labels,
+      bool backPressed,
+      bool prevPressed,
+      bool nextPressed,
+      int pressedItemIndex);
+  void drawUpdateInfoDetailScreen(
+      const char* version,
+      const char* title,
+      const char* body,
       bool backPressed,
       bool prevPressed,
       bool nextPressed);

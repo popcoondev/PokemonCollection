@@ -40,6 +40,8 @@ enum ScreenMode {
   SCREEN_ACHIEVEMENTS_LOCKON,
   SCREEN_ACHIEVEMENTS_LOCKON_LIST,
   SCREEN_ACHIEVEMENTS_LOCKON_BADGES,
+  SCREEN_UPDATE_INFO_LIST,
+  SCREEN_UPDATE_INFO_DETAIL,
   SCREEN_MUSIC_LIST,
   SCREEN_GUIDE_MENU,
   SCREEN_GUIDE_POKEMON_LIST,
@@ -159,6 +161,28 @@ constexpr int kTypeMatchupDefenseSpriteH = 96;
 constexpr uint16_t kTypeMatchupTransparentColor = 0xF81F;
 constexpr int kLockOnBarX = 36;
 constexpr int kLockOnBarW = SCREEN_WIDTH - 72;
+
+struct UpdateInfoEntry {
+  const char* version;
+  const char* title;
+  const char* body;
+};
+
+constexpr UpdateInfoEntry kUpdateInfoEntries[] = {
+    {
+        "v0.9.8",
+        "たたかう と パソコン確認を改善",
+        "たたかう の演出や見た目を調整し、パソコンでも画面確認しやすくした。"},
+    {
+        "v0.9.7",
+        "おんがく機能を追加",
+        "おんがく メニューを追加し、保存した曲を選んで再生できるようにした。"},
+    {
+        "v0.9.6",
+        "ロックオン と じっせきを追加",
+        "ロックオン の遊びを広げ、じっせき メニューから記録を見られるようにした。"},
+};
+constexpr size_t kUpdateInfoEntryCount = sizeof(kUpdateInfoEntries) / sizeof(kUpdateInfoEntries[0]);
 
 struct __attribute__((packed)) RiffHeader {
   char riff[4];
@@ -623,6 +647,8 @@ uint32_t lockOnNextFeverCaptureCount = 10;
 uint32_t lockOnFeverEndsAt = 0;
 size_t lockOnAchievementsListOffset = 0;
 size_t lockOnBadgeListOffset = 0;
+size_t updateInfoListOffset = 0;
+size_t updateInfoDetailIndex = 0;
 unsigned long vibrationStopAt = 0;
 int selectedAttackTypeIndex = -1;
 int selectedDefenseTypeIndex = -1;
@@ -2640,6 +2666,7 @@ enum PressedControl {
   PRESS_GUIDE_POKEMON,
   PRESS_GUIDE_LOCATION,
   PRESS_ACHIEVEMENT_LOCKON,
+  PRESS_ACHIEVEMENT_UPDATE_INFO,
   PRESS_ACHIEVEMENT_LIST,
   PRESS_ACHIEVEMENT_BADGES,
   PRESS_MUSIC_CONTROL_LEFT,
@@ -2793,7 +2820,8 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
 
   if (mode == SCREEN_ACHIEVEMENTS_MENU) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_BACK;
-    if (hitTest(tx, ty, 32, 160, SCREEN_WIDTH - 64, 42, 0)) return PRESS_ACHIEVEMENT_LOCKON;
+    if (hitTest(tx, ty, 32, 150, SCREEN_WIDTH - 64, 34, 0)) return PRESS_ACHIEVEMENT_LOCKON;
+    if (hitTest(tx, ty, 32, 192, SCREEN_WIDTH - 64, 34, 0)) return PRESS_ACHIEVEMENT_UPDATE_INFO;
     return PRESS_NONE;
   }
 
@@ -2812,6 +2840,29 @@ PressedControl getPressedControl(int tx, int ty, ScreenMode mode) {
   }
 
   if (mode == SCREEN_ACHIEVEMENTS_LOCKON_BADGES) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_UPDATE_INFO_LIST) {
+    if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
+    if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
+    if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
+    for (int i = 0; i < 10; ++i) {
+      const int col = i % 2;
+      const int row = i / 2;
+      const int x = (col == 0) ? 44 : 162;
+      const int y = 48 + (row * 30);
+      if (hitTest(tx, ty, x, y, 114, 24, 0)) {
+        return static_cast<PressedControl>(PRESS_GUIDE_LIST_ITEM_0 + i);
+      }
+    }
+    return PRESS_NONE;
+  }
+
+  if (mode == SCREEN_UPDATE_INFO_DETAIL) {
     if (hitTest(tx, ty, MARGIN, 6, SCREEN_WIDTH - (MARGIN * 2), HEADER_H - 12, 0)) return PRESS_GUIDE_LIST_BACK;
     if (hitTest(tx, ty, 0, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_PREV;
     if (hitTest(tx, ty, SCREEN_WIDTH - 40, 0, 40, SCREEN_HEIGHT, 0)) return PRESS_GUIDE_LIST_NEXT;
@@ -2968,6 +3019,12 @@ enum PendingActionType {
   ACTION_OPEN_ACHIEVEMENTS_LOCKON_BADGES,
   ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES,
   ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE,
+  ACTION_OPEN_UPDATE_INFO_LIST,
+  ACTION_CLOSE_UPDATE_INFO_LIST,
+  ACTION_UPDATE_INFO_LIST_PAGE,
+  ACTION_OPEN_UPDATE_INFO_DETAIL,
+  ACTION_CLOSE_UPDATE_INFO_DETAIL,
+  ACTION_UPDATE_INFO_DETAIL_PAGE,
   ACTION_OPEN_MUSIC_LIST,
   ACTION_CLOSE_MUSIC_LIST,
   ACTION_MUSIC_LIST_PAGE,
@@ -3063,6 +3120,8 @@ PressedControl getBackPressedControlForScreen(ScreenMode mode) {
       return PRESS_GUIDE_BACK;
     case SCREEN_ACHIEVEMENTS_LOCKON_LIST:
     case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
+    case SCREEN_UPDATE_INFO_LIST:
+    case SCREEN_UPDATE_INFO_DETAIL:
     case SCREEN_MUSIC_LIST:
       return PRESS_GUIDE_LIST_BACK;
     case SCREEN_GUIDE_MENU:
@@ -3112,6 +3171,10 @@ PendingAction getBackPendingActionForScreen(ScreenMode mode) {
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_LIST);
     case SCREEN_ACHIEVEMENTS_LOCKON_BADGES:
       return makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_LOCKON_BADGES);
+    case SCREEN_UPDATE_INFO_LIST:
+      return makePendingAction(ACTION_CLOSE_UPDATE_INFO_LIST);
+    case SCREEN_UPDATE_INFO_DETAIL:
+      return makePendingAction(ACTION_CLOSE_UPDATE_INFO_DETAIL);
     case SCREEN_MUSIC_LIST:
       return makePendingAction(ACTION_CLOSE_MUSIC_LIST);
     case SCREEN_GUIDE_MENU:
@@ -4690,6 +4753,8 @@ void AppRuntime::tick() {
           pendingAction = makePendingAction(ACTION_CLOSE_ACHIEVEMENTS_MENU);
         } else if (pressedControl == PRESS_ACHIEVEMENT_LOCKON) {
           pendingAction = makePendingAction(ACTION_OPEN_ACHIEVEMENTS_LOCKON);
+        } else if (pressedControl == PRESS_ACHIEVEMENT_UPDATE_INFO) {
+          pendingAction = makePendingAction(ACTION_OPEN_UPDATE_INFO_LIST);
         }
       } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON) {
         if (pressedControl == PRESS_GUIDE_BACK) {
@@ -4714,6 +4779,27 @@ void AppRuntime::tick() {
           pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE, -3);
         } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
           pendingAction = makePendingAction(ACTION_ACHIEVEMENTS_LOCKON_BADGES_PAGE, 3);
+        }
+      } else if (screenMode == SCREEN_UPDATE_INFO_LIST) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_UPDATE_INFO_LIST);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_UPDATE_INFO_LIST_PAGE, -10);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_UPDATE_INFO_LIST_PAGE, 10);
+        } else if (pressedControl >= PRESS_GUIDE_LIST_ITEM_0 && pressedControl <= PRESS_GUIDE_LIST_ITEM_9) {
+          const int index = static_cast<int>(updateInfoListOffset) + (pressedControl - PRESS_GUIDE_LIST_ITEM_0);
+          if (index < static_cast<int>(kUpdateInfoEntryCount)) {
+            pendingAction = makePendingAction(ACTION_OPEN_UPDATE_INFO_DETAIL, index);
+          }
+        }
+      } else if (screenMode == SCREEN_UPDATE_INFO_DETAIL) {
+        if (pressedControl == PRESS_GUIDE_LIST_BACK) {
+          pendingAction = makePendingAction(ACTION_CLOSE_UPDATE_INFO_DETAIL);
+        } else if (pressedControl == PRESS_GUIDE_LIST_PREV) {
+          pendingAction = makePendingAction(ACTION_UPDATE_INFO_DETAIL_PAGE, -1);
+        } else if (pressedControl == PRESS_GUIDE_LIST_NEXT) {
+          pendingAction = makePendingAction(ACTION_UPDATE_INFO_DETAIL_PAGE, 1);
         }
       } else if (screenMode == SCREEN_GUIDE_POKEMON_LIST) {
         if (pressedControl == PRESS_GUIDE_LIST_BACK) {
@@ -5152,6 +5238,43 @@ void AppRuntime::tick() {
           lockOnBadgeListOffset =
               (lockOnBadgeListOffset >= maxOffset) ? 0 : (lockOnBadgeListOffset + pageSize);
         }
+        break;
+      }
+      case ACTION_OPEN_UPDATE_INFO_LIST:
+        screenMode = SCREEN_UPDATE_INFO_LIST;
+        updateInfoListOffset = 0;
+        break;
+      case ACTION_CLOSE_UPDATE_INFO_LIST:
+        screenMode = SCREEN_ACHIEVEMENTS_MENU;
+        break;
+      case ACTION_UPDATE_INFO_LIST_PAGE: {
+        const size_t totalCount = kUpdateInfoEntryCount;
+        const size_t pageSize = 10;
+        const size_t maxOffset = (totalCount > pageSize) ? (((totalCount - 1) / pageSize) * pageSize) : 0;
+        if (totalCount == 0) {
+          updateInfoListOffset = 0;
+          break;
+        }
+        if (pendingAction.value < 0) {
+          updateInfoListOffset = (updateInfoListOffset == 0) ? maxOffset : (updateInfoListOffset - pageSize);
+        } else if (pendingAction.value > 0) {
+          updateInfoListOffset = (updateInfoListOffset >= maxOffset) ? 0 : (updateInfoListOffset + pageSize);
+        }
+        break;
+      }
+      case ACTION_OPEN_UPDATE_INFO_DETAIL:
+        screenMode = SCREEN_UPDATE_INFO_DETAIL;
+        updateInfoDetailIndex = static_cast<size_t>(constrain(pendingAction.value, 0, static_cast<int>(kUpdateInfoEntryCount) - 1));
+        break;
+      case ACTION_CLOSE_UPDATE_INFO_DETAIL:
+        screenMode = SCREEN_UPDATE_INFO_LIST;
+        break;
+      case ACTION_UPDATE_INFO_DETAIL_PAGE: {
+        const int totalCount = static_cast<int>(kUpdateInfoEntryCount);
+        int nextIndex = static_cast<int>(updateInfoDetailIndex) + pendingAction.value;
+        if (nextIndex < 0) nextIndex = totalCount - 1;
+        if (nextIndex >= totalCount) nextIndex = 0;
+        updateInfoDetailIndex = static_cast<size_t>(nextIndex);
         break;
       }
       case ACTION_OPEN_GUIDE_MENU:
@@ -6220,6 +6343,7 @@ void AppRuntime::tick() {
           getGuideCaughtCount(),
           countTrueFlags(slideshowAchievementViewed),
           visualControl == PRESS_ACHIEVEMENT_LOCKON,
+          visualControl == PRESS_ACHIEVEMENT_UPDATE_INFO,
           visualControl == PRESS_GUIDE_BACK);
     } else if (screenMode == SCREEN_ACHIEVEMENTS_LOCKON) {
       ui.drawLockOnAchievementsSummaryScreen(
@@ -6264,6 +6388,31 @@ void AppRuntime::tick() {
           LOCKON_BADGE_COUNT,
           (lockOnBadgeListOffset / 3) + 1,
           (LOCKON_BADGE_COUNT + 2) / 3,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT);
+    } else if (screenMode == SCREEN_UPDATE_INFO_LIST) {
+      std::vector<String> labels;
+      labels.reserve(10);
+      const size_t totalCount = kUpdateInfoEntryCount;
+      const size_t end = std::min(totalCount, updateInfoListOffset + 10);
+      for (size_t i = updateInfoListOffset; i < end; ++i) {
+        labels.push_back(String(kUpdateInfoEntries[i].version));
+      }
+      ui.drawUpdateInfoListScreen(
+          labels,
+          visualControl == PRESS_GUIDE_LIST_BACK,
+          visualControl == PRESS_GUIDE_LIST_PREV,
+          visualControl == PRESS_GUIDE_LIST_NEXT,
+          (visualControl >= PRESS_GUIDE_LIST_ITEM_0 && visualControl <= PRESS_GUIDE_LIST_ITEM_9)
+              ? (visualControl - PRESS_GUIDE_LIST_ITEM_0)
+              : -1);
+    } else if (screenMode == SCREEN_UPDATE_INFO_DETAIL) {
+      const auto& entry = kUpdateInfoEntries[updateInfoDetailIndex];
+      ui.drawUpdateInfoDetailScreen(
+          entry.version,
+          entry.title,
+          entry.body,
           visualControl == PRESS_GUIDE_LIST_BACK,
           visualControl == PRESS_GUIDE_LIST_PREV,
           visualControl == PRESS_GUIDE_LIST_NEXT);
