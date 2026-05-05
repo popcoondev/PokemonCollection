@@ -21,9 +21,56 @@
 
 ```bash
 cd sim
+./bootstrap.sh
 cmake -S . -B build
 cmake --build build
 ./build/pokemoncollection_sim
+```
+
+preset を使う場合:
+
+```bash
+cd sim
+./bootstrap.sh default
+cmake --build --preset default
+./build/pokemoncollection_sim
+```
+
+`ArduinoJson` は次の順で解決されます。
+
+1. `sim/local-deps/ArduinoJson`
+2. `pio run -e m5stack-cores3` で展開された `.pio/libdeps/.../ArduinoJson/src`
+3. `ARDUINOJSON_ROOT` で指定したローカル配置先
+4. CMake `FetchContent` による自動取得
+
+ネットワークを使わずにビルドしたい場合は、`ArduinoJson` の配置先を明示してください。
+
+```bash
+ARDUINOJSON_ROOT=/path/to/ArduinoJson ./bootstrap.sh default
+```
+
+`bootstrap.sh` は外部の `ArduinoJson` を見つけたら `sim/local-deps/ArduinoJson` にコピーして、次回以降はそのローカルキャッシュを優先利用します。
+
+Apple Silicon で既存の `build` ディレクトリが `x86_64` 向けに作られている場合は、別ディレクトリで作り直してください。
+
+```bash
+./bootstrap.sh macos-arm64
+cmake --build --preset macos-arm64
+./build-arm64/pokemoncollection_sim
+```
+
+必要な依存:
+
+- `cmake`
+- `sdl2`
+- `sdl2_image`
+- `sdl2_ttf`
+- `ArduinoJson` のローカル配置、またはネットワーク経由の自動取得
+
+macOS + Homebrew なら最低限これで揃います。
+
+```bash
+brew install cmake sdl2 sdl2_image sdl2_ttf
 ```
 
 今後の予定:

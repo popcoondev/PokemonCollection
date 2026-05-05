@@ -873,6 +873,7 @@
 - 期待結果: 実機描画と PC 描画を差し替え可能な構造になっており、PC 上でも 320x240 の仮想画面で主要画面の表示と最低限の操作確認ができる
 - 実際の結果: 現状は CoreS3 実機前提の構成で、描画と入力が実機依存コードに寄っているため PC シミュレータ対応が難しい
 - 対応メモ: GitHub issue #70。目的は完全な M5 エミュレータではなく、アプリロジックと描画/入力実装を分離して実機描画と PC 描画を差し替え可能にすること。対象は Renderer 抽象、実機用 Renderer、PC 用 Renderer、320x240 仮想画面、最低限のマウス/キーボード入力、実機ビルドと PC ビルドの分離整理。音声やセンサーの完全再現は対象外
+- 進捗メモ: `sim/CMakeLists.txt` で `ArduinoJson` の探索順を整理し、`.pio/libdeps` / `ARDUINOJSON_ROOT` / `FetchContent` の順で解決できるようにした。`SDL2` / `SDL2_image` / `SDL2_ttf` も config package 優先で検出し、足りない依存は明示エラーにした。`sim/bootstrap.sh` と `sim/CMakePresets.json` を追加し、Apple Silicon では `./bootstrap.sh macos-arm64 && cmake --build --preset macos-arm64` で再現できるようにした
 - 設計メモ:
   - 中心構造は `Input -> update(state, input) -> render(state, renderer)` に寄せる
   - 共通コードは `AppState`、画面定義、UI ロジック、描画命令生成に集約する
