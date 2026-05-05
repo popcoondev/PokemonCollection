@@ -9,6 +9,8 @@
 /tmp/
 sim/build/
 sim/build-asan/
+sim/build-*/
+sim/local-deps/
 *.log
 *.tmp
 *.bak
